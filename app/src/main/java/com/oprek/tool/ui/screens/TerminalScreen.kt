@@ -106,9 +106,15 @@ fun TerminalScreen(navController: NavController) {
                     }
                     "xxd" -> withContext(Dispatchers.IO) {
                         val path = parts.getOrElse(1) { "" }
-                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: xxd FILEPATH", isError = true) } return@withContext }
+                        if (path.isEmpty()) {
+                            withContext(Dispatchers.Main) { addLine("Usage: xxd FILEPATH", isError = true) }
+                            return@withContext
+                        }
                         val f = java.io.File(path)
-                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: ${path}", isError = true) } return@withContext }
+                        if (!f.exists()) {
+                            withContext(Dispatchers.Main) { addLine("File not found: ${path}", isError = true) }
+                            return@withContext
+                        }
                         val data = f.readBytes().take(2048)
                         for (i in data.indices step 16) {
                             val hex = data.drop(i).take(16).joinToString(" ") { "%02X".format(it) }
@@ -119,9 +125,15 @@ fun TerminalScreen(navController: NavController) {
                     }
                     "strings" -> withContext(Dispatchers.IO) {
                         val path = parts.getOrElse(1) { "" }
-                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: strings FILEPATH", isError = true) } return@withContext }
+                        if (path.isEmpty()) {
+                            withContext(Dispatchers.Main) { addLine("Usage: strings FILEPATH", isError = true) }
+                            return@withContext
+                        }
                         val f = java.io.File(path)
-                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: ${path}", isError = true) } return@withContext }
+                        if (!f.exists()) {
+                            withContext(Dispatchers.Main) { addLine("File not found: ${path}", isError = true) }
+                            return@withContext
+                        }
                         val data = f.readBytes()
                         val sb = StringBuilder()
                         var cur = StringBuilder()
