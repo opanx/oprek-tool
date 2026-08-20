@@ -6,8 +6,6 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -18,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +52,7 @@ fun DeobfuscateScreen(navController: NavController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("🔓 Deobfuscate", fontWeight = FontWeight.Bold) },
+            TopAppBar(title = { Text("\uD83D\uDD13 Deobfuscate", fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
         },
@@ -66,7 +63,7 @@ fun DeobfuscateScreen(navController: NavController) {
             Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🤖 Auto-Detect Obfuscated", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple, modifier = Modifier.weight(1f))
+                        Text("\uD83E\uDD16 Auto-Detect Obfuscated", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple, modifier = Modifier.weight(1f))
                         if (isScanning) CircularProgressIndicator(Modifier.size(18.dp), color = AccentPurple, strokeWidth = 2.dp)
                     }
                     Spacer(Modifier.height(4.dp))
@@ -108,7 +105,7 @@ fun DeobfuscateScreen(navController: NavController) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Found ${autoDetected.size} obfuscated strings", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple, modifier = Modifier.weight(1f))
                             Button(onClick = {
-                                val all = autoDetected.joinToString("\n") { "[${it.type}] ${it.offset}: ${it.raw} → ${it.decoded}" }
+                                val all = autoDetected.joinToString("\n") { "[${it.type}] ${it.offset}: ${it.raw} -> ${it.decoded}" }
                                 clipboard.setPrimaryClip(ClipData.newPlainText("deobf", all))
                                 Toast.makeText(context, "Copied ${autoDetected.size} results!", Toast.LENGTH_SHORT).show()
                             }, colors = ButtonDefaults.buttonColors(containerColor = AccentPurple), shape = RoundedCornerShape(8.dp)) {
@@ -151,9 +148,21 @@ fun DeobfuscateScreen(navController: NavController) {
                 Column(Modifier.padding(12.dp)) {
                     Text("Manual Mode", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentCyan)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.take(4).forEach { (k, l) -> FilterChip(selected = selectedMode == k, onClick = { selectedMode = k }, label = { Text(l, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(0.3f))) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        modes.take(4).forEach { (k, l) ->
+                            FilterChip(selected = selectedMode == k, onClick = { selectedMode = k },
+                                label = { Text(l, fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(0.3f)))
+                        }
+                    }
                     Spacer(Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.drop(4).forEach { (k, l) -> FilterChip(selected = selectedMode == k, onClick = { selectedMode = k }, label = { Text(l, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(0.3f))) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        modes.drop(4).forEach { (k, l) ->
+                            FilterChip(selected = selectedMode == k, onClick = { selectedMode = k },
+                                label = { Text(l, fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(0.3f)))
+                        }
+                    }
                 }
             }
 
@@ -169,10 +178,13 @@ fun DeobfuscateScreen(navController: NavController) {
 
             Button(onClick = {
                 isProcessing = true
-                scope.launch(Dispatchers.Default) { outputText = processDeobfuscate(inputText, selectedMode); isProcessing = false }
+                scope.launch(Dispatchers.Default) {
+                    outputText = runDeobfuscate(inputText, selectedMode)
+                    isProcessing = false
+                }
             }, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp), colors = ButtonDefaults.buttonColors(containerColor = AccentGreen), shape = RoundedCornerShape(12.dp),
                 enabled = inputText.isNotEmpty() && !isProcessing) {
-                if (isProcessing) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                if (isProcessing) CircularProgressIndicator(Modifier.size(18.dp), color = androidx.compose.ui.graphics.Color.White, strokeWidth = 2.dp)
                 else { Icon(Icons.Default.ChevronRight, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Deobfuscate", fontWeight = FontWeight.Bold) }
             }
 
@@ -193,15 +205,11 @@ fun DeobfuscateScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(16.dp))
-
-
         }
-
     }
 }
 
-
-private fun processDeobfuscate(input: String, mode: String): String {
+private fun runDeobfuscate(input: String, mode: String): String {
     if (input.isBlank()) return ""
     return try {
         when (mode) {
@@ -224,14 +232,23 @@ private fun processDeobfuscate(input: String, mode: String): String {
                 }
                 sb.toString()
             }
-            "unicode" -> Regex("\\\\u([0-9a-fA-F]{4})").replace(input) {
-                it.groupValues[1].toInt(16).toChar().toString()
+            "unicode" -> {
+                val regex = Regex("\\\\u([0-9a-fA-F]{4})")
+                regex.replace(input) { match ->
+                    match.groupValues[1].toInt(16).toChar().toString()
+                }
             }
-            "hex" -> input.replace("\\s".toRegex(), "").chunked(2).map {
-                it.toInt(16).toChar()
-            }.joinToString("")
-            "base64" -> String(android.util.Base64.decode(input.trim(), android.util.Base64.DEFAULT))
-            "url" -> java.net.URLDecoder.decode(input, "UTF-8")
+            "hex" -> {
+                input.replace("\\s".toRegex(), "").chunked(2).mapNotNull {
+                    it.toIntOrNull(16)?.toChar()
+                }.joinToString("")
+            }
+            "base64" -> {
+                String(android.util.Base64.decode(input.trim(), android.util.Base64.DEFAULT))
+            }
+            "url" -> {
+                java.net.URLDecoder.decode(input, "UTF-8")
+            }
             "xor" -> {
                 val bytes = input.toByteArray()
                 val results = mutableListOf<String>()
@@ -245,10 +262,16 @@ private fun processDeobfuscate(input: String, mode: String): String {
                 if (results.isNotEmpty()) results.joinToString("\n\n") else "No likely XOR key found"
             }
             "reverse" -> input.reversed()
-            "unescape" -> input.replace("\n", "\n").replace("\t", "\t")
-                .replace("\\", "\").replace("\r", "\r")
-                .replace("\0", "\u0000")
+            "unescape" -> {
+                input
+                    .replace("\\n", "\n")
+                    .replace("\\t", "\t")
+                    .replace("\\\\", "\\")
+                    .replace("\\r", "\r")
+            }
             else -> input
         }
-    } catch (e: Exception) { "Error: \${e.message}" }
+    } catch (e: Exception) {
+        "Error: ${e.message}"
+    }
 }

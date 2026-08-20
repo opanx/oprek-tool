@@ -21,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +46,7 @@ fun ObfuscateScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("🔒 Obfuscate", fontWeight = FontWeight.Bold) },
+                title = { Text("\uD83D\uDD12 Obfuscate", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -75,13 +74,23 @@ fun ObfuscateScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         modes.take(4).forEach { (key, label) ->
-                            FilterChip(selected = selectedMode == key, onClick = { selectedMode = key }, label = { Text(label, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentOrange.copy(0.3f)))
+                            FilterChip(
+                                selected = selectedMode == key,
+                                onClick = { selectedMode = key },
+                                label = { Text(label, fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentOrange.copy(0.3f))
+                            )
                         }
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         modes.drop(4).forEach { (key, label) ->
-                            FilterChip(selected = selectedMode == key, onClick = { selectedMode = key }, label = { Text(label, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentOrange.copy(0.3f)))
+                            FilterChip(
+                                selected = selectedMode == key,
+                                onClick = { selectedMode = key },
+                                label = { Text(label, fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentOrange.copy(0.3f))
+                            )
                         }
                     }
 
@@ -125,7 +134,7 @@ fun ObfuscateScreen(navController: NavController) {
                     isProcessing = true
                     scope.launch(Dispatchers.Default) {
                         val result = withContext(Dispatchers.Default) {
-                            processObfuscate(inputText, selectedMode, xorKey)
+                            runObfuscate(inputText, selectedMode, xorKey)
                         }
                         outputText = result
                         isProcessing = false
@@ -180,12 +189,11 @@ fun ObfuscateScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(16.dp))
-
         }
     }
 }
 
-private fun processObfuscate(input: String, mode: String, xorKey: String): String {
+private fun runObfuscate(input: String, mode: String, xorKey: String): String {
     if (input.isBlank()) return ""
     return try {
         when (mode) {
@@ -214,6 +222,6 @@ private fun processObfuscate(input: String, mode: String, xorKey: String): Strin
             else -> input
         }
     } catch (e: Exception) {
-        "Error: \${e.message}"
+        "Error: ${e.message}"
     }
 }
