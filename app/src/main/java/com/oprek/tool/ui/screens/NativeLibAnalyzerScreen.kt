@@ -361,7 +361,7 @@ private fun parseSections(bytes: ByteArray, is64: Boolean, isLE: Boolean): Strin
     // Get string table
     val strOff = if (shstrndx < shnum) {
         val sh = shoff + shstrndx * shentsize
-        if (is64) readELF64LE(bytes, sh.toInt() + 24).toInt() else readELF32LE(bytes, sh + 16)
+        if (is64) readELF64LE(bytes, sh.toInt() + 24).toInt() else readELF32LE(bytes, sh.toInt() + 16)
     } else 0
 
     sb.appendLine(String.format("%-20s %-10s %-12s %-12s %-8s", "Name", "Type", "Addr", "Offset", "Size"))
@@ -374,9 +374,9 @@ private fun parseSections(bytes: ByteArray, is64: Boolean, isLE: Boolean): Strin
         val name = if (strOff + nameIdx < bytes.size) readString(bytes, strOff + nameIdx) else "?"
         val type = readELF32LE(bytes, sh.toInt() + 4)
 
-        val addr = if (is64) readELF64LE(bytes, sh.toInt() + 16) else readELF32LE(bytes, sh + 12).toLong()
-        val offset = if (is64) readELF64LE(bytes, sh.toInt() + 24).toLong() else readELF32LE(bytes, sh + 16).toLong()
-        val size = if (is64) readELF64LE(bytes, sh.toInt() + 32).toLong() else readELF32LE(bytes, sh + 20).toLong()
+        val addr = if (is64) readELF64LE(bytes, sh.toInt() + 16) else readELF32LE(bytes, sh.toInt() + 12).toLong()
+        val offset = if (is64) readELF64LE(bytes, sh.toInt() + 24).toLong() else readELF32LE(bytes, sh.toInt() + 16).toLong()
+        val size = if (is64) readELF64LE(bytes, sh.toInt() + 32).toLong() else readELF32LE(bytes, sh.toInt() + 20).toLong()
 
         val typeName = when (type) {
             0 -> "NULL"; 1 -> "PROGBITS"; 2 -> "SYMTAB"; 3 -> "STRTAB"; 4 -> "RELA"
