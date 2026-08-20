@@ -53,7 +53,7 @@ fun RecentFilesScreen(navController: NavController, onFileSelected: (String) -> 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("🕐 Recent Files", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = {
                         context.getSharedPreferences("oprek_recent", Context.MODE_PRIVATE).edit().clear().apply()

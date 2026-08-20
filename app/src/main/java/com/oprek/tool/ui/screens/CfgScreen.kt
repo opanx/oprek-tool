@@ -49,7 +49,7 @@ fun CfgScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("📊 Control Flow Graph", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { scope.launch(Dispatchers.Default) {
                         val file = context.cacheDir.listFiles()?.firstOrNull() ?: return@launch

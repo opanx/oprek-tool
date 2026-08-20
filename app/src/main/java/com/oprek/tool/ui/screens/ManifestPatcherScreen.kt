@@ -54,7 +54,7 @@ fun ManifestPatcherScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("📋 Manifest Patcher", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
         },

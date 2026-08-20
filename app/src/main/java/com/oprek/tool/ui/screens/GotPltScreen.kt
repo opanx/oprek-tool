@@ -25,7 +25,7 @@ fun GotPltScreen(navController: NavController) {
     var entries by remember { mutableStateOf(listOf<com.oprek.tool.engine.GotPltEntry>()) }
     Scaffold(topBar = {
         TopAppBar(title = { Text("GOT / PLT", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {

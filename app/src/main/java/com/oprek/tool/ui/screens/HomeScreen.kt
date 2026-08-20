@@ -98,7 +98,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
 
             val tools = listOf(
                 ToolItem("Hex Viewer", "View & edit raw bytes", Icons.Outlined.Code, AccentGreen, "hex"),
-                ToolItem("Strings", "Extract readable text", Icons.AutoMirrored.Outlined.TextSnippet, AccentBlue, "strings"),
+                ToolItem("Strings", "Extract readable text", Icons.Outlined.TextSnippet, AccentBlue, "strings"),
                 ToolItem("Disassembler", "ARM64/x86 disasm", Icons.Outlined.BugReport, AccentPurple, "disasm"),
                 ToolItem("ELF Info", "Parse ELF headers", Icons.Outlined.Memory, AccentCyan, "elf"),
                 ToolItem("APK Info", "Analyze APK structure", Icons.Outlined.Apps, AccentOrange, "apk"),
@@ -118,7 +118,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("Export Report", "Save analysis report", Icons.Outlined.Share, AccentPurple, "export"),
                 ToolItem("Recent Files", "History of opened files", Icons.Outlined.History, AccentCyan, "recent"),
                 ToolItem("Memory Analyzer", "Entropy, packer detect", Icons.Outlined.Analytics, AccentRed, "memory"),
-                ToolItem("Logcat", "Capture Android logs", Icons.AutoMirrored.Outlined.List, AccentGreen, "logcat"),
+                ToolItem("Logcat", "Capture Android logs", Icons.Outlined.List, AccentGreen, "logcat"),
                 ToolItem("Hex Copy", "Export bytes as C/Python", Icons.Outlined.ContentCopy, AccentPurple, "hexcopy"),
                 ToolItem("ELF Symbols", "Symbol table + dynamic", Icons.Outlined.DataObject, AccentCyan, "elfsymbol"),
                 ToolItem("Hook Generator", "LD_PRELOAD + trampoline", Icons.Outlined.Link, AccentOrange, "inlinehook"),
@@ -132,7 +132,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("File Info", "Hash, magic, metadata", Icons.Outlined.Info, AccentBlue, "info"),
                 ToolItem("Terminal", "Run shell commands", Icons.Outlined.Terminal, AccentRed, "terminal"),
                 // === NEW v4 TOOLS ===
-                ToolItem("Program Headers", "PT_LOAD/PT_DYNAMIC viewer", Icons.AutoMirrored.Outlined.ViewList, AccentBlue, "proghdr"),
+                ToolItem("Program Headers", "PT_LOAD/PT_DYNAMIC viewer", Icons.Outlined.ViewList, AccentBlue, "proghdr"),
                 ToolItem("Section Headers", ".text/.data/.symtab viewer", Icons.Outlined.ViewModule, AccentCyan, "sechdr"),
                 ToolItem("Symbol Table", "Full .symtab/.dynsym", Icons.Outlined.DataObject, AccentGreen, "symtable"),
                 ToolItem("Dynamic Section", "DT_NEEDED, DT_SONAME", Icons.Outlined.Settings, AccentOrange, "dynamic"),
@@ -140,9 +140,9 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("GOT / PLT", "GOT entries + PLT stubs", Icons.Outlined.AccountTree, AccentRed, "gotplt"),
                 ToolItem("Shell Deobfuscate", "Decode shell obfuscation", Icons.Outlined.FmdBad, AccentOrange, "shelldeob"),
                 ToolItem("Disasm Advanced", "ARM64/x86 with decode", Icons.Outlined.BugReport, AccentPurple, "advdisasm"),
-                ToolItem("XREF Viewer", "Cross-reference finder", Icons.AutoMirrored.Outlined.CallSplit, AccentCyan, "xref"),
+                ToolItem("XREF Viewer", "Cross-reference finder", Icons.Outlined.CallSplit, AccentCyan, "xref"),
                 ToolItem("Patch Instruction", "NOP/RET/JMP patcher", Icons.Outlined.Build, AccentRed, "patchinsn"),
-                ToolItem("Patch Branch", "Conditional → NOP/JMP", Icons.AutoMirrored.Outlined.TrendingDown, AccentOrange, "patchbranch"),
+                ToolItem("Patch Branch", "Conditional → NOP/JMP", Icons.Outlined.TrendingDown, AccentOrange, "patchbranch"),
                 ToolItem("Auto Patch Login", "Login bypass auto-scan", Icons.Outlined.LockOpen, AccentRed, "autologin"),
                 ToolItem("Patch String", "Search & replace string", Icons.Outlined.FindReplace, AccentCyan, "patchstring"),
                 ToolItem("XOR Brute Force", "Brute-force XOR key", Icons.Outlined.Key, AccentPurple, "xorbrute"),

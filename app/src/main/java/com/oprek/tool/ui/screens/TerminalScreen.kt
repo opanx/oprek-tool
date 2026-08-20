@@ -209,7 +209,7 @@ fun TerminalScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("💻 Terminal", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { lines.clear() }) { Icon(Icons.Default.DeleteSweep, "Clear") }
                     IconButton(onClick = {

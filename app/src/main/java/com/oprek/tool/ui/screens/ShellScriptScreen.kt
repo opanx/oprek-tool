@@ -53,7 +53,7 @@ fun ShellScriptScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("📜 Shell Script Analyzer", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = {
                         clipboard.setPrimaryClip(ClipData.newPlainText("script", rawContent))

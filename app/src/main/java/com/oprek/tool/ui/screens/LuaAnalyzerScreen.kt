@@ -111,7 +111,7 @@ fun LuaAnalyzerScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("🌙 Lua Analyzer", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { clipboard.setPrimaryClip(ClipData.newPlainText("lua", rawContent)); Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show() }) {
                         Icon(Icons.Default.ContentCopy, "Copy")

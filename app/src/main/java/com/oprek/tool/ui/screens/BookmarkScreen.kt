@@ -66,7 +66,7 @@ fun BookmarkScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("📌 Bookmarks", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) { Icon(Icons.Default.Add, "Add") }
                 },

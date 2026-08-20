@@ -72,7 +72,7 @@ fun DecompilerScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("🔧 Pseudo-C Decompiler", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     if (result.isNotEmpty()) {
                         IconButton(onClick = {
@@ -114,7 +114,7 @@ fun DecompilerScreen(navController: NavController) {
                             OutlinedTextField(
                                 value = selectedSymbol.ifEmpty { "All functions (disassemble from start)" },
                                 onValueChange = { selectedSymbol = it },
-                                label = { Text("Function") }, modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+                                label = { Text("Function") }, modifier = Modifier.fillMaxWidth().menuAnchor(),
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
                             )

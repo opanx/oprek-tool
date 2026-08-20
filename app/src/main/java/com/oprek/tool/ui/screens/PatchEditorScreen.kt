@@ -40,7 +40,7 @@ fun PatchEditorScreen(navController: NavController, vm: MainViewModel) {
                 title = { Text("Patch Editor", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.Filled.ArrowBack, "Back")
                     }
                 },
                 actions = {

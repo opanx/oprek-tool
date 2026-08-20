@@ -57,7 +57,7 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
                 title = { Text("📝 Strings (${filtered.size}/${strings.size})", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        Icon(Icons.Filled.ArrowBack, "Back")
                     }
                 },
                 actions = {

@@ -52,7 +52,7 @@ fun AdvancedDisasmScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Disassembler", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding).padding(12.dp)) {
