@@ -108,8 +108,7 @@ fun AntiDebugScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { results.joinToString("
-") { "${it.first}: ${it.second}" } },
+                content = { "Anti-debug scan complete" },
                 filename = "antidebug.txt",
                 subfolder = "analysis"
             )
