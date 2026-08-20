@@ -67,10 +67,10 @@ fun SmaliScreen(navController: NavController) {
                         if (file == null) { result = "No file loaded"; isLoading = false; return@launch }
                         val data = StreamingIO.readRange(file, 0, minOf(file.length(), 500000L).toInt())
                         // Parse DEX classes
-                        val classes = withContext(Dispatchers.IO) { NativeLib.dexGetClasses(data) }
+                        val classes = withContext(Dispatchers.IO) { NativeLib.dexGetClasses(data).asList() }
                         val filtered = if (classFilter.isNotEmpty()) classes.filter { it.contains(classFilter, true) } else classes
                         val smaliParts = mutableListOf<String>()
-                        filtered.toList().forEach { cls ->
+                        for (cls in filtered) {
                             val parts = cls.split("|")
                             val name = parts.getOrElse(0) { "?" }
                             val flags = parts.getOrElse(1) { "0" }
