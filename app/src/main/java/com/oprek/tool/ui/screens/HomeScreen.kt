@@ -162,6 +162,8 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("DEX → Smali", "Convert DEX to Smali", Icons.Outlined.Transform, AccentPurple, "smali"),
                 ToolItem("Multi-File Compare", "Compare 3+ files", Icons.Outlined.Compare, AccentCyan, "multidiff"),
                 ToolItem("Script Engine", "IDC-like scripting", Icons.Outlined.Code, AccentPurple, "scripting"),
+                ToolItem("Python Script", "Deobfuscate/Encrypt/Decrypt", Icons.Outlined.Code, AccentGreen, "python"),
+                ToolItem("Tools & Downloads", "SDK/NDK/RE tools links", Icons.Outlined.Link, AccentCyan, "toolsdl"),
             )
 
             LazyVerticalGrid(
