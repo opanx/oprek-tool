@@ -75,13 +75,13 @@ fun ObfuscateScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         modes.take(4).forEach { (key, label) ->
-                            ModeChip(label, selectedMode == key) { selectedMode = key }
+                            FilterChip(selected = selectedMode == key, onClick = { selectedMode = key }, label = { Text(label, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentOrange.copy(0.3f)))
                         }
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         modes.drop(4).forEach { (key, label) ->
-                            ModeChip(label, selectedMode == key) { selectedMode = key }
+                            FilterChip(selected = selectedMode == key, onClick = { selectedMode = key }, label = { Text(label, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentOrange.copy(0.3f)))
                         }
                     }
 
@@ -214,14 +214,6 @@ private fun processObfuscate(input: String, mode: String, xorKey: String): Strin
             else -> input
         }
     } catch (e: Exception) {
-        "Error: ${e.message}"
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { output },
-                filename = "obfuscated.txt",
-                subfolder = "obfuscate"
-            )
-
+        "Error: \${e.message}"
     }
 }

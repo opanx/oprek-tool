@@ -245,10 +245,10 @@ private fun processDeobfuscate(input: String, mode: String): String {
                 if (results.isNotEmpty()) results.joinToString("\n\n") else "No likely XOR key found"
             }
             "reverse" -> input.reversed()
-            "unescape" -> input.replace("\\n", "\n").replace("\\t", "\t")
-                .replace("\\\\", "\\").replace("\\r", "\r")
-                .replace("\\0", "\u0000").replace("\\'", "'").replace('\"\"', '\"')
+            "unescape" -> input.replace("\n", "\n").replace("\t", "\t")
+                .replace("\\", "\").replace("\r", "\r")
+                .replace("\0", "\u0000")
             else -> input
         }
-    } catch (e: Exception) { "Error: ${e.message}" }
+    } catch (e: Exception) { "Error: \${e.message}" }
 }
