@@ -126,4 +126,3 @@ private fun findSubArray(haystack: ByteArray, needle: ByteArray): Int {
     }
     return -1
 }
-}
