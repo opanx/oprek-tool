@@ -197,7 +197,7 @@ fun DeobfuscateScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output.ifEmpty { "No results" } },
+                content = { outputText.ifEmpty { "No results" } },
                 filename = "deobfuscated.txt",
                 subfolder = "deobfuscate"
             )
@@ -219,22 +219,48 @@ private fun processDeobfuscate(input: String, mode: String): String {
     return try {
         when (mode) {
             "strings" -> {
-                val sb = StringBuilder(); val cur = StringBuilder()
-                for (c in input) { if (c.code in 0x20..0x7E) cur.append(c) else { if (cur.length >= 3) { if (sb.isNotEmpty()) sb.append("\n"); sb.append(cur) }; cur.clear() } }
-                if (cur.length >= 3) { if (sb.isNotEmpty()) sb.append("\n"); sb.append(cur) }; sb.toString()
+                val sb = StringBuilder()
+                val cur = StringBuilder()
+                for (c in input) {
+                    if (c.code in 0x20..0x7E) cur.append(c)
+                    else {
+                        if (cur.length >= 3) {
+                            if (sb.isNotEmpty()) sb.append("\n")
+                            sb.append(cur)
+                        }
+                        cur.clear()
+                    }
+                }
+                if (cur.length >= 3) {
+                    if (sb.isNotEmpty()) sb.append("\n")
+                    sb.append(cur)
+                }
+                sb.toString()
             }
-            "unicode" -> Regex("\\\\u([0-9a-fA-F]{4})").replace(input) { it.groupValues[1].toInt(16).toChar().toString() }
-            "hex" -> input.replace("\\s".toRegex(), "").chunked(2).map { it.toInt(16).toChar() }.joinToString("")
+            "unicode" -> Regex("\\\\u([0-9a-fA-F]{4})").replace(input) {
+                it.groupValues[1].toInt(16).toChar().toString()
+            }
+            "hex" -> input.replace("\\s".toRegex(), "").chunked(2).map {
+                it.toInt(16).toChar()
+            }.joinToString("")
             "base64" -> String(android.util.Base64.decode(input.trim(), android.util.Base64.DEFAULT))
             "url" -> java.net.URLDecoder.decode(input, "UTF-8")
             "xor" -> {
-                val bytes = input.toByteArray(); val results = mutableListOf<String>()
-                for (key in 0..255) { val decoded = bytes.map { (it.toInt() xor key).toChar() }.joinToString(""); val score = decoded.count { it.code in 0x20..0x7E || it == '\n' }
-                    if (score > bytes.size * 0.7) results.add("Key 0x${"%02X".format(key)}:\n$decoded") }
+                val bytes = input.toByteArray()
+                val results = mutableListOf<String>()
+                for (key in 0..255) {
+                    val decoded = bytes.map { (it.toInt() xor key).toChar() }.joinToString("")
+                    val score = decoded.count { it.code in 0x20..0x7E || it == '\n' }
+                    if (score > bytes.size * 0.7) {
+                        results.add("Key 0x${"%02X".format(key)}:\n$decoded")
+                    }
+                }
                 if (results.isNotEmpty()) results.joinToString("\n\n") else "No likely XOR key found"
             }
             "reverse" -> input.reversed()
-            "unescape" -> input.replace("\\\\n", "\n").replace("\\\\t", "\t").replace("\\\\\\\\", "\\").replace("\\\\r", "\r").replace("\\\\0", "\u0000").replace("\\'", "'").replace("\\\"", "\"")
+            "unescape" -> input.replace("\\n", "\n").replace("\\t", "\t")
+                .replace("\\\\", "\\").replace("\\r", "\r")
+                .replace("\\0", "\u0000").replace("\\'", "'").replace('\"\"', '\"')
             else -> input
         }
     } catch (e: Exception) { "Error: ${e.message}" }

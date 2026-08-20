@@ -134,7 +134,7 @@ Java.perform(function() {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { script },
+                content = { result },
                 filename = "frida_hook.js",
                 subfolder = "hooks"
             )
