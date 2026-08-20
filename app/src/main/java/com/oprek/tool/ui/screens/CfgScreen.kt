@@ -52,7 +52,7 @@ fun CfgScreen(navController: NavController) {
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { scope.launch(Dispatchers.Default) {
-                        val file = context.cacheDir.listFiles()?.firstOrNull() ?: return@launch
+                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@launch
                         val data = withContext(Dispatchers.IO) { StreamingIO.readRange(file, 0, minOf(file.length(), 50000L).toInt()) }
                         val disasm = withContext(Dispatchers.IO) { NativeLib.disassemble(data, 0, 1, 2, 300) }
                         blocks = buildCfg(disasm)

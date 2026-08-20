@@ -57,7 +57,7 @@ fun DecompilerScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         try { NativeLib.elfValidate(byteArrayOf(0x7F, 0x45, 0x4C, 0x46)); hasNative = true } catch (_: Exception) {}
         // Load symbols
-        val file = context.cacheDir.listFiles()?.firstOrNull()
+        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
         if (file != null) {
             try {
                 val analysis = withContext(Dispatchers.IO) { AnalysisEngine.analyzeElf(file) }
@@ -175,7 +175,7 @@ fun DecompilerScreen(navController: NavController) {
                 isLoading = true
                 scope.launch(Dispatchers.Default) {
                     try {
-                        val file = context.cacheDir.listFiles()?.firstOrNull()
+                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
                         if (file == null) { result = "No file loaded"; isLoading = false; return@launch }
 
                         withContext(Dispatchers.Main) { progress = "Reading file..." }

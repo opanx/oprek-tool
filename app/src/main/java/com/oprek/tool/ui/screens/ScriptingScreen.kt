@@ -133,7 +133,7 @@ fun ScriptingScreen(navController: NavController) {
 private fun executeScript(script: String, context: Context): String {
     val sb = StringBuilder()
     val vars = mutableMapOf<String, Any>()
-    val file = context.cacheDir.listFiles()?.firstOrNull()
+    val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
 
     sb.appendLine("═══ Script Output ═══")
     sb.appendLine()

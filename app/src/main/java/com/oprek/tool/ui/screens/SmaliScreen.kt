@@ -63,7 +63,7 @@ fun SmaliScreen(navController: NavController) {
                 isLoading = true
                 scope.launch(Dispatchers.Default) {
                     try {
-                        val file = context.cacheDir.listFiles()?.firstOrNull()
+                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
                         if (file == null) { result = "No file loaded"; isLoading = false; return@launch }
                         val data = StreamingIO.readRange(file, 0, minOf(file.length(), 500000L).toInt())
                         // Parse DEX classes

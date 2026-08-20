@@ -151,8 +151,8 @@ fun DisassemblerScreen(navController: NavController) {
                 isLoading = true
                 scope.launch(Dispatchers.Default) {
                     try {
-                        val file = context.cacheDir.listFiles()?.firstOrNull()
-                        if (file == null) {
+                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+                        if (file == null || !file.exists() || file.isDirectory) {
                             result = "No file loaded. Open a file first."
                             isLoading = false
                             return@launch

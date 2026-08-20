@@ -135,7 +135,7 @@ fun PythonScreen(navController: NavController) {
 private fun executePython(script: String, context: Context): String {
     val sb = StringBuilder()
     val vars = mutableMapOf<String, String>()
-    val file = context.cacheDir.listFiles()?.firstOrNull()
+    val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
 
     sb.appendLine("═══ Python Output ═══")
     sb.appendLine()
