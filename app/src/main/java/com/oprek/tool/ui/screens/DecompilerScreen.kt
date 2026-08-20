@@ -253,7 +253,7 @@ fun DecompilerScreen(navController: NavController) {
 
 @Composable
 fun StatCard(label: String, value: String, color: Color) {
-    Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)), shape = RoundedCornerShape(8.dp)) {
+    Card(Modifier, colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)), shape = RoundedCornerShape(8.dp)) {
         Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(value, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = color)
             Text(label, fontSize = 10.sp, color = TextSecondary)
