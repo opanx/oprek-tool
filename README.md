@@ -8,6 +8,23 @@ An all-in-one Android app for binary analysis, disassembly, patching, encryption
 
 ---
 
+## 📱 Screenshots
+
+<table>
+<tr>
+<td align="center"><b>🏠 Home Screen</b><br><img src="img/Screenshot_20260820-020322_OprekTool.png" width="250"></td>
+<td align="center"><b>🔬 Hex Viewer</b><br><img src="img/Screenshot_20260820-020353_OprekTool.png" width="250"></td>
+</tr>
+<tr>
+<td align="center"><b>📝 Strings Analysis</b><br><img src="img/Screenshot_20260820-024100_OprekTool.png" width="250"></td>
+<td align="center"><b>⚙️ Advanced Tools</b><br><img src="img/Screenshot_20260820-184635_OprekTool.png" width="250"></td>
+</tr>
+</table>
+
+> 🔥 **65+ tools** in one app — Real Capstone disassembler, auto-detect encryption, ELF full parser, and more!
+
+---
+
 ## 📊 Comparison with Other Tools
 
 | Feature | **OprekTool** | Gidra Mobile | radare2 | IDA Pro | JEB | Hex Editor |
