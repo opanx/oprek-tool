@@ -114,6 +114,7 @@ object AnalysisEngine {
         val cached = cache[file.absolutePath]
         if (cached != null) return cached
 
+        autoCleanup()
         val bytes = file.readBytes()
         val result = parseElf(bytes)
         cache[file.absolutePath] = result
@@ -126,6 +127,14 @@ object AnalysisEngine {
 
     fun clearCache(path: String? = null) {
         if (path != null) cache.remove(path) else cache.clear()
+    }
+
+    // Auto-cleanup: remove oldest entries if cache > 10
+    private fun autoCleanup() {
+        if (cache.size > 10) {
+            val toRemove = cache.keys.take(cache.size - 10)
+            toRemove.forEach { cache.remove(it) }
+        }
     }
 
     // ====== ELF Parser ======

@@ -155,6 +155,12 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("Session Manager", "Save/load analysis state", Icons.Outlined.Save, AccentCyan, "session"),
                 ToolItem("Encrypt Tool", "10 encrypt methods", Icons.Outlined.Lock, AccentGreen, "encrypt"),
                 ToolItem("Decrypt Tool", "10 decrypt + auto-detect", Icons.Outlined.LockOpen, AccentRed, "decrypt"),
+                ToolItem("Pseudo-C Decompiler", "Basic decompilation", Icons.Outlined.Code, AccentPurple, "decompiler"),
+                ToolItem("Control Flow Graph", "CFG visualization", Icons.Outlined.AccountTree, AccentCyan, "cfg"),
+                ToolItem("Frida Script Lib", "15+ pre-built scripts", Icons.Outlined.Script, AccentGreen, "fridalib"),
+                ToolItem("Manifest Patcher", "Edit AndroidManifest", Icons.Outlined.Edit, AccentOrange, "manifestpatch"),
+                ToolItem("DEX → Smali", "Convert DEX to Smali", Icons.Outlined.Transform, AccentPurple, "smali"),
+                ToolItem("Multi-File Compare", "Compare 3+ files", Icons.Outlined.Compare, AccentCyan, "multidiff"),
             )
 
             LazyVerticalGrid(

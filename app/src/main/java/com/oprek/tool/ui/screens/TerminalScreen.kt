@@ -67,8 +67,71 @@ fun TerminalScreen(navController: NavController) {
                 when (parts[0]) {
                     "clear" -> withContext(Dispatchers.Main) { lines.clear() }
                     "help" -> withContext(Dispatchers.Main) {
-                        addLine("Built-in commands: clear, help, logcat, share")
-                        addLine("System commands: ls, cat, file, strings, xxd, readelf, objdump")
+                        addLine("═══ Built-in Commands ═══")
+                        addLine("clear          - Clear terminal")
+                        addLine("help           - Show this help")
+                        addLine("logcat         - Android logcat dump")
+                        addLine("share          - Share terminal output")
+                        addLine("file <path>    - Show file info (magic bytes)")
+                        addLine("xxd <path>     - Hex dump of file")
+                        addLine("strings <path> - Extract printable strings")
+                        addLine("readelf <path> - Show ELF headers")
+                        addLine("ls             - List current directory")
+                        addLine("pwd            - Print working directory")
+                        addLine("date           - Show current date/time")
+                        addLine("whoami         - Show current user")
+                        addLine("info           - Show app info")
+                    }
+                    "pwd" -> withContext(Dispatchers.Main) { addLine(System.getProperty("user.dir")) }
+                    "date" -> withContext(Dispatchers.Main) { addLine(java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())) }
+                    "whoami" -> withContext(Dispatchers.Main) { addLine(System.getProperty("user.name") ?: "root") }
+                    "info" -> withContext(Dispatchers.Main) {
+                        addLine("OprekTool v0.0.6")
+                        addLine("Build: ${android.os.Build.VERSION.SDK_INT} (${android.os.Build.DISPLAY})")
+                        addLine("Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}")
+                        addLine("Arch: ${System.getProperty("os.arch")}")
+                    }
+                    "file" -> withContext(Dispatchers.Main) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) addLine("Usage: file <path>", isError = true)
+                        else {
+                            val f = java.io.File(path)
+                            if (!f.exists()) addLine("File not found: $path", isError = true)
+                            else {
+                                addLine("$path: ${f.length()} bytes, ${if (f.isDirectory) "directory" else "file"}")
+                                val bytes = f.readBytes().take(16).joinToString(" ") { "%02X".format(it) }
+                                addLine("Magic: $bytes")
+                            }
+                        }
+                    }
+                    "xxd" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: xxd <path>", isError = true) } return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) } return@withContext }
+                        val data = f.readBytes().take(2048)
+                        for (i in data.indices step 16) {
+                            val hex = data.drop(i).take(16).joinToString(" ") { "%02X".format(it) }
+                            val asc = data.drop(i).take(16).map { if (it.toInt() in 0x20..0x7E) it.toInt().toChar() else '.' }.joinToString("")
+                            withContext(Dispatchers.Main) { addLine("${"%08X".format(i)}: $hex  |$asc|") }
+                        }
+                    }
+                    "strings" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: strings <path>", isError = true) } return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) } return@withContext }
+                        val data = f.readBytes()
+                        val sb = StringBuilder()
+                        var cur = StringBuilder()
+                        for (b in data) {
+                            val c = b.toInt() and 0xFF
+                            if (c in 0x20..0x7E) cur.append(c.toChar())
+                            else { if (cur.length >= 4) sb.appendLine(cur.toString()); cur.clear() }
+                        }
+                        val output = sb.toString()
+                        output.lines().take(100).forEach { line -> withContext(Dispatchers.Main) { addLine(line) } }
+                        if (output.lines().size > 100) withContext(Dispatchers.Main) { addLine("... ${output.lines().size - 100} more strings") }
                     }
                     "logcat" -> {
                         val filter = if (parts.size > 1) parts.drop(1).joinToString(" ") else ""

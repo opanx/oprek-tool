@@ -82,6 +82,34 @@ object StreamingIO {
             strings.add(StringPair(currentOffset - sb.length, sb.toString()))
         }
 
+        // Also extract UTF-16 strings (common in Windows/Java binaries)
+        var utf16Offset = 0L
+        var utf16Buf = StringBuilder()
+        RandomAccessFile(file, "r").use { raf ->
+            val buffer = ByteArray(CHUNK_SIZE)
+            raf.seek(0)
+            while (utf16Offset < file.length() && strings.size < maxStrings * 2) {
+                val read = raf.read(buffer)
+                if (read == -1) break
+                var i = 0
+                while (i + 1 < read) {
+                    val lo = buffer[i].toInt() and 0xFF
+                    val hi = buffer[i + 1].toInt() and 0xFF
+                    val codepoint = lo or (hi shl 8)
+                    if (codepoint in 0x20..0x7E && hi == 0) {
+                        utf16Buf.append(codepoint.toChar())
+                    } else {
+                        if (utf16Buf.length >= minLength) {
+                            strings.add(StringPair(utf16Offset + i - utf16Buf.length * 2, "[UTF16] ${utf16Buf}"))
+                        }
+                        utf16Buf.clear()
+                    }
+                    i += 2
+                }
+                utf16Offset += read
+            }
+        }
+
         return strings
     }
 

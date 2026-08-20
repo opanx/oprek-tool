@@ -21,7 +21,7 @@ An all-in-one Android app for binary analysis, disassembly, patching, encryption
 </tr>
 </table>
 
-> 🔥 **65+ tools** in one app — Real Capstone disassembler, auto-detect encryption, ELF full parser, and more!
+> 🔥 **75+ tools** in one app — Real Capstone disassembler, auto-detect encryption, ELF full parser, and more!
 
 ---
 
@@ -199,6 +199,16 @@ The **Strings screen** also has auto-detect button that finds encrypted strings 
 
 ---
 
+
+### 🔧 Decompiler & Visualization
+| Tool | Description | Auto |
+|------|-------------|------|
+| **Pseudo-C Decompiler** | Basic decompilation from disassembly | ✅ |
+| **Control Flow Graph** | Interactive CFG with zoom/pan | ✅ |
+| **Frida Script Library** | 15+ pre-built scripts (SSL bypass, root detect, etc.) | ✅ |
+| **Manifest Patcher** | Edit AndroidManifest.xml permissions | ✅ |
+| **DEX → Smali** | Convert DEX classes to Smali format | ✅ |
+| **Multi-File Compare** | Compare 3+ files simultaneously | ✅ |
 ## Tech Stack
 
 - **Language:** Kotlin + Jetpack Compose
