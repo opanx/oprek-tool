@@ -1,8 +1,13 @@
 package com.oprek.tool.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -14,11 +19,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.oprek.tool.core.AnalysisEngine
 import com.oprek.tool.core.NativeLib
 import com.oprek.tool.core.StreamingIO
+import com.oprek.tool.engine.DecompilerEngine
 import com.oprek.tool.ui.components.OutputButton
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
@@ -33,11 +41,32 @@ fun DecompilerScreen(navController: NavController) {
     val context = LocalContext.current
     var result by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf("") }
     var funcName by remember { mutableStateOf("") }
     var hasNative by remember { mutableStateOf(false) }
+    var showAddresses by remember { mutableStateOf(false) }
+    var archIndex by remember { mutableIntStateOf(1) } // ARM64 default
+    var blockCount by remember { mutableIntStateOf(0) }
+    var varCount by remember { mutableIntStateOf(0) }
+    var lineCount by remember { mutableIntStateOf(0) }
+
+    // Symbol list from ELF
+    var symbols by remember { mutableStateOf(listOf<String>()) }
+    var selectedSymbol by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         try { NativeLib.elfValidate(byteArrayOf(0x7F, 0x45, 0x4C, 0x46)); hasNative = true } catch (_: Exception) {}
+        // Load symbols
+        val file = context.cacheDir.listFiles()?.firstOrNull()
+        if (file != null) {
+            try {
+                val analysis = withContext(Dispatchers.IO) { AnalysisEngine.analyzeElf(file) }
+                symbols = analysis.symbols.filter { it.isFunc && it.stValue > 0 }.map { "${it.stName} @ 0x${java.lang.Long.toHexString(it.stValue)}" }
+                // Also add dynsym
+                val dynSyms = analysis.dynsym.filter { it.isFunc && it.stValue > 0 }.map { "${it.stName} @ 0x${java.lang.Long.toHexString(it.stValue)}" }
+                symbols = (symbols + dynSyms).distinct().take(500)
+            } catch (_: Exception) {}
+        }
     }
 
     Scaffold(
@@ -45,35 +74,137 @@ fun DecompilerScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("🔧 Pseudo-C Decompiler", fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                actions = {
+                    if (result.isNotEmpty()) {
+                        IconButton(onClick = {
+                            val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            cb.setPrimaryClip(ClipData.newPlainText("decompiled", result))
+                            Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+                        }) { Icon(Icons.Default.ContentCopy, "Copy") }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
         },
         containerColor = DarkBg
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState())) {
+            // Architecture selector
             Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
-                    Text("Function Name (optional)", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple)
+                    Text("Target Architecture", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple)
                     Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(value = funcName, onValueChange = { funcName = it },
-                        label = { Text("e.g. sub_12345 or main") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("ARM (32)", "ARM64", "x86").forEachIndexed { idx, name ->
+                            FilterChip(selected = archIndex == idx, onClick = { archIndex = idx },
+                                label = { Text(name, fontSize = 11.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(alpha = 0.3f)))
+                        }
+                    }
                 }
             }
 
+            // Function selector
+            if (symbols.isNotEmpty()) {
+                Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("Select Function (${symbols.size} available)", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentGreen)
+                        Spacer(Modifier.height(8.dp))
+                        var expanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+                            OutlinedTextField(
+                                value = selectedSymbol.ifEmpty { "All functions (disassemble from start)" },
+                                onValueChange = { selectedSymbol = it },
+                                label = { Text("Function") }, modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
+                            )
+                            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                                DropdownMenuItem(text = { Text("All functions", fontSize = 11.sp) }, onClick = {
+                                    selectedSymbol = ""; funcName = ""; expanded = false
+                                })
+                                symbols.take(100).forEach { sym ->
+                                    DropdownMenuItem(text = { Text(sym, fontSize = 10.sp, fontFamily = FontFamily.Monospace) }, onClick = {
+                                        selectedSymbol = sym
+                                        funcName = sym.split(" @").first()
+                                        expanded = false
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Function name (manual input)
+            if (symbols.isEmpty()) {
+                Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("Function Name", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple)
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(value = funcName, onValueChange = { funcName = it },
+                            label = { Text("e.g. main, sub_12345 (empty = all)") },
+                            modifier = Modifier.fillMaxWidth(), singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple))
+                    }
+                }
+            }
+
+            // Options
+            Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
+                Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Show addresses", fontSize = 12.sp, color = TextPrimary)
+                    Spacer(Modifier.weight(1f))
+                    Switch(checked = showAddresses, onCheckedChange = { showAddresses = it },
+                        colors = SwitchDefaults.colors(checkedThumbColor = AccentGreen))
+                }
+            }
+
+            // Progress
+            if (progress.isNotEmpty()) {
+                Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = AccentPurple.copy(alpha = 0.15f)), shape = RoundedCornerShape(8.dp)) {
+                    Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(Modifier.size(16.dp), color = AccentPurple, strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                        Text(progress, fontSize = 12.sp, color = AccentPurple)
+                    }
+                }
+            }
+
+            // Decompile button
             Button(onClick = {
                 isLoading = true
                 scope.launch(Dispatchers.Default) {
                     try {
                         val file = context.cacheDir.listFiles()?.firstOrNull()
                         if (file == null) { result = "No file loaded"; isLoading = false; return@launch }
-                        val data = StreamingIO.readRange(file, 0, minOf(file.length(), 200000L).toInt())
-                        // Basic pseudo-C decompilation from disassembly
+
+                        withContext(Dispatchers.Main) { progress = "Reading file..." }
+                        val readSize = minOf(file.length(), 500000L).toInt()
+                        val data = StreamingIO.readRange(file, 0, readSize)
+
+                        withContext(Dispatchers.Main) { progress = "Disassembling (${archIndex})..." }
+                        val arch = when (archIndex) { 0 -> 0; 1 -> 1; 2 -> 2; else -> 1 }
+                        val mode = when (archIndex) { 0 -> 0; 1 -> 2; 2 -> 4; else -> 2 }
                         val disasm = withContext(Dispatchers.IO) {
-                            NativeLib.disassemble(data, 0, 1, 2, 500) // ARM64
+                            NativeLib.disassemble(data, 0, arch, mode, 2000)
                         }
-                        result = decompileToPseudoC(disasm, funcName.ifEmpty { "main" })
-                    } catch (e: Exception) { result = "Error: ${e.message}" }
+
+                        withContext(Dispatchers.Main) { progress = "Building CFG + lifting IR..." }
+                        val name = funcName.ifEmpty { "unknown" }
+                        val output = withContext(Dispatchers.Default) {
+                            DecompilerEngine.generatePseudoC(disasm, name, showAddresses)
+                        }
+
+                        result = output
+                        lineCount = output.lines().size
+                        blockCount = output.lines().count { it.contains("Block 0x") }
+                        varCount = output.lines().count { it.trimStart().startsWith("long ") && it.contains(";") }
+                        withContext(Dispatchers.Main) { progress = "" }
+                    } catch (e: Exception) {
+                        result = "Error: ${e.message}"
+                        withContext(Dispatchers.Main) { progress = "" }
+                    }
                     isLoading = false
                 }
             }, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -84,16 +215,36 @@ fun DecompilerScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(12.dp))
+
+            // Stats
+            if (result.isNotEmpty() && !isLoading) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StatCard("Lines", "$lineCount", AccentGreen)
+                    StatCard("Blocks", "$blockCount", AccentCyan)
+                    StatCard("Vars", "$varCount", AccentOrange)
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // Output
             if (result.isNotEmpty()) {
                 Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
                     Column(Modifier.padding(12.dp)) {
-                        Text("Pseudo-C Output", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Pseudo-C Output", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple, modifier = Modifier.weight(1f))
+                            IconButton(onClick = {
+                                val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                cb.setPrimaryClip(ClipData.newPlainText("decompiled", result))
+                                Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+                            }) { Icon(Icons.Default.ContentCopy, "Copy", tint = AccentGreen) }
+                        }
                         Spacer(Modifier.height(8.dp))
-                        Text(result, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = AccentGreen,
+                        Text(result, fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = AccentGreen,
                             modifier = Modifier.fillMaxWidth().heightIn(max = 500.dp).verticalScroll(rememberScrollState()))
                     }
                 }
             }
+
             Spacer(Modifier.height(12.dp))
             OutputButton(content = { result }, filename = "decompile.c", subfolder = "decompile")
             Spacer(Modifier.height(24.dp))
@@ -101,63 +252,12 @@ fun DecompilerScreen(navController: NavController) {
     }
 }
 
-private fun decompileToPseudoC(disasm: String, funcName: String): String {
-    val sb = StringBuilder()
-    sb.appendLine("// Pseudo-C decompilation of $funcName")
-    sb.appendLine("// Generated by OprekTool Decompiler")
-    sb.appendLine()
-    sb.appendLine("void $funcName() {")
-
-    val lines = disasm.lines().filter { it.contains("0x") }
-    val locals = mutableSetOf<String>()
-    val params = mutableSetOf<String>()
-
-    for (line in lines) {
-        val parts = line.trim().split("\\s+".toRegex())
-        if (parts.size < 3) continue
-        val mnemonic = parts.getOrElse(2) { "" }
-        val operands = parts.drop(3).joinToString(" ")
-
-        when {
-            mnemonic.startsWith("stp") || mnemonic.startsWith("str") -> {
-                if (operands.contains("x29") || operands.contains("fp")) {
-                    sb.appendLine("    // function prologue")
-                }
-            }
-            mnemonic == "ret" -> {
-                sb.appendLine("    return;")
-            }
-            mnemonic.startsWith("bl") && !mnemonic.startsWith("blr") -> {
-                val target = operands.split(",").firstOrNull()?.trim() ?: ""
-                sb.appendLine("    ${target.removePrefix("#")}();")
-            }
-            mnemonic.startsWith("b.") -> {
-                val cond = mnemonic.removePrefix("b.")
-                sb.appendLine("    if ($cond) {")
-                sb.appendLine("        // conditional branch")
-                sb.appendLine("    }")
-            }
-            mnemonic == "b" || mnemonic == "br" -> {
-                val target = operands.split(",").firstOrNull()?.trim() ?: ""
-                sb.appendLine("    goto ${target.removePrefix("#")};")
-            }
-            mnemonic.startsWith("mov") -> {
-                val dst = operands.split(",").firstOrNull()?.trim() ?: ""
-                val src = operands.split(",").getOrNull(1)?.trim() ?: ""
-                if (dst.startsWith("x") && src.startsWith("#")) {
-                    val reg = "v_" + dst.removePrefix("x")
-                    if (locals.add(reg)) sb.appendLine("    long $reg = ${src.removePrefix("#")};")
-                    else sb.appendLine("    $reg = ${src.removePrefix("#")};")
-                }
-            }
-            mnemonic.startsWith("ldr") -> {
-                sb.appendLine("    // load from memory")
-            }
-            mnemonic.startsWith("cmp") -> {
-                sb.appendLine("    // compare")
-            }
+@Composable
+fun StatCard(label: String, value: String, color: Color) {
+    Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)), shape = RoundedCornerShape(8.dp)) {
+        Column(Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(value, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = color)
+            Text(label, fontSize = 10.sp, color = TextSecondary)
         }
     }
-    sb.appendLine("}")
-    return sb.toString()
 }

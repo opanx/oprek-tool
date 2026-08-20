@@ -1,0 +1,80 @@
+You are an expert reverse engineering engineer specializing in decompilers (Ghidra P-Code, Hex-Rays, Binary Ninja HLIL, RetDec).
+
+Your task is to completely rewrite and significantly improve the Pseudo-C Decompiler in the OprekTool project (file: app/src/main/java/com/oprek/tool/ui/screens/DecompilerScreen.kt and related engine files).
+
+### Current Problem
+The existing decompiler is extremely basic and almost useless. It only does simple string pattern matching on Capstone disassembly output (mov → variable, bl → function call, ret → return, etc.). There is no real control flow recovery, no data-flow analysis, no expression building, and no proper variable recovery. Accuracy is currently \~5-15%.
+
+### Goal
+Build a much more accurate and useful Pseudo-C decompiler that works offline on Android, while remaining performant on mid-range devices.
+
+### Mandatory Improvements (implement all of these):
+
+1. **Basic Block + Control Flow Recovery**
+   - Split disassembly into basic blocks
+   - Build a simple Control Flow Graph (CFG)
+   - Detect and reconstruct:
+     - if / else
+     - if / else if
+     - while / do-while (simple loops)
+     - switch-like patterns (if possible)
+   - Handle conditional branches (b.eq, b.ne, cbz, cbnz, etc.) properly
+
+2. **Variable & Stack Recovery**
+   - Detect function prologue/epilogue (stp/ldp x29, x30, etc.)
+   - Recover local variables from stack frame (based on x29/fp offsets)
+   - Track register usage and promote registers to meaningful variable names (v0, v1, arg0, result, etc.)
+   - Basic constant propagation
+
+3. **Expression Building**
+   - Combine sequential instructions into higher-level expressions
+     Example: mov + add + ldr → `v1 = *(v0 + 8)`
+   - Support common ARM64 patterns (add, sub, ldr, str, mov, orr, and, etc.)
+
+4. **Function Structure**
+   - Detect function start/end more reliably
+   - Generate proper function signature when possible (`int`, `void`, `long`, pointers)
+   - Show parameters and return value when detectable
+   - Support naming the function (user input or from symbol table)
+
+5. **Output Quality**
+   - Clean, readable Pseudo-C
+   - Proper indentation
+   - Comments for unrecognized / complex instructions
+   - Option to show original address next to lines
+   - Limit output size intelligently (don’t dump 10k lines of garbage)
+
+6. **Architecture Support**
+   - Prioritize ARM64 (AArch64) first (most common on Android)
+   - Keep basic support for ARM32
+   - Make the decompiler architecture-aware
+
+7. **Performance & Stability**
+   - Work on StreamingIO / limited memory (don’t load entire large binaries)
+   - Run heavy analysis on background thread
+   - Handle incomplete / stripped binaries gracefully
+   - Add proper error handling and progress indication
+
+### Technical Constraints
+- Keep it pure Kotlin + existing NativeLib (Capstone) as much as possible
+- Do NOT introduce heavy external native libraries that significantly increase APK size
+- Prefer clean, maintainable code over maximum theoretical accuracy
+- The decompiler should still be usable on mid-range Android devices
+
+### Implementation Plan
+1. First, create a proper intermediate representation (simple IR / statement list)
+2. Build basic blocks and CFG
+3. Perform variable recovery and expression lifting
+4. Generate clean Pseudo-C from the IR
+5. Rewrite DecompilerScreen.kt to use the new engine
+6. Make the decompiler callable from other screens if useful (e.g. from Function List / XREF)
+
+### Deliverables
+- Significantly improved decompiler accuracy (target: useful for understanding real functions, not just toy examples)
+- Clean, readable Pseudo-C output
+- Updated DecompilerScreen with better UX (function selector, progress, copy/export)
+- Code should compile and run without crashes
+
+Start by analyzing the current DecompilerScreen.kt and NativeLib.disassemble, then rewrite the decompilation pipeline properly.
+
+Focus on quality and correctness over adding more features. Make the decompiler actually useful for reverse engineering on Android.
