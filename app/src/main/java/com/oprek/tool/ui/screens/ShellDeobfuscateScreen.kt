@@ -28,7 +28,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URLDecoder
 import android.util.Base64
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +52,7 @@ fun ShellDeobfuscateScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Shell Deobfuscator", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding).padding(12.dp)) {
@@ -119,13 +118,6 @@ fun ShellDeobfuscateScreen(navController: NavController) {
                     }
                 }
             }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { output.ifEmpty { "No results" },
-                filename = "deobfuscated_shell.sh",
-                subfolder = "shell"
-            )
 
         }
     }

@@ -21,7 +21,6 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +43,7 @@ fun PatchInstructionScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Patch Instruction", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding).padding(12.dp)) {
@@ -83,13 +82,6 @@ fun PatchInstructionScreen(navController: NavController) {
                 if (saved) { Spacer(Modifier.height(8.dp)); Text("✓ Patch applied (in memory)", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
 
             }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { preview },
-                filename = "patch_insn.txt",
-                subfolder = "patches"
-            )
 
         }
     }

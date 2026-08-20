@@ -22,7 +22,6 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +43,7 @@ fun PatchStringScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Patch String", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding).padding(12.dp)) {
@@ -88,13 +87,6 @@ fun PatchStringScreen(navController: NavController) {
                     }
                 }
             }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "${strings.size} strings found, $patchedCount patched" },
-                filename = "patch_string.txt",
-                subfolder = "patches"
-            )
 
         }
     }

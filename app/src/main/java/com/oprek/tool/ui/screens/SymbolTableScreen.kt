@@ -21,7 +21,6 @@ import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.engine.SymbolEntry
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +32,7 @@ fun SymbolTableScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Symbol Table", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding)) {
@@ -78,13 +77,6 @@ fun SymbolTableScreen(navController: NavController) {
             ElfFullEngine.parseSectionHeaders()
             symbols = ElfFullEngine.parseSymbolTable()
         } catch (_: Exception) {}
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "${symbols.size} symbols" } symbols" } symbols" },
-                filename = "symbols.txt",
-                subfolder = "elf"
-            )
 
     }
 }

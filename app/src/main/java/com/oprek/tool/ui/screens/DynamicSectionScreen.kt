@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +25,7 @@ fun DynamicSectionScreen(navController: NavController) {
     var entries by remember { mutableStateOf(listOf<com.oprek.tool.engine.DynamicEntry>()) }
     Scaffold(topBar = {
         TopAppBar(title = { Text("Dynamic Section", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {
@@ -45,14 +44,6 @@ fun DynamicSectionScreen(navController: NavController) {
             }
         }
     }
-
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "${entries.size} dynamic entries" },
-                filename = "dynamic.txt",
-                subfolder = "elf"
-            )
 
     LaunchedEffect(Unit) { try { ElfFullEngine.parseSectionHeaders(); entries = ElfFullEngine.parseDynamicSection() } catch (_: Exception) {} }
 }

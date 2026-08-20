@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,13 +104,6 @@ fun SearchScreen(navController: NavController, vm: MainViewModel, initialQuery: 
                     Tip("Use Hex Viewer for byte-level search + patch")
                 }
             }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "Search complete" },
-                filename = "search_results.txt",
-                subfolder = "search"
-            )
 
         }
 

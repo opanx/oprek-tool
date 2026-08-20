@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import kotlin.math.ln
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +25,7 @@ fun XorBruteForceScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("XOR Brute Force", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding).padding(12.dp)) {
@@ -63,13 +62,6 @@ fun XorBruteForceScreen(navController: NavController) {
                 }
             }
         }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "${results.size} XOR candidates" },
-                filename = "xor_results.txt",
-                subfolder = "analysis"
-            )
 
     }
 }

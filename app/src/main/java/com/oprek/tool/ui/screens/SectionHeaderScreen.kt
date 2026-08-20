@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +28,7 @@ fun SectionHeaderScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Section Headers", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding)) {
@@ -60,14 +59,6 @@ fun SectionHeaderScreen(navController: NavController) {
             }
         }
     }
-
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "${sections.size} sections" },
-                filename = "section_headers.txt",
-                subfolder = "elf"
-            )
 
     LaunchedEffect(Unit) { try { sections = ElfFullEngine.parseSectionHeaders() } catch (_: Exception) {} }
 }

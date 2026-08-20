@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -205,13 +204,6 @@ fun StringRowWithHighlight(idx: Int, sp: com.oprek.tool.core.StringPair, filter:
             cb.setPrimaryClip(ClipData.newPlainText("str", sp.value))
         }, modifier = Modifier.size(20.dp)) {
             Icon(Icons.Default.ContentCopy, "Copy", Modifier.size(12.dp), tint = TextMuted)
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "Strings extracted" },
-                filename = "strings.txt",
-                subfolder = "strings"
-            )
 
         }
     }

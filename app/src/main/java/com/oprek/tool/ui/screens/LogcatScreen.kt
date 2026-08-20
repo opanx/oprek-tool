@@ -28,7 +28,6 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import androidx.compose.ui.graphics.Color
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +52,7 @@ fun LogcatScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("📋 Logcat", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { lines.clear(); lineCount = 0 }) { Icon(Icons.Default.DeleteSweep, "Clear") }
                     IconButton(onClick = {
@@ -105,13 +104,6 @@ fun LogcatScreen(navController: NavController) {
                     }, modifier = Modifier.padding(vertical = 0.5.dp))
                 }
             }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "Logcat captured" },
-                filename = "logcat.txt",
-                subfolder = "logcat"
-            )
 
         }
     }

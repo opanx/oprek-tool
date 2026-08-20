@@ -26,7 +26,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +74,7 @@ fun AndroidToolsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("🤖 Android Tools", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
         },
         containerColor = DarkBg
@@ -141,14 +140,6 @@ fun AndroidToolsScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(24.dp))
-
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "Android tools loaded" },
-                filename = "android_tools.txt",
-                subfolder = "android"
-            )
 
         }
     }

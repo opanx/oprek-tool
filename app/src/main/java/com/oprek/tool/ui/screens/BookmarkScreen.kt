@@ -28,7 +28,6 @@ import com.oprek.tool.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import com.oprek.tool.ui.components.OutputButton
 
 data class BookmarkEntry(val offset: Long, val label: String, val timestamp: Long)
 
@@ -67,7 +66,7 @@ fun BookmarkScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("📌 Bookmarks", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) { Icon(Icons.Default.Add, "Add") }
                 },
@@ -131,16 +130,9 @@ fun BookmarkScreen(navController: NavController) {
                     } catch (_: Exception) {}
                 }, colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)) { Text("Save") }
             },
-            dismissButton = { TextButton(onClick = { showAddDialog = false }) { Text("Cancel") },
+            dismissButton = { TextButton(onClick = { showAddDialog = false }) { Text("Cancel") } },
             containerColor = DarkCard
         )
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "Bookmarks screen - use menu to export" },
-                filename = "bookmarks.txt",
-                subfolder = "bookmarks"
-            )
 
     }
 }

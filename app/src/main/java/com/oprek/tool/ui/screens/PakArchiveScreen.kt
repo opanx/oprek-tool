@@ -30,7 +30,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.RandomAccessFile
 import java.util.zip.ZipInputStream
-import com.oprek.tool.ui.components.OutputButton
 
 data class PakEntry(val name: String, val offset: Long, val size: Long, val type: String)
 
@@ -131,7 +130,7 @@ fun PakArchiveScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("📦 Pak Archive", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { clipboard.setPrimaryClip(ClipData.newPlainText("pak", entries.joinToString("\n") { "${it.name} [${it.type}] ${it.size}B" })); Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show() }) {
                         Icon(Icons.Default.ContentCopy, "Copy")
@@ -175,13 +174,6 @@ fun PakArchiveScreen(navController: NavController) {
                     }
                 }
             }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "Pak analysis complete" },
-                filename = "pak_info.txt",
-                subfolder = "pak"
-            )
 
         }
     }

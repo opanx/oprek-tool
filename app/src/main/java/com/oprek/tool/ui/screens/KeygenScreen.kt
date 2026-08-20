@@ -37,7 +37,7 @@ fun KeygenScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("🔑 Key Generator", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
         },
         containerColor = DarkBg

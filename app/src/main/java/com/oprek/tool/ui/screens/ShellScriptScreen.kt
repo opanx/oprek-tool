@@ -30,7 +30,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +53,7 @@ fun ShellScriptScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("📜 Shell Script Analyzer", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = {
                         clipboard.setPrimaryClip(ClipData.newPlainText("script", rawContent))
@@ -188,15 +187,7 @@ fun SimpleList(items: List<String>, type: String, color: androidx.compose.ui.gra
                     }
                 }
             }
+
         }
     }
-
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "Shell analysis complete" },
-                filename = "shell_analysis.txt",
-                subfolder = "shell"
-            )
-
 }

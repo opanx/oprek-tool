@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +25,7 @@ fun GotPltScreen(navController: NavController) {
     var entries by remember { mutableStateOf(listOf<com.oprek.tool.engine.GotPltEntry>()) }
     Scaffold(topBar = {
         TopAppBar(title = { Text("GOT / PLT", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {
@@ -44,14 +43,6 @@ fun GotPltScreen(navController: NavController) {
             }
         }
     }
-
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { "${entries.size} GOT/PLT entries" },
-                filename = "got_plt.txt",
-                subfolder = "elf"
-            )
 
     LaunchedEffect(Unit) { try { ElfFullEngine.parseSectionHeaders(); entries = ElfFullEngine.parseGotPlt() } catch (_: Exception) {} }
 }
