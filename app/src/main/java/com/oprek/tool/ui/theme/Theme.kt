@@ -57,7 +57,9 @@ fun OprekToolTheme(content: @Composable () -> Unit) {
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            @Suppress("DEPRECATION")
             window.statusBarColor = DarkBg.toArgb()
+            @Suppress("DEPRECATION")
             window.navigationBarColor = DarkBg.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
         }

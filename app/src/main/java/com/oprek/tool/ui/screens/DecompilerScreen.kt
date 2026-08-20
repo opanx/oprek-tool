@@ -114,7 +114,7 @@ fun DecompilerScreen(navController: NavController) {
                             OutlinedTextField(
                                 value = selectedSymbol.ifEmpty { "All functions (disassemble from start)" },
                                 onValueChange = { selectedSymbol = it },
-                                label = { Text("Function") }, modifier = Modifier.fillMaxWidth().menuAnchor(),
+                                label = { Text("Function") }, modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
                             )

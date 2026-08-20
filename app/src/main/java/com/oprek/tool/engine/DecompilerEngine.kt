@@ -51,7 +51,7 @@ object DecompilerEngine {
     private fun fmtC(v: Long): String = when {
         v == 0L -> "0"; v == 1L -> "1"; v == -1L -> "-1"
         v in 2..9 -> "$v"
-        v in 0x20..0x7E -> "'${v.toChar()}'"
+        v in 0x20..0x7E -> "'${v.toInt().toChar()}'"
         v in 0x10..0x7FFF -> "0x${java.lang.Long.toHexString(v)}"
         v in -0x7FFF..-0x10 -> "-0x${java.lang.Long.toHexString(-v)}"
         else -> "0x${java.lang.Long.toHexString(v)}"
