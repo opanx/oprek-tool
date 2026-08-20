@@ -499,8 +499,8 @@ private fun readELF64LE(bytes: ByteArray, off: Int): Long {
     return v
 }
 
-private fun readELF32LE(bytes: ByteArray, off: Long): Int {
-    val o = off.toInt()
+private fun readELF32LE(bytes: ByteArray, off: Int): Int {
+    val o = off
     if (o + 4 > bytes.size) return 0
     return (bytes[o].toInt() and 0xFF) or ((bytes[o+1].toInt() and 0xFF) shl 8) or
            ((bytes[o+2].toInt() and 0xFF) shl 16) or ((bytes[o+3].toInt() and 0xFF) shl 24)
