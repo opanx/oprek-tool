@@ -101,7 +101,6 @@ fun HashCalculatorScreen(navController: NavController) {
                     }
                 }
             }
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -109,6 +108,8 @@ fun HashCalculatorScreen(navController: NavController) {
                 filename = "hashes.txt",
                 subfolder = "hash"
             )
+
+        }
 
     }
 }

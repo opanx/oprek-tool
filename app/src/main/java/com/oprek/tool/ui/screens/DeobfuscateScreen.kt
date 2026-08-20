@@ -152,9 +152,9 @@ fun DeobfuscateScreen(navController: NavController) {
                 Column(Modifier.padding(12.dp)) {
                     Text("Manual Mode", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentCyan)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.take(4).forEach { (k, l) -> ModeChip(l, selectedMode == k) { selectedMode = k } } }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.take(4).forEach { (k, l) -> ModeChip(l, selectedMode == k) { selectedMode = k } }
                     Spacer(Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.drop(4).forEach { (k, l) -> ModeChip(l, selectedMode == k) { selectedMode = k } } }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.drop(4).forEach { (k, l) -> ModeChip(l, selectedMode == k) { selectedMode = k } }
                 }
             }
 
@@ -194,15 +194,15 @@ fun DeobfuscateScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(16.dp))
-
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output.ifEmpty { "No deobfuscation results" } } },
+                content = { output.ifEmpty { "No results" } },
                 filename = "deobfuscated.txt",
                 subfolder = "deobfuscate"
             )
+
+        }
 
     }
 }

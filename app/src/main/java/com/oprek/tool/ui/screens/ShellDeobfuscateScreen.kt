@@ -122,7 +122,7 @@ fun ShellDeobfuscateScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output.ifEmpty { "No results" } } },
+                content = { output.ifEmpty { "No results" } },
                 filename = "deobfuscated_shell.sh",
                 subfolder = "shell"
             )

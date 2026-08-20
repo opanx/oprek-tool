@@ -105,7 +105,6 @@ fun SearchScreen(navController: NavController, vm: MainViewModel, initialQuery: 
                     Tip("Use Hex Viewer for byte-level search + patch")
                 }
             }
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -113,6 +112,8 @@ fun SearchScreen(navController: NavController, vm: MainViewModel, initialQuery: 
                 filename = "search_results.txt",
                 subfolder = "search"
             )
+
+        }
 
     }
 }

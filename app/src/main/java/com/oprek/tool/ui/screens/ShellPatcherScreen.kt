@@ -116,7 +116,7 @@ fun ShellPatcherScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output.ifEmpty { "No output" } } },
+                content = { output.ifEmpty { "No output" } },
                 filename = "patched_shell.sh",
                 subfolder = "shell"
             )

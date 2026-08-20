@@ -107,7 +107,6 @@ fun UnpackerScreen(navController: NavController) {
                     }
                 }
             }
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -115,6 +114,8 @@ fun UnpackerScreen(navController: NavController) {
                 filename = "unpacker.txt",
                 subfolder = "analysis"
             )
+
+        }
 
     }
 }

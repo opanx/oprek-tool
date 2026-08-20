@@ -102,7 +102,6 @@ fun AutoPatchLoginScreen(navController: NavController) {
                 }
                 if (patchedCount > 0) Text("✓ $patchedCount login checks bypassed!", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -110,6 +109,8 @@ fun AutoPatchLoginScreen(navController: NavController) {
                 filename = "login_bypass.txt",
                 subfolder = "patches"
             )
+
+        }
 
     }
 }

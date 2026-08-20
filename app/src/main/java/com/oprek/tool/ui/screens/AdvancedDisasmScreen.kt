@@ -103,7 +103,6 @@ fun AdvancedDisasmScreen(navController: NavController) {
                     }
                 }
             }
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -111,6 +110,8 @@ fun AdvancedDisasmScreen(navController: NavController) {
                 filename = "adv_disasm.txt",
                 subfolder = "disasm"
             )
+
+        }
 
     }
 }

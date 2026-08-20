@@ -122,7 +122,6 @@ fun CopyableField(label: String, value: String, context: Context) {
             clipboard.setPrimaryClip(ClipData.newPlainText(label, value))
         }, modifier = Modifier.size(24.dp)) {
             Icon(Icons.Default.ContentCopy, "Copy", Modifier.size(14.dp), tint = TextMuted)
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -130,6 +129,8 @@ fun CopyableField(label: String, value: String, context: Context) {
                 filename = "file_info.txt",
                 subfolder = "info"
             )
+
+        }
 
     }
 }

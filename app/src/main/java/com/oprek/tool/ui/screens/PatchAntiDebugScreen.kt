@@ -93,7 +93,6 @@ fun PatchAntiDebugScreen(navController: NavController) {
                 }
                 if (patchedCount > 0) Text("✓ $patchedCount anti-debug checks NOP'd", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
-        }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -101,6 +100,8 @@ fun PatchAntiDebugScreen(navController: NavController) {
                 filename = "antidebug_bypass.txt",
                 subfolder = "patches"
             )
+
+        }
 
     }
 }
