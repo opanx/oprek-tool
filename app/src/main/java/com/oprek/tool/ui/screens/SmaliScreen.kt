@@ -69,13 +69,13 @@ fun SmaliScreen(navController: NavController) {
                         // Parse DEX classes
                         val classes = withContext(Dispatchers.IO) { NativeLib.dexGetClasses(data) }
                         val filtered = if (classFilter.isNotEmpty()) classes.filter { it.contains(classFilter, true) } else classes
-                        result = filtered.joinToString("\n\n") { cls ->
+                        val smaliParts = mutableListOf<String>()
+                        for (cls in filtered) {
                             val parts = cls.split("|")
                             val name = parts.getOrElse(0) { "?" }
                             val flags = parts.getOrElse(1) { "0" }
                             val smaliFlags = dexFlagsToSmali(flags.toIntOrNull() ?: 0)
-                            // Generate basic Smali structure
-                            buildString {
+                            smaliParts.add(buildString {
                                 appendLine(".class $smaliFlags $name")
                                 appendLine(".super Ljava/lang/Object;")
                                 appendLine()
@@ -87,8 +87,9 @@ fun SmaliScreen(navController: NavController) {
                                 appendLine("    invoke-direct {p0}, Ljava/lang/Object;-><init>()V")
                                 appendLine("    return-void")
                                 appendLine(".end method")
-                            }
+                            })
                         }
+                        result = smaliParts.joinToString("\n\n")
                         if (result.isEmpty()) result = "No classes found"
                     } catch (e: Exception) { result = "Error: ${e.message}" }
                     isLoading = false

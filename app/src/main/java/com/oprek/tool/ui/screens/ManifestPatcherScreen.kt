@@ -40,13 +40,14 @@ fun ManifestPatcherScreen(navController: NavController) {
     var patchesApplied by remember { mutableIntStateOf(0) }
     var isLoaded by remember { mutableStateOf(false) }
 
+    data class PatchDef(val label: String, val search: String, val replace: String)
     val commonPatches = listOf(
-        "Remove DEBUG flag" to "android:debuggable=\"true\"" to "android:debuggable=\"false\"",
-        "Add INTERNET permission" to "<application" to "<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <application",
-        "Remove allowBackup" to "android:allowBackup=\"true\"" to "android:allowBackup=\"false\"",
-        "Add REQUEST_INSTALL" to "<application" to "<uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\"/>\n    <application",
-        "Remove exported flag" to "android:exported=\"true\"" to "android:exported=\"false\"",
-        "Add READ_EXTERNAL" to "<application" to "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>\n    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>\n    <application",
+        PatchDef("Remove DEBUG flag", "android:debuggable=\"true\"", "android:debuggable=\"false\""),
+        PatchDef("Add INTERNET permission", "<application", "<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <application"),
+        PatchDef("Remove allowBackup", "android:allowBackup=\"true\"", "android:allowBackup=\"false\""),
+        PatchDef("Add REQUEST_INSTALL", "<application", "<uses-permission android:name=\"android.permission.REQUEST_INSTALL_PACKAGES\"/>\n    <application"),
+        PatchDef("Remove exported flag", "android:exported=\"true\"", "android:exported=\"false\""),
+        PatchDef("Add READ/WRITE storage", "<application", "<uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\"/>\n    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\"/>\n    <application"),
     )
 
     Scaffold(
@@ -65,20 +66,16 @@ fun ManifestPatcherScreen(navController: NavController) {
                 Column(Modifier.padding(12.dp)) {
                     Text("Quick Patches", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentGreen)
                     Spacer(Modifier.height(8.dp))
-                    commonPatches.forEach { (name, _) ->
-                        val (find, repl) = name.let { commonPatches.find { p -> p.first == it }?.second ?: ("" to "") }
-                        // Actually use the pair
-                    }
-                    commonPatches.forEach { (label, patch) ->
+                    commonPatches.forEach { patch ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(label, fontSize = 12.sp, color = TextPrimary, modifier = Modifier.weight(1f))
+                            Text(patch.label, fontSize = 12.sp, color = TextPrimary, modifier = Modifier.weight(1f))
                             TextButton(onClick = {
-                                search = patch.first
-                                replace = patch.second
-                                // Auto-apply
+                                search = patch.search
+                                replace = patch.replace
                                 if (manifest.isNotEmpty()) {
-                                    manifest = manifest.replace(patch.first, patch.second)
-                                    patchesApplied++
+                                    val count = manifest.split(patch.search).size - 1
+                                    manifest = manifest.replace(patch.search, patch.replace)
+                                    patchesApplied += count
                                 }
                             }) { Text("Apply", fontSize = 11.sp, color = AccentGreen) }
                         }
