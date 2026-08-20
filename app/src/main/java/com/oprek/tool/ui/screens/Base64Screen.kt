@@ -25,7 +25,6 @@ import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.ui.graphics.Color
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,13 +85,6 @@ fun Base64Screen(navController: NavController) {
             }
             if (output.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { result },
-                filename = "base64.txt",
-                subfolder = "encode"
-            )
 
                 Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
                     Column(Modifier.padding(12.dp)) {
@@ -106,6 +98,14 @@ fun Base64Screen(navController: NavController) {
                     }
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { result },
+                filename = "base64.txt",
+                subfolder = "encode"
+            )
+
         }
     }
 }

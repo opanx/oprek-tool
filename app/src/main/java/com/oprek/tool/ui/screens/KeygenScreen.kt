@@ -23,7 +23,6 @@ import com.oprek.tool.ui.theme.*
 import kotlin.random.Random
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.ui.graphics.Color
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,13 +54,6 @@ fun KeygenScreen(navController: NavController) {
                             modifier = Modifier.width(80.dp), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
                     }
                     Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { keys.joinToString("\n") },
-                filename = "keys.txt",
-                subfolder = "keys"
-            )
 
                     Text("Charset:", fontSize = 12.sp, color = TextSecondary)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -106,6 +98,14 @@ fun KeygenScreen(navController: NavController) {
                     }
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "Keys generated" },
+                filename = "keys.txt",
+                subfolder = "keys"
+            )
+
         }
     }
 }

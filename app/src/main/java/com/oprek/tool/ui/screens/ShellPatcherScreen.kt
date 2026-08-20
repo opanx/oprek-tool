@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import java.io.File
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,13 +87,6 @@ fun ShellPatcherScreen(navController: NavController) {
                     OutlinedTextField(value = replaceStr, onValueChange = { replaceStr = it }, label = { Text("Replace") },
                         modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
                     Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { output },
-                filename = "patched_shell.sh",
-                subfolder = "shell"
-            )
 
                     Button(onClick = {
                         if (searchStr.isNotEmpty()) {
@@ -120,6 +112,14 @@ fun ShellPatcherScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp).verticalScroll(rememberScrollState()))
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { output.ifEmpty { "No output" } },
+                filename = "patched_shell.sh",
+                subfolder = "shell"
+            )
+
         }
     }
 }

@@ -77,6 +77,14 @@ fun SessionScreen(navController: NavController) {
             OutlinedTextField(value = session.notes, onValueChange = { session = session.copy(notes = it) },
                 label = { Text("Notes") }, modifier = Modifier.fillMaxWidth().weight(1f),
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "Session info" },
+                filename = "session.txt",
+                subfolder = "session"
+            )
+
         }
     }
 }

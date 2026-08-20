@@ -21,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,13 +77,6 @@ fun ManifestReaderScreen(navController: NavController) {
                         Column(Modifier.padding(12.dp)) {
                             Text("🔒 Permissions Found", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentOrange)
                             Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { permissions.joinToString("\n") },
-                filename = "manifest.txt",
-                subfolder = "apk"
-            )
 
                             commonPerms.forEach { p ->
                                 Text("• $p", fontSize = 12.sp, fontFamily = FontFamily.Monospace, color = AccentCyan)
@@ -93,6 +85,14 @@ fun ManifestReaderScreen(navController: NavController) {
                     }
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "Manifest read" },
+                filename = "manifest.txt",
+                subfolder = "apk"
+            )
+
         }
     }
 }

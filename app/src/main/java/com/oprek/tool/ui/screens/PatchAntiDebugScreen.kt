@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ln
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,13 +71,6 @@ fun PatchAntiDebugScreen(navController: NavController) {
                     findings = found
                 }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentRed)) { Text("🔍 Scan Anti-Debug") }
                 Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { findings.joinToString("\n") { "0x${"%08X".format(it.first)}: ${it.second} -> ${it.third}" } },
-                filename = "antidebug_bypass.txt",
-                subfolder = "patches"
-            )
 
                 Text("${findings.size} anti-debug checks found", color = AccentCyan, fontSize = 12.sp)
                 LazyColumn(Modifier.weight(1f)) {
@@ -101,6 +93,14 @@ fun PatchAntiDebugScreen(navController: NavController) {
                 if (patchedCount > 0) Text("✓ $patchedCount anti-debug checks NOP'd", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
         }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "$patchedCount anti-debug checks NOP'd" },
+                filename = "antidebug_bypass.txt",
+                subfolder = "patches"
+            )
+
     }
 }
 

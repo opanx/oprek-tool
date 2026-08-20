@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,13 +78,6 @@ fun ElfAnalyzerScreen(navController: NavController, vm: MainViewModel) {
                 }
 
                 item { Spacer(Modifier.height(24.dp)) }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { elfInfo.toString() + "\n\n" + elfSections.joinToString("\n") { "${it.name}: ${it.typeStr} size=${it.size}" } },
-                filename = "elf_info.txt",
-                subfolder = "elf"
-            )
 
             }
         }
@@ -117,6 +109,14 @@ fun SectionRow(idx: Int, section: com.oprek.tool.core.ElfSection) {
         Text("0x${"%08X".format(section.offset)}", fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = AccentGreen,
             modifier = Modifier.width(90.dp))
         Text(formatSize(section.size), fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = TextSecondary)
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "ELF analysis complete" },
+                filename = "elf_info.txt",
+                subfolder = "elf"
+            )
+
     }
 }
 

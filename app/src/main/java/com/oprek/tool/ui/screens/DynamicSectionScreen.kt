@@ -30,13 +30,6 @@ fun DynamicSectionScreen(navController: NavController) {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { entries.joinToString("\n") { "${it.dTag} = ${it.dValStr}" } },
-                filename = "dynamic.txt",
-                subfolder = "elf"
-            )
 
             items(entries) { entry ->
                 val color = when(entry.dTag) {
@@ -52,5 +45,14 @@ fun DynamicSectionScreen(navController: NavController) {
             }
         }
     }
+
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "${entries.size} dynamic entries" },
+                filename = "dynamic.txt",
+                subfolder = "elf"
+            )
+
     LaunchedEffect(Unit) { try { ElfFullEngine.parseSectionHeaders(); entries = ElfFullEngine.parseDynamicSection() } catch (_: Exception) {} }
 }

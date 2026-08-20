@@ -21,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URLEncoder
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -180,13 +179,6 @@ fun ObfuscateScreen(navController: NavController) {
             }
 
             Spacer(Modifier.height(16.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { result },
-                filename = "obfuscated.txt",
-                subfolder = "obfuscate"
-            )
 
         }
     }
@@ -222,5 +214,13 @@ private fun processObfuscate(input: String, mode: String, xorKey: String): Strin
         }
     } catch (e: Exception) {
         "Error: ${e.message}"
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { result },
+                filename = "obfuscated.txt",
+                subfolder = "obfuscate"
+            )
+
     }
 }

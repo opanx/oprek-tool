@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import java.io.File
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,13 +96,6 @@ fun AntiDebugScreen(navController: NavController) {
                 Column(Modifier.padding(16.dp)) {
                     Text("💡 Bypass Tips", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentOrange)
                     Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { findings.joinToString("\n") { "0x${"%08X".format(it.first)}: ${it.second}" } },
-                filename = "antidebug.txt",
-                subfolder = "analysis"
-            )
 
                     Text("• Frida: Use frida-server in spawned mode", fontSize = 12.sp, color = TextSecondary)
                     Text("• Magisk: Use Zygisk + DenyList", fontSize = 12.sp, color = TextSecondary)
@@ -112,6 +104,14 @@ fun AntiDebugScreen(navController: NavController) {
                     Text("• /proc/self/status: Hook open() to return fake status", fontSize = 12.sp, color = TextSecondary)
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "Anti-debug scan complete" },
+                filename = "antidebug.txt",
+                subfolder = "analysis"
+            )
+
         }
     }
 }

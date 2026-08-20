@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -79,6 +78,7 @@ fun StringEncryptorScreen(navController: NavController) {
                 filename = "encrypted.txt",
                 subfolder = "encode"
             )
+
         }
     }
 }

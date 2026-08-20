@@ -24,7 +24,6 @@ import com.oprek.tool.ui.theme.*
 import java.io.File
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.ui.graphics.Color
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,13 +67,6 @@ fun HexCopyScreen(navController: NavController) {
                 Spacer(Modifier.height(8.dp))
                 CopyBlock("Python bytes", pyBytes, context)
                 Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { output },
-                filename = "hex_copy.txt",
-                subfolder = "hex"
-            )
 
                 CopyBlock("Hex String", hexStr, context)
             }
@@ -97,6 +89,14 @@ fun CopyBlock(title: String, content: String, context: Context) {
             Spacer(Modifier.height(4.dp))
             Text(content, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = AccentGreen,
                 modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp).verticalScroll(rememberScrollState()))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { output },
+                filename = "hex_copy.txt",
+                subfolder = "hex"
+            )
+
         }
     }
 }

@@ -21,7 +21,6 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +80,8 @@ fun PatchInstructionScreen(navController: NavController) {
                 if (error.isNotEmpty()) Text(error, color = AccentRed, fontSize = 11.sp)
                 if (preview.isNotEmpty()) { Spacer(Modifier.height(8.dp)); Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(8.dp)) { Text(preview, modifier = Modifier.padding(12.dp), color = AccentGreen, fontSize = 11.sp) } }
                 if (saved) { Spacer(Modifier.height(8.dp)); Text("✓ Patch applied (in memory)", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+
+            }
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -89,7 +90,6 @@ fun PatchInstructionScreen(navController: NavController) {
                 subfolder = "patches"
             )
 
-            }
         }
     }
 }

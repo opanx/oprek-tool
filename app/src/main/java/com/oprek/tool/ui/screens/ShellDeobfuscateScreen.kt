@@ -28,7 +28,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URLDecoder
 import android.util.Base64
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,13 +104,6 @@ fun ShellDeobfuscateScreen(navController: NavController) {
                 }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)) { Text("Deobfuscate") }
                 if (results.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { output },
-                filename = "deobfuscated_shell.sh",
-                subfolder = "shell"
-            )
 
                     Text("${results.size} obfuscations found:", fontWeight = FontWeight.Bold, color = AccentCyan, fontSize = 12.sp)
                     LazyColumn(Modifier.weight(1f)) {
@@ -126,6 +118,14 @@ fun ShellDeobfuscateScreen(navController: NavController) {
                     }
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { output.ifEmpty { "No results" } },
+                filename = "deobfuscated_shell.sh",
+                subfolder = "shell"
+            )
+
         }
     }
 }

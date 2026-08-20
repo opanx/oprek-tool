@@ -30,7 +30,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.RandomAccessFile
 import java.util.zip.ZipInputStream
-import com.oprek.tool.ui.components.OutputButton
 
 data class PakEntry(val name: String, val offset: Long, val size: Long, val type: String)
 
@@ -161,13 +160,6 @@ fun PakArchiveScreen(navController: NavController) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No entries found", color = TextSecondary) }
             } else {
                 LazyColumn(Modifier.padding(12.dp)) {
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { entries.joinToString("\n") },
-                filename = "pak_info.txt",
-                subfolder = "pak"
-            )
 
                     itemsIndexed(entries) { idx, entry ->
                         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp).background(if (idx % 2 == 0) DarkBg else DarkSurface).padding(8.dp),
@@ -182,6 +174,14 @@ fun PakArchiveScreen(navController: NavController) {
                     }
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "Pak analysis complete" },
+                filename = "pak_info.txt",
+                subfolder = "pak"
+            )
+
         }
     }
 }

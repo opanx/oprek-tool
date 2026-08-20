@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,13 +51,6 @@ fun ProgramHeaderScreen(navController: NavController) {
                 item {
                     Text("Program Headers (${headers.size})", fontWeight = FontWeight.Bold, color = AccentCyan, fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { headers.joinToString("\n") { "${it.pType} [${it.pFlags}] offset=0x${"%X".format(it.pOffset)} vaddr=0x${"%X".format(it.pVaddr)}" } },
-                filename = "program_headers.txt",
-                subfolder = "elf"
-            )
 
                 }
                 items(headers) { ph ->
@@ -79,6 +71,14 @@ fun ProgramHeaderScreen(navController: NavController) {
                     }
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "${headers.size} program headers" },
+                filename = "program_headers.txt",
+                subfolder = "elf"
+            )
+
         }
     }
 }

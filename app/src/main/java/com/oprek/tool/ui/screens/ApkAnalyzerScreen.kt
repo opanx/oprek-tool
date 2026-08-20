@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,13 +79,6 @@ fun ApkAnalyzerScreen(navController: NavController, vm: MainViewModel) {
                     }
                 }
                 item { Spacer(Modifier.height(24.dp)) }
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { apkInfo.toString() },
-                filename = "apk_info.txt",
-                subfolder = "apk"
-            )
 
             }
         }
@@ -117,6 +109,14 @@ fun ApkEntryRow(idx: Int, entry: com.oprek.tool.core.ApkEntry) {
         Text(entry.methodStr, fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = AccentOrange,
             modifier = Modifier.width(60.dp))
         Text(formatApkSize(entry.uncompressedSize), fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = TextSecondary)
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "APK analysis complete" },
+                filename = "apk_info.txt",
+                subfolder = "apk"
+            )
+
     }
 }
 

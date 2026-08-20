@@ -23,7 +23,6 @@ import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.ui.graphics.Color
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,13 +46,6 @@ fun InlineHookScreen(navController: NavController) {
                     OutlinedTextField(value = funcName, onValueChange = { funcName = it }, label = { Text("Function name") },
                         modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
                     Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { script },
-                filename = "inline_hook.c",
-                subfolder = "hooks"
-            )
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("ldpreload" to "LD_PRELOAD", "trampoline" to "Trampoline").forEach { (k, l) ->
@@ -134,6 +126,14 @@ original_${funcName}:
                     }
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { script },
+                filename = "inline_hook.c",
+                subfolder = "hooks"
+            )
+
         }
     }
 }

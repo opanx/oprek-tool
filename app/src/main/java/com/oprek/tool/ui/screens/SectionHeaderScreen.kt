@@ -37,13 +37,6 @@ fun SectionHeaderScreen(navController: NavController) {
                 label = { Text("Filter sections...") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
                 singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan, focusedLabelColor = AccentCyan))
             LazyColumn(Modifier.padding(horizontal = 12.dp)) {
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { sections.joinToString("\n") { "${it.shName}: ${it.shType} offset=0x${"%08X".format(it.shOffset)} size=${it.shSize}" } },
-                filename = "section_headers.txt",
-                subfolder = "elf"
-            )
 
                 items(sections.filter { filter.isEmpty() || it.shName.contains(filter, true) }) { sec ->
                     val color = when {
@@ -67,5 +60,14 @@ fun SectionHeaderScreen(navController: NavController) {
             }
         }
     }
+
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "${sections.size} sections" },
+                filename = "section_headers.txt",
+                subfolder = "elf"
+            )
+
     LaunchedEffect(Unit) { try { sections = ElfFullEngine.parseSectionHeaders() } catch (_: Exception) {} }
 }

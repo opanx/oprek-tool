@@ -30,7 +30,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import com.oprek.tool.ui.components.OutputButton
 
 data class LuaFunction(val name: String, val line: Int, val params: String)
 data class LuaObfuscated(val offset: Int, val raw: String, val type: String, val decoded: String)
@@ -149,13 +148,6 @@ fun LuaAnalyzerScreen(navController: NavController) {
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { analysis },
-                filename = "lua_analysis.txt",
-                subfolder = "lua"
-            )
 
                 when (selectedTab) {
                     0 -> LazyColumn(Modifier.padding(12.dp)) {
@@ -206,5 +198,13 @@ fun InfoPill(label: String, value: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = color)
         Text(label, fontSize = 8.sp, color = TextMuted)
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { analysis },
+                filename = "lua_analysis.txt",
+                subfolder = "lua"
+            )
+
     }
 }

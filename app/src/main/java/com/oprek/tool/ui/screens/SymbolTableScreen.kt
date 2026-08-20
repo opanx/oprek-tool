@@ -21,7 +21,6 @@ import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.engine.SymbolEntry
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,13 +49,6 @@ fun SymbolTableScreen(navController: NavController) {
             }
             Text("  ${symbols.size} symbols", fontSize = 11.sp, color = TextMuted)
             LazyColumn(Modifier.padding(horizontal = 8.dp)) {
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { symbols.joinToString("\n") { "0x${"%08X".format(it.stValue)} ${it.stName} ${it.stType} ${it.stBind}" } },
-                filename = "symbols.txt",
-                subfolder = "elf"
-            )
 
                 val filtered = symbols.filter {
                     (search.isEmpty() || it.stName.contains(search, true)) &&
@@ -85,5 +77,13 @@ fun SymbolTableScreen(navController: NavController) {
             ElfFullEngine.parseSectionHeaders()
             symbols = ElfFullEngine.parseSymbolTable()
         } catch (_: Exception) {}
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "${symbols.size} symbols" },
+                filename = "symbols.txt",
+                subfolder = "elf"
+            )
+
     }
 }

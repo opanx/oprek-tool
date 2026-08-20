@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,13 +137,6 @@ fun PackerDetectionScreen(navController: NavController) {
                 Column(Modifier.padding(16.dp)) {
                     Text("💡 Detection Tips", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentGreen)
                     Spacer(Modifier.height(8.dp))
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { results.joinToString("\n") },
-                filename = "packer.txt",
-                subfolder = "analysis"
-            )
 
                     Text("• UPX: string \"UPX!\" in sections, entropy ~6-7", fontSize = 11.sp, color = TextSecondary)
                     Text("• Themida: high entropy (>7.5), unusual section names", fontSize = 11.sp, color = TextSecondary)
@@ -152,6 +144,14 @@ fun PackerDetectionScreen(navController: NavController) {
                     Text("• Encrypted: very high entropy (>7.5) across all sections", fontSize = 11.sp, color = TextSecondary)
                 }
             }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "Packer detection complete" },
+                filename = "packer.txt",
+                subfolder = "analysis"
+            )
+
         }
     }
 }

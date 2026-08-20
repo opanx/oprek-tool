@@ -30,13 +30,6 @@ fun GotPltScreen(navController: NavController) {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { entries.joinToString("\n") { "[${it.index}] 0x${"%08X".format(it.address)} = 0x${"%08X".format(it.value)} ${it.funcName}" } },
-                filename = "got_plt.txt",
-                subfolder = "elf"
-            )
 
             items(entries) { e ->
                 Card(Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -51,5 +44,14 @@ fun GotPltScreen(navController: NavController) {
             }
         }
     }
+
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "${entries.size} GOT/PLT entries" },
+                filename = "got_plt.txt",
+                subfolder = "elf"
+            )
+
     LaunchedEffect(Unit) { try { ElfFullEngine.parseSectionHeaders(); entries = ElfFullEngine.parseGotPlt() } catch (_: Exception) {} }
 }

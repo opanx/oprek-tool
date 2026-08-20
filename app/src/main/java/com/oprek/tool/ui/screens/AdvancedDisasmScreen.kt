@@ -26,7 +26,6 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,13 +95,6 @@ fun AdvancedDisasmScreen(navController: NavController) {
                 }, Modifier.fillMaxWidth().padding(vertical = 4.dp), colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)) { Text("Disassemble") }
                 if (error.isNotEmpty()) Text(error, color = AccentRed, fontSize = 11.sp)
                 LazyColumn(Modifier.weight(1f).padding(top = 8.dp)) {
-            // Output to /sdcard/oprek-tool/output/
-            Spacer(Modifier.height(12.dp))
-            OutputButton(
-                content = { instructions.joinToString("\n") },
-                filename = "adv_disasm.txt",
-                subfolder = "disasm"
-            )
 
                     itemsIndexed(instructions) { _, line ->
                         Text(line, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
@@ -111,6 +103,14 @@ fun AdvancedDisasmScreen(navController: NavController) {
                 }
             }
         }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { instructions.joinToString("\n") },
+                filename = "adv_disasm.txt",
+                subfolder = "disasm"
+            )
+
     }
 }
 
