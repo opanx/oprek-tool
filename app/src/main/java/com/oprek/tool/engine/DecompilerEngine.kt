@@ -671,11 +671,11 @@ object DecompilerEngine {
                 }
                 is IRStmt.Branch -> {
                     val condStr = formatExpr(stmt.cond)
-                    sb.appendLine("$indif ($condStr) {")
+                    sb.appendLine("${ind}if ($condStr) {")
                     genBlock(cfg, stmt.target, sb, visited, depth + 1, showAddr)
                     val ft = findNextBlockStart(cfg.blocks, block.endAddr - 4)
                     if (ft != null && ft in cfg.blocks && ft !in visited) {
-                        sb.appendLine("$ind} else {")
+                        sb.appendLine("${ind}} else {")
                         genBlock(cfg, ft, sb, visited, depth + 1, showAddr)
                     }
                     sb.appendLine("$ind}")
@@ -684,7 +684,7 @@ object DecompilerEngine {
                     if (stmt.target > 0) genBlock(cfg, stmt.target, sb, visited, depth, showAddr)
                 }
                 is IRStmt.Return -> {
-                    sb.appendLine("$indreturn${if (stmt.value != null) " ${formatExpr(stmt.value)}" else ""};")
+                    sb.appendLine("${ind}return${if (stmt.value != null) " ${formatExpr(stmt.value)}" else ""};")
                 }
                 is IRStmt.CallStmt -> {
                     val argsStr = stmt.args.joinToString(", ") { formatExpr(it) }
