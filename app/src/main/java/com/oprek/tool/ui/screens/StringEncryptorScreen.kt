@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +75,7 @@ fun StringEncryptorScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { result },
+                content = { output },
                 filename = "encrypted.txt",
                 subfolder = "encode"
             )

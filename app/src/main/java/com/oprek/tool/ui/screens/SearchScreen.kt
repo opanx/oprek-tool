@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -28,6 +28,7 @@ import com.oprek.tool.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import com.oprek.tool.ui.components.OutputButton
 
 data class BookmarkEntry(val offset: Long, val label: String, val timestamp: Long)
 
@@ -136,7 +137,7 @@ fun BookmarkScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { "Bookmarks exported" },
+                content = { "Bookmarks screen - use menu to export" },
                 filename = "bookmarks.txt",
                 subfolder = "bookmarks"
             )

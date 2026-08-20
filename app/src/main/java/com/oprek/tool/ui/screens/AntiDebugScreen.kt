@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import java.io.File
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,7 +108,8 @@ fun AntiDebugScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { "Anti-debug scan complete" },
+                content = { results.joinToString("
+") { "${it.first}: ${it.second}" } },
                 filename = "antidebug.txt",
                 subfolder = "analysis"
             )

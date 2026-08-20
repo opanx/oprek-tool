@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import java.io.File
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +116,7 @@ fun ShellPatcherScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output.ifEmpty { "No output" } },
+                content = { output.ifEmpty { "No output" } } },
                 filename = "patched_shell.sh",
                 subfolder = "shell"
             )
