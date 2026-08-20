@@ -81,7 +81,7 @@ fun SymbolTableScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { "${symbols.size} symbols" },
+                content = { "${symbols.size} symbols" } symbols" },
                 filename = "symbols.txt",
                 subfolder = "elf"
             )

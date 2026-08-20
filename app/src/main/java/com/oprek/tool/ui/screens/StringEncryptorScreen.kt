@@ -75,7 +75,7 @@ fun StringEncryptorScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output },
+                content = { "Encryption complete" },
                 filename = "encrypted.txt",
                 subfolder = "encode"
             )

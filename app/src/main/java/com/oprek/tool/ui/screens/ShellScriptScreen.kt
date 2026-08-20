@@ -191,7 +191,7 @@ fun SimpleList(items: List<String>, type: String, color: androidx.compose.ui.gra
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { analysis },
+                content = { "Shell analysis complete" },
                 filename = "shell_analysis.txt",
                 subfolder = "shell"
             )

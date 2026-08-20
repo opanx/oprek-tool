@@ -120,7 +120,7 @@ fun TerminalScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output.joinToString("\n") },
+                content = { "Terminal output" },
                 filename = "terminal_output.txt",
                 subfolder = "terminal"
             )
