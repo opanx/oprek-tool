@@ -47,10 +47,29 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("memdump") { MemoryDumpScreen(navController) }
         composable("lua") { LuaAnalyzerScreen(navController) }
         composable("pak") { PakArchiveScreen(navController) }
-        composable(
-            "search?query={query}",
-            arguments = listOf(navArgument("query") { type = NavType.StringType; defaultValue = "" })
-        ) { backStackEntry ->
+        // === NEW v4 SCREENS ===
+        composable("proghdr") { ProgramHeaderScreen(navController) }
+        composable("sechdr") { SectionHeaderScreen(navController) }
+        composable("symtable") { SymbolTableScreen(navController) }
+        composable("dynamic") { DynamicSectionScreen(navController) }
+        composable("reloc") { RelocationScreen(navController) }
+        composable("gotplt") { GotPltScreen(navController) }
+        composable("shelldeob") { ShellDeobfuscateScreen(navController) }
+        composable("advdisasm") { AdvancedDisasmScreen(navController) }
+        composable("xref") { XrefScreen(navController) }
+        composable("patchinsn") { PatchInstructionScreen(navController) }
+        composable("patchbranch") { PatchBranchScreen(navController) }
+        composable("autologin") { AutoPatchLoginScreen(navController) }
+        composable("patchstring") { PatchStringScreen(navController) }
+        composable("xorbrute") { XorBruteForceScreen(navController) }
+        composable("patchantidebug") { PatchAntiDebugScreen(navController) }
+        composable("unpacker") { UnpackerScreen(navController) }
+        composable("funclist") { FunctionListScreen(navController) }
+        composable("idaststrings") { IdaStringWindowScreen(navController) }
+        composable("entropy") { EntropyAnalyzerScreen(navController) }
+        composable("strencrypt") { StringEncryptorScreen(navController) }
+        composable("session") { SessionScreen(navController) }
+        composable("search?query={query}", arguments = listOf(navArgument("query") { type = NavType.StringType; defaultValue = "" })) { backStackEntry ->
             SearchScreen(navController, vm, backStackEntry.arguments?.getString("query") ?: "")
         }
     }

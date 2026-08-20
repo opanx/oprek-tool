@@ -131,6 +131,28 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("Pak Archive", "Analyze .pak/.paks", Icons.Outlined.Archive, AccentOrange, "pak"),
                 ToolItem("File Info", "Hash, magic, metadata", Icons.Outlined.Info, AccentBlue, "info"),
                 ToolItem("Terminal", "Run shell commands", Icons.Outlined.Terminal, AccentRed, "terminal"),
+                // === NEW v4 TOOLS ===
+                ToolItem("Program Headers", "PT_LOAD/PT_DYNAMIC viewer", Icons.Outlined.ViewList, AccentBlue, "proghdr"),
+                ToolItem("Section Headers", ".text/.data/.symtab viewer", Icons.Outlined.ViewModule, AccentCyan, "sechdr"),
+                ToolItem("Symbol Table", "Full .symtab/.dynsym", Icons.Outlined.DataObject, AccentGreen, "symtable"),
+                ToolItem("Dynamic Section", "DT_NEEDED, DT_SONAME", Icons.Outlined.Settings, AccentOrange, "dynamic"),
+                ToolItem("Relocations", "R_ARM/R_AARCH64 relocs", Icons.Outlined.SwapHoriz, AccentPurple, "reloc"),
+                ToolItem("GOT / PLT", "GOT entries + PLT stubs", Icons.Outlined.AccountTree, AccentRed, "gotplt"),
+                ToolItem("Shell Deobfuscate", "Decode shell obfuscation", Icons.Outlined.FmdBad, AccentOrange, "shelldeob"),
+                ToolItem("Disasm Advanced", "ARM64/x86 with decode", Icons.Outlined.BugReport, AccentPurple, "advdisasm"),
+                ToolItem("XREF Viewer", "Cross-reference finder", Icons.Outlined.CallSplit, AccentCyan, "xref"),
+                ToolItem("Patch Instruction", "NOP/RET/JMP patcher", Icons.Outlined.Build, AccentRed, "patchinsn"),
+                ToolItem("Patch Branch", "Conditional → NOP/JMP", Icons.Outlined.TrendingDown, AccentOrange, "patchbranch"),
+                ToolItem("Auto Patch Login", "Login bypass auto-scan", Icons.Outlined.LockOpen, AccentRed, "autologin"),
+                ToolItem("Patch String", "Search & replace string", Icons.Outlined.FindReplace, AccentCyan, "patchstring"),
+                ToolItem("XOR Brute Force", "Brute-force XOR key", Icons.Outlined.Key, AccentPurple, "xorbrute"),
+                ToolItem("Patch Anti-Debug", "NOP ptrace/frida checks", Icons.Outlined.Shield, AccentRed, "patchantidebug"),
+                ToolItem("Unpacker", "UPX/Themida/entropy", Icons.Outlined.Unarchive, AccentOrange, "unpacker"),
+                ToolItem("Function List", "All functions + filter", Icons.Outlined.Functions, AccentGreen, "funclist"),
+                ToolItem("IDA Strings", "String window + type", Icons.Outlined.TextFields, AccentBlue, "idaststrings"),
+                ToolItem("Entropy Analyzer", "Detect encryption/packing", Icons.Outlined.Analytics, AccentRed, "entropy"),
+                ToolItem("String Encryptor", "XOR/AES/ROT13 encode", Icons.Outlined.EnhancedEncryption, AccentPurple, "strencrypt"),
+                ToolItem("Session Manager", "Save/load analysis state", Icons.Outlined.Save, AccentCyan, "session"),
             )
 
             LazyVerticalGrid(
