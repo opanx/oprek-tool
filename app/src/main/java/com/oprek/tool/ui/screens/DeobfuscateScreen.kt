@@ -197,7 +197,7 @@ fun DeobfuscateScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { "Deobfuscation complete" } },
+                content = { "Deobfuscation complete" },
                 filename = "deobfuscated.txt",
                 subfolder = "deobfuscate"
             )
