@@ -54,37 +54,21 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
             TopAppBar(
                 title = { Text("📝 Strings (${filtered.size}/${strings.size})", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconRow(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = includeUtf16, onCheckedChange = { includeUtf16 = it })
-                    Text("Include UTF-16", fontSize = 12.sp, color = TextSecondary)
-                }
-                Button(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
                 actions = {
-                    IconRow(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = includeUtf16, onCheckedChange = { includeUtf16 = it })
-                    Text("Include UTF-16", fontSize = 12.sp, color = TextSecondary)
-                }
-                Button(onClick = { showFilter = !showFilter }) {
+                    IconButton(onClick = { showFilter = !showFilter }) {
                         Icon(Icons.Default.Search, "Search")
                     }
-                    IconRow(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = includeUtf16, onCheckedChange = { includeUtf16 = it })
-                    Text("Include UTF-16", fontSize = 12.sp, color = TextSecondary)
-                }
-                Button(onClick = {
+                    IconButton(onClick = {
                         val text = filtered.joinToString("\n") { "0x${"%08X".format(it.offset)}: ${it.value}" }
                         val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cb.setPrimaryClip(ClipData.newPlainText("strings", text))
                         Toast.makeText(context, "Copied ${filtered.size} strings!", Toast.LENGTH_SHORT).show()
                     }) { Icon(Icons.Default.ContentCopy, "Copy All") }
-                    IconRow(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = includeUtf16, onCheckedChange = { includeUtf16 = it })
-                    Text("Include UTF-16", fontSize = 12.sp, color = TextSecondary)
-                }
-                Button(onClick = { vm.extractStrings(minLength.toIntOrNull() ?: 4) }) {
+                    IconButton(onClick = { vm.extractStrings(minLength.toIntOrNull() ?: 4) }) {
                         Icon(Icons.Default.Refresh, "Reload")
                     }
                 },
@@ -104,11 +88,7 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
                     leadingIcon = { Icon(Icons.Default.Search, null, tint = AccentGreen) },
                     trailingIcon = {
                         if (filter.isNotEmpty()) {
-                            IconRow(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = includeUtf16, onCheckedChange = { includeUtf16 = it })
-                    Text("Include UTF-16", fontSize = 12.sp, color = TextSecondary)
-                }
-                Button(onClick = { filter = "" }) {
+                            IconButton(onClick = { filter = "" }) {
                                 Icon(Icons.Default.Close, "Clear", tint = AccentGreen)
                             }
                         }
@@ -131,11 +111,7 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
                     )
                     Spacer(Modifier.width(8.dp))
-                    IconRow(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = includeUtf16, onCheckedChange = { includeUtf16 = it })
-                    Text("Include UTF-16", fontSize = 12.sp, color = TextSecondary)
-                }
-                Button(onClick = { vm.extractStrings(minLength.toIntOrNull() ?: 4) }, modifier = Modifier.size(28.dp)) {
+                    IconButton(onClick = { vm.extractStrings(minLength.toIntOrNull() ?: 4) }, modifier = Modifier.size(28.dp)) {
                         Icon(Icons.Default.Check, "Apply", Modifier.size(16.dp), tint = AccentGreen)
                     }
                     Spacer(Modifier.weight(1f))
@@ -223,11 +199,7 @@ fun StringRowWithHighlight(idx: Int, sp: com.oprek.tool.core.StringPair, filter:
                 .weight(1f)
                 .horizontalScroll(rememberScrollState())
         )
-        IconRow(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.material3.Checkbox(checked = includeUtf16, onCheckedChange = { includeUtf16 = it })
-                    Text("Include UTF-16", fontSize = 12.sp, color = TextSecondary)
-                }
-                Button(onClick = {
+        IconButton(onClick = {
             val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             cb.setPrimaryClip(ClipData.newPlainText("str", sp.value))
         }, modifier = Modifier.size(20.dp)) {
