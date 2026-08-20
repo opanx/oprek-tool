@@ -40,6 +40,8 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
     var minLength by remember { mutableStateOf("4") }
     var filter by remember { mutableStateOf("") }
     var showFilter by remember { mutableStateOf(true) }
+    var showEncrypted by remember { mutableStateOf(false) }
+    var encryptedResults by remember { mutableStateOf(listOf<Pair<String, String>>()) }
     val context = LocalContext.current
 
     LaunchedEffect(Unit) { vm.extractStrings() }
@@ -70,6 +72,23 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
                     }) { Icon(Icons.Default.ContentCopy, "Copy All") }
                     IconButton(onClick = { vm.extractStrings(minLength.toIntOrNull() ?: 4) }) {
                         Icon(Icons.Default.Refresh, "Reload")
+                    }
+                    IconButton(onClick = {
+                        showEncrypted = !showEncrypted
+                        if (showEncrypted) {
+                            encryptedResults = strings.filter { sp ->
+                                val v = sp.value
+                                (v.length >= 8 && v.all { it.isDigit() || it in 'A'..'F' || it in 'a'..'f' }) ||
+                                v.contains("=") && v.length >= 12 ||
+                                v.startsWith("U2") || v.startsWith("H4") ||
+                                v.all { it.code in 0x21..0x7E } && v.length >= 16 && v.count { it == ' ' } < 3
+                            }.map { sp ->
+                                val decoded = tryAutoDecrypt(sp.value)
+                                sp.value to decoded
+                            }.filter { it.second.isNotEmpty() }
+                        }
+                    }) {
+                        Icon(Icons.Default.Security, "Auto-Detect Encrypted", tint = if (showEncrypted) AccentRed else TextMuted)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
@@ -116,6 +135,25 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
                     }
                     Spacer(Modifier.weight(1f))
                     Text("${filtered.size} results", fontSize = 11.sp, color = AccentGreen, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            if (showEncrypted && encryptedResults.isNotEmpty()) {
+                Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = AccentRed.copy(alpha = 0.1f)), shape = RoundedCornerShape(12.dp)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("🔒 Auto-Detected Encrypted Strings (${encryptedResults.size})", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = AccentRed)
+                        Spacer(Modifier.height(8.dp))
+                        encryptedResults.take(50).forEach { (enc, dec) ->
+                            Column(Modifier.padding(vertical = 2.dp)) {
+                                Text("ENC: $enc", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = AccentOrange, maxLines = 1)
+                                Text("DEC: $dec", fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = AccentGreen, maxLines = 1)
+                                HorizontalDivider(color = DarkCard, thickness = 0.5.dp)
+                            }
+                        }
+                        if (encryptedResults.size > 50) {
+                            Text("... and ${encryptedResults.size - 50} more", fontSize = 10.sp, color = TextMuted)
+                        }
+                    }
                 }
             }
 
@@ -207,4 +245,37 @@ fun StringRowWithHighlight(idx: Int, sp: com.oprek.tool.core.StringPair, filter:
 
         }
     }
+}
+
+private fun tryAutoDecrypt(input: String): String {
+    // Try Base64
+    try {
+        val bytes = android.util.Base64.decode(input, android.util.Base64.NO_WRAP)
+        val text = String(bytes)
+        if (text.all { it.code in 0x20..0x7E || it.code in 9..13 } && text.length >= 4) return "[Base64] $text"
+    } catch (_: Exception) {}
+
+    // Try ROT13
+    val rot13 = input.map { c -> when {
+        c in 'A'..'Z' -> 'A' + (c - 'A' + 13) % 26
+        c in 'a'..'z' -> 'a' + (c - 'a' + 13) % 26
+        else -> c
+    }}.joinToString("")
+    if (rot13 != input && rot13.count { it.isLetter() } > rot13.length * 0.6f) return "[ROT13] $rot13"
+
+    // Try ROT47
+    val rot47 = input.map { c -> if (c in '!'..'~') (((c.code - 33 + 47) % 94) + 33).toChar() else c }.joinToString("")
+    if (rot47 != input && rot47.count { it.isLetter() || it == ' ' } > rot47.length * 0.5f) return "[ROT47] $rot47"
+
+    // Try XOR brute force
+    val bytes = input.toByteArray()
+    var bestKey = 0; var bestScore = 0f; var bestResult = ""
+    for (k in 0..255) {
+        val decoded = String(bytes.map { (it.toInt() xor k) and 0xFF }.map { it.toByte() }.toByteArray())
+        val score = decoded.count { it in 'a'..'z' || it in 'A'..'Z' || it == ' ' }.toFloat() / decoded.length.coerceAtLeast(1)
+        if (score > bestScore) { bestScore = score; bestKey = k; bestResult = decoded }
+    }
+    if (bestScore > 0.5f) return "[XOR key=0x${"%02X".format(bestKey)}] $bestResult"
+
+    return ""
 }

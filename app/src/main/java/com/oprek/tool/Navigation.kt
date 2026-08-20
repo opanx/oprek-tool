@@ -69,6 +69,8 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("entropy") { EntropyAnalyzerScreen(navController) }
         composable("strencrypt") { StringEncryptorScreen(navController) }
         composable("session") { SessionScreen(navController) }
+        composable("encrypt") { EncryptToolScreen(navController) }
+        composable("decrypt") { DecryptToolScreen(navController) }
         composable("search?query={query}", arguments = listOf(navArgument("query") { type = NavType.StringType; defaultValue = "" })) { backStackEntry ->
             SearchScreen(navController, vm, backStackEntry.arguments?.getString("query") ?: "")
         }

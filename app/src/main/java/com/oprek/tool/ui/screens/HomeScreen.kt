@@ -153,6 +153,8 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("Entropy Analyzer", "Detect encryption/packing", Icons.Outlined.Analytics, AccentRed, "entropy"),
                 ToolItem("String Encryptor", "XOR/AES/ROT13 encode", Icons.Outlined.EnhancedEncryption, AccentPurple, "strencrypt"),
                 ToolItem("Session Manager", "Save/load analysis state", Icons.Outlined.Save, AccentCyan, "session"),
+                ToolItem("Encrypt Tool", "10 encrypt methods", Icons.Outlined.Lock, AccentGreen, "encrypt"),
+                ToolItem("Decrypt Tool", "10 decrypt + auto-detect", Icons.Outlined.LockOpen, AccentRed, "decrypt"),
             )
 
             LazyVerticalGrid(
