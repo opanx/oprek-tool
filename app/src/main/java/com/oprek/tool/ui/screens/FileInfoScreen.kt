@@ -23,6 +23,7 @@ import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,6 +97,14 @@ fun FileInfoScreen(navController: NavController, vm: MainViewModel) {
                 }
 
                 Spacer(Modifier.height(24.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { info?.let { "Name: ${it.name}\nType: ${it.type}\nSize: ${it.size}\nMD5: ${it.md5}\nSHA256: ${it.sha256}\nMagic: ${it.magic}" } ?: "No file" },
+                filename = "file_info.txt",
+                subfolder = "info"
+            )
+
             }
         }
     }

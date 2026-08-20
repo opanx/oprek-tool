@@ -25,6 +25,7 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +78,14 @@ fun IdaStringWindowScreen(navController: NavController) {
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
             Text("${strings.size} strings", fontSize = 11.sp, color = TextMuted)
             LazyColumn(Modifier.weight(1f)) {
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { strings.joinToString("\n") { "0x${"%08X".format(it.first)} [${it.third}] ${it.second}" } },
+                filename = "ida_strings.txt",
+                subfolder = "strings"
+            )
+
                 val filtered = strings.filter { search.isEmpty() || it.second.contains(search, true) }
                 itemsIndexed(filtered.take(1000)) { _, (addr, s, type) ->
                     val color = when(type) { "URL" -> AccentBlue; "CMD" -> AccentRed; "LIB" -> AccentOrange; "EMAIL" -> AccentPurple; else -> AccentGreen }

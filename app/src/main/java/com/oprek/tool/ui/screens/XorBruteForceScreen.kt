@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import kotlin.math.ln
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +51,14 @@ fun XorBruteForceScreen(navController: NavController) {
                 results = scored.sortedByDescending { it.second.count { c -> c.isLetter() } }.take(20)
             }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)) { Text("Brute Force") }
             Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { results.joinToString("\n") { "Key=0x${"%02X".format(it.first)}: ${it.second}" } },
+                filename = "xor_results.txt",
+                subfolder = "analysis"
+            )
+
             LazyColumn(Modifier.weight(1f)) {
                 itemsIndexed(results) { _, (key, decoded) ->
                     Card(Modifier.fillMaxWidth().padding(vertical = 2.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(6.dp)) {

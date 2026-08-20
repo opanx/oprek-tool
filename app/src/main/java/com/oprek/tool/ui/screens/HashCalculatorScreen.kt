@@ -27,6 +27,7 @@ import java.util.zip.CRC32
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.ui.graphics.Color
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +65,14 @@ fun HashCalculatorScreen(navController: NavController) {
                 Column(Modifier.padding(12.dp)) {
                     Text("Input Text", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentCyan)
                     Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { results },
+                filename = "hashes.txt",
+                subfolder = "hash"
+            )
+
                     OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.fillMaxWidth().height(120.dp),
                         placeholder = { Text("Enter text or paste content...", color = TextMuted) },
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))

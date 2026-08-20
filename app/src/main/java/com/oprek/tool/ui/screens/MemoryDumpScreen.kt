@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import java.io.File
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +92,14 @@ fun MemoryDumpScreen(navController: NavController) {
                 Column(Modifier.padding(12.dp)) {
                     Text("🔍 ELF Detection", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple)
                     Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { results.joinToString("\n") },
+                filename = "memdump.txt",
+                subfolder = "analysis"
+            )
+
                     if (elfFound) {
                         Text("✅ ELF header found at offset 0x${"%08X".format(elfBase)}", fontSize = 12.sp, color = AccentGreen)
                     } else {

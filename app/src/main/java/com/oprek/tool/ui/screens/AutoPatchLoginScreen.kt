@@ -24,6 +24,7 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +80,14 @@ fun AutoPatchLoginScreen(navController: NavController) {
                     findings = found
                 }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentRed)) { Text("🔍 Scan Login Checks") }
                 Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { findings.joinToString("\n") { "0x${"%08X".format(it.first)}: ${it.second} -> ${it.third}" } },
+                filename = "login_bypass.txt",
+                subfolder = "patches"
+            )
+
                 Text("${findings.size} login checks found", color = AccentCyan, fontSize = 12.sp)
                 LazyColumn(Modifier.weight(1f)) {
                     items(findings) { (addr, keyword, str) ->

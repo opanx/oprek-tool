@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,6 +130,14 @@ fun DiffToolScreen(navController: NavController) {
             }
             if (diffResult.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { diffResult },
+                filename = "diff.txt",
+                subfolder = "diff"
+            )
+
                 Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
                     Text(diffResult, fontSize = 11.sp, fontFamily = FontFamily.Monospace, color = AccentGreen,
                         modifier = Modifier.padding(12.dp).fillMaxWidth().heightIn(max = 400.dp).verticalScroll(rememberScrollState()))

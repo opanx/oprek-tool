@@ -28,6 +28,7 @@ import com.oprek.tool.ui.theme.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import com.oprek.tool.ui.components.OutputButton
 
 data class BookmarkEntry(val offset: Long, val label: String, val timestamp: Long)
 
@@ -116,6 +117,14 @@ fun BookmarkScreen(navController: NavController) {
                     OutlinedTextField(value = newOffset, onValueChange = { newOffset = it }, label = { Text("Offset (hex)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
                     Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { bookmarks.joinToString("\n") { "0x${"%08X".format(it.first)}: ${it.second}" } },
+                filename = "bookmarks.txt",
+                subfolder = "bookmarks"
+            )
+
                     OutlinedTextField(value = newLabel, onValueChange = { newLabel = it }, label = { Text("Label") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
                 }

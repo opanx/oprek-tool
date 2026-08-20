@@ -22,6 +22,7 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +64,14 @@ fun PatchBranchScreen(navController: NavController) {
                     branches = found
                 }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)) { Text("Scan Conditional Branches") }
                 Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "$patchedCount branches NOP'd" },
+                filename = "patch_branch.txt",
+                subfolder = "patches"
+            )
+
                 Text("${branches.size} conditional branches found", color = AccentCyan, fontSize = 12.sp)
                 LazyColumn(Modifier.weight(1f)) {
                     items(branches) { (addr, cond) ->

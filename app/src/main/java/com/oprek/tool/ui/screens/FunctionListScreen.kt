@@ -27,6 +27,7 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +72,14 @@ fun FunctionListScreen(navController: NavController) {
             }
             Text("${symbols.size} functions", fontSize = 11.sp, color = TextMuted)
             LazyColumn(Modifier.weight(1f)) {
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { symbols.joinToString("\n") { "0x${"%08X".format(it.stValue)} ${it.stName} [${it.stSize}B]" } },
+                filename = "functions.txt",
+                subfolder = "elf"
+            )
+
                 val filtered = symbols.filter {
                     (search.isEmpty() || it.stName.contains(search, true)) &&
                     (typeFilter == "ALL" || it.stType.contains(typeFilter, true))

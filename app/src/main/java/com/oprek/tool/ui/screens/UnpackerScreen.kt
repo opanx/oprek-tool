@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ln
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +72,14 @@ fun UnpackerScreen(navController: NavController) {
                     }
                 }
                 Spacer(Modifier.height(16.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { status },
+                filename = "unpacker.txt",
+                subfolder = "analysis"
+            )
+
                 if (packer.contains("UPX")) {
                     Button(onClick = {
                         status = "Attempting UPX unpack... (requires UPX binary on device)"

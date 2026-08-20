@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,6 +97,14 @@ fun SearchScreen(navController: NavController, vm: MainViewModel, initialQuery: 
                 Column(Modifier.padding(16.dp)) {
                     Text("💡 Quick Tips", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentCyan)
                     Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { results.joinToString("\n") { "0x${"%08X".format(it)}" } },
+                filename = "search_results.txt",
+                subfolder = "search"
+            )
+
                     Tip("ELF header: 7F 45 4C 46")
                     Tip("APK/ZIP: 50 4B 03 04")
                     Tip("DEX: CA FE BA BE")

@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import androidx.compose.ui.graphics.Color
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,6 +95,14 @@ fun LogcatScreen(navController: NavController) {
             }
             Text("Lines: $lineCount", fontSize = 10.sp, color = TextMuted, modifier = Modifier.padding(horizontal = 12.dp))
             LazyColumn(Modifier.fillMaxSize().padding(horizontal = 8.dp)) {
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { logs.joinToString("\n") },
+                filename = "logcat.txt",
+                subfolder = "logcat"
+            )
+
                 items(lines) { line ->
                     Text(line, fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = when {
                         line.contains("E/") || line.contains("FATAL") -> AccentRed

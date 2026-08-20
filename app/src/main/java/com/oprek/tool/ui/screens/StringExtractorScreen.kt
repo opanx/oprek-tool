@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,6 +127,14 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
 
             // String list with highlight
             LazyColumn(Modifier.fillMaxSize()) {
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { strings.joinToString("\n") { "0x${"%08X".format(it.offset)}: ${it.value}" } },
+                filename = "strings.txt",
+                subfolder = "strings"
+            )
+
                 itemsIndexed(filtered) { idx, sp ->
                     StringRowWithHighlight(idx, sp, filter, context)
                 }

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +30,14 @@ fun DynamicSectionScreen(navController: NavController) {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { entries.joinToString("\n") { "${it.dTag} = ${it.dValStr}" } },
+                filename = "dynamic.txt",
+                subfolder = "elf"
+            )
+
             items(entries) { entry ->
                 val color = when(entry.dTag) {
                     "DT_NEEDED" -> AccentGreen; "DT_SONAME" -> AccentCyan; "DT_INIT" -> AccentOrange; "DT_FINI" -> AccentRed; else -> AccentBlue

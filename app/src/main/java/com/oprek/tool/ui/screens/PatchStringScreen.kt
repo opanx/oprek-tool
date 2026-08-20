@@ -22,6 +22,7 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +79,14 @@ fun PatchStringScreen(navController: NavController) {
                     }, colors = ButtonDefaults.buttonColors(containerColor = AccentRed)) { Text("Patch All") }
                 }
                 Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { "${strings.size} strings found, $patchedCount patched" },
+                filename = "patch_string.txt",
+                subfolder = "patches"
+            )
+
                 Text("${strings.size} strings found, $patchedCount patched", color = AccentCyan, fontSize = 12.sp)
                 LazyColumn(Modifier.weight(1f)) {
                     itemsIndexed(strings.filter { searchStr.isEmpty() || it.second.contains(searchStr, true) }) { _, (off, s) ->

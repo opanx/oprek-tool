@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,6 +85,14 @@ fun ElfHeaderScreen(navController: NavController) {
                     Column(Modifier.padding(16.dp)) {
                         Text("📂 Sections (${sections.size})", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = AccentPurple)
                         Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { header.toString() },
+                filename = "elf_header.txt",
+                subfolder = "elf"
+            )
+
                         sections.forEach { sec ->
                             val parts = sec.split("|")
                             val name = parts.getOrElse(0) { "?" }

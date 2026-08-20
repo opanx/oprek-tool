@@ -22,6 +22,7 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,6 +78,14 @@ fun XrefScreen(navController: NavController) {
                 Spacer(Modifier.height(12.dp))
                 Text("${xrefs.size} cross-references found:", fontWeight = FontWeight.Bold, color = AccentCyan, fontSize = 12.sp)
                 LazyColumn(Modifier.weight(1f).padding(top = 8.dp)) {
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { xrefs.joinToString("\n") { "0x${"%08X".format(it)} -> 0x${targetAddr}" } },
+                filename = "xrefs.txt",
+                subfolder = "xref"
+            )
+
                     itemsIndexed(xrefs) { _, addr ->
                         Card(Modifier.fillMaxWidth().padding(vertical = 2.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(6.dp)) {
                             Text("0x${"%08X".format(addr)}  →  0x${targetAddr}", modifier = Modifier.padding(8.dp),

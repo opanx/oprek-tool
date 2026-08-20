@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +30,14 @@ fun RelocationScreen(navController: NavController) {
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { relocs.joinToString("\n") { "0x${"%08X".format(it.rOffset)} ${it.rType} ${it.rSym}" } },
+                filename = "relocations.txt",
+                subfolder = "elf"
+            )
+
             items(relocs) { r ->
                 Card(Modifier.fillMaxWidth().padding(vertical = 2.dp),
                     colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(6.dp)) {

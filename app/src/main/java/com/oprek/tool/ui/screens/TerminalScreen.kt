@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.ui.components.OutputButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -193,7 +194,14 @@ fun TerminalScreen(navController: NavController) {
                 }
             }
         }
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { output.joinToString("\n") },
+                filename = "terminal_output.txt",
+                subfolder = "terminal"
+            )
+        }
     }
-}
 
 data class TerminalLine(val text: String, val isCommand: Boolean = false, val isError: Boolean = false)

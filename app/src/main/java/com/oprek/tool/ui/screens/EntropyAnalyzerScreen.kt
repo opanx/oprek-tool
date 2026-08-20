@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.ln
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +59,14 @@ fun EntropyAnalyzerScreen(navController: NavController) {
                     results = r
                 }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)) { Text("Analyze Entropy") }
                 Spacer(Modifier.height(8.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { results.joinToString("\n") { "${it.first}: ${String.format("%.4f", it.second)}" } },
+                filename = "entropy.txt",
+                subfolder = "analysis"
+            )
+
                 LazyColumn(Modifier.weight(1f)) {
                     itemsIndexed(results) { _, (range, ent) ->
                         val bar = "█".repeat((ent * 3).toInt())

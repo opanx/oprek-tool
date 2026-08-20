@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import com.oprek.tool.ui.components.OutputButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -148,6 +149,14 @@ fun DisassemblerScreen(navController: NavController) {
                 }
             }
             Spacer(Modifier.height(24.dp))
+            // Output to /sdcard/oprek-tool/output/
+            Spacer(Modifier.height(12.dp))
+            OutputButton(
+                content = { disasmLines.joinToString("\n") },
+                filename = "disasm.txt",
+                subfolder = "disasm"
+            )
+
         }
     }
 }
