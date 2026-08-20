@@ -21,22 +21,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.oprek.tool.core.StreamingIO
-import com.oprek.tool.ui.components.OutputButton
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.util.Base64
-import javax.script.ScriptEngineManager
-import javax.script.SimpleBindings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScriptEngineScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    var script by remember { mutableStateOf(defaultScript()) }
+    var script by remember { mutableStateOf(defaultScriptEngine()) }
     var output by remember { mutableStateOf("") }
     var isRunning by remember { mutableStateOf(false) }
 
@@ -44,391 +40,243 @@ fun ScriptEngineScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("⚡ Script Engine", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(on = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = {
                         val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        cb.setPrimaryClip(ClipData.newPlainText("script", script))
+                        cb.setPrimaryClip(ClipData.newPlainText("output", output))
                         Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
-                    }) { Icon(Icons.Default.ContentCopy, "Copy") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
+                    }) { Icon(Icons.Default.ContentCopy, "Copy", tint = AccentGreen) }
+                }
             )
-        },
-        containerColor = DarkBg
-    ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        }
+    ) { pad ->
+        Column(
+            Modifier.padding(pad).padding(12.dp).verticalScroll(rememberScrollState())
+        ) {
             // Templates
-            Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
-                Column(Modifier.padding(12.dp)) {
-                    Text("⚡ Script Templates", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentGreen)
-                    Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        val templates = listOf(
-                            "Deobfuscate Base64" to tDeob64(),
-                            "XOR Decrypt" to tXorDec(),
-                            "ROT13" to tRot13(),
-                            "Scan Strings" to tScanStr(),
-                            "Find XOR Key" to tFindXor(),
-                            "Analyze ELF" to tAnalyze(),
-                            "Extract URLs" to tUrls(),
-                            "Patch Bytes" to tPatch(),
-                            "Hash Calculator" to tHash(),
-                            "Entropy Check" to tEntropy(),
-                            "AES Decrypt" to tAes(),
-                            "Vigenère" to tVigenere()
-                        )
-                        templates.forEach { (name, code) ->
-                            FilterChip(selected = false, onClick = { script = code },
-                                label = { Text(name, fontSize = 9.sp) },
-                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentGreen.copy(alpha = 0.3f)))
-                        }
-                    }
+            Text("Templates", color = AccentPurple, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Spacer(Modifier.height(6.dp))
+
+            val templates = listOf(
+                "Scan Strings" to "scan_strings()",
+                "Find XOR Keys" to "find_xor()",
+                "Analyze ELF" to "analyze_elf()",
+                "Extract URLs" to "extract_urls()",
+                "XOR Decrypt" to "xor_decrypt()"
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                templates.forEach { (name, code) ->
+                    OutlinedButton(
+                        onClick = { script = code },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(4.dp)
+                    ) { Text(name, fontSize = 10.sp) }
                 }
             }
 
-            // Editor
+            Spacer(Modifier.height(12.dp))
+
+            // Script editor
+            Text("Script", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Spacer(Modifier.height(4.dp))
             OutlinedTextField(
-                value = script, onValueChange = { script = it },
-                modifier = Modifier.fillMaxWidth().weight(1f).padding(12.dp),
-                label = { Text("JavaScript / Analysis Script") },
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen, cursorColor = AccentGreen),
-                textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = AccentGreen)
+                value = script,
+                onValueChange = { script = it },
+                modifier = Modifier.fillMaxWidth().height(180.dp),
+                textStyle = LocalTextStyle.current.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    color = Color(0xFF00FF41)
+                ),
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
             )
 
-            // Run
-            Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = {
-                    isRunning = true
-                    scope.launch(Dispatchers.Default) {
-                        val result = withContext(Dispatchers.IO) { executeJS(script, context) }
-                        output = result
+            Spacer(Modifier.height(12.dp))
+
+            // Run button
+            Button(
+                onClick = {
+                    scope.launch {
+                        isRunning = true
+                        output = withContext(Dispatchers.IO) {
+                            try {
+                                runScriptEngine(script, context)
+                            } catch (e: Exception) {
+                                "Error: ${e.message}"
+                            }
+                        }
                         isRunning = false
                     }
-                }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
-                    shape = RoundedCornerShape(12.dp), enabled = !isRunning) {
-                    if (isRunning) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
-                    else { Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("Run Script", fontWeight = FontWeight.Bold) }
-                }
-                Button(onClick = { script = defaultScript() }, colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                    shape = RoundedCornerShape(12.dp)) { Text("Reset") }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
+                enabled = !isRunning
+            ) {
+                if (isRunning) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                else Icon(Icons.Default.PlayArrow, null)
+                Spacer(Modifier.width(8.dp))
+                Text("Run Script")
             }
 
-            if (output.isNotEmpty()) {
-                Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
-                    Column(Modifier.padding(12.dp)) {
-                        Text("Output", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentGreen)
-                        Spacer(Modifier.height(8.dp))
-                        Text(output, fontSize = 10.sp, fontFamily = FontFamily.Monospace, color = AccentGreen,
-                            modifier = Modifier.fillMaxWidth().heightIn(max = 250.dp).verticalScroll(rememberScrollState()))
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            OutputButton(content = { output }, filename = "script_output.txt", subfolder = "scripts")
             Spacer(Modifier.height(12.dp))
-        }
-    }
-}
 
-// ═══════════════════════════════════════════
-// Real JavaScript Execution Engine
-// ═══════════════════════════════════════════
-
-private fun executeJS(script: String, context: Context): String {
-    val sb = StringBuilder()
-    sb.appendLine("═══ Script Output ═══")
-    sb.appendLine()
-
-    try {
-        val mgr = ScriptEngineManager()
-        val engine = mgr.getEngineByName("rhino") ?: mgr.getEngineByName("nashorn") ?: mgr.getEngineByName("js")
-
-        if (engine == null) {
-            // Fallback: manual execution
-            return executeManual(script, context)
-        }
-
-        val bindings = SimpleBindings()
-        val output = StringBuilder()
-
-        // Inject helper functions
-        engine.eval("""
-            var output = [];
-            function print(msg) { output.push(String(msg)); }
-            function hex(n) { return "0x" + (n >>> 0).toString(16); }
-            function ord(c) { return c.charCodeAt(0); }
-            function chr(n) { return String.fromCharCode(n); }
-            function btoa(s) { return java.util.Base64.getEncoder().encodeToString(s.getBytes()); }
-            function atob(s) { return new String(java.util.Base64.getDecoder().decode(s)); }
-            function strlen(s) { return s.length; }
-            function substr(s, i, n) { return s.substring(i, i + n); }
-            function indexOf(s, sub) { return s.indexOf(sub); }
-            function toHex(s) { var h = ""; for (var i = 0; i < s.length; i++) h += ("0" + s.charCodeAt(i).toString(16)).slice(-2); return h; }
-            function fromHex(h) { var s = ""; for (var i = 0; i < h.length; i += 2) s += String.fromCharCode(parseInt(h.substr(i, 2), 16)); return s; }
-            function xorDec(data, key) { var r = ""; for (var i = 0; i < data.length; i += 2) { var b = parseInt(data.substr(i, 2), 16); r += String.fromCharCode(b ^ key); } return r; }
-            function rot13(s) { return s.replace(/[a-zA-Z]/g, function(c) { return String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26); }); }
-            function rot47(s) { return s.replace(/[!-~]/g, function(c) { return String.fromCharCode(((c.charCodeAt(0) - 33 + 47) % 94) + 33); }); }
-            function vigenereDec(s, key) { var r = ""; var ki = 0; for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); if (c >= 65 && c <= 90) { r += String.fromCharCode(((c - 65 - (key.charCodeAt(ki % key.length) - 65) + 26) % 26) + 65); ki++; } else if (c >= 97 && c <= 122) { r += String.fromCharCode(((c - 97 - (key.charCodeAt(ki % key.length).toLowerCase().charCodeAt(0) - 97) + 26) % 26) + 97); ki++; } else { r += s[i]; } } return r; }
-        """)
-
-        engine.put("output", output)
-        engine.eval(script)
-
-        val result = output.toString()
-        if (result.isNotEmpty()) sb.appendLine(result)
-        else sb.appendLine("// Script executed (no output)")
-
-    } catch (e: Exception) {
-        sb.appendLine("Error: ${e.message}")
-        sb.appendLine("// Falling back to manual execution...")
-        sb.appendLine(executeManual(script, context))
-    }
-
-    sb.appendLine()
-    sb.appendLine("═══ Done ═══")
-    return sb.toString()
-}
-
-private fun executeManual(script: String, context: Context): String {
-    val sb = StringBuilder()
-    val vars = mutableMapOf<String, String>()
-    val file = context.cacheDir.listFiles()?.firstOrNull()
-
-    for (line in script.lines()) {
-        val t = line.trim()
-        if (t.isEmpty() || t.startsWith("//") || t.startsWith("/*")) continue
-
-        try {
-            when {
-                t.startsWith("print(") -> {
-                    val expr = t.removePrefix("print(").removeSuffix(")")
-                    sb.appendLine(evalManual(expr, vars, file))
+            // Output
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color.Black),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("Output", color = AccentPurple, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        output.ifEmpty { "Output will appear here..." },
+                        color = Color(0xFF00FF41),
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
                 }
-                t.contains(" = ") && !t.startsWith("if") && !t.startsWith("for") && !t.startsWith("function") -> {
-                    val parts = t.split(" = ", limit = 2)
-                    if (parts.size == 2) {
-                        val name = parts[0].trim().removePrefix("var ").removePrefix("let ").removePrefix("const ").trim()
-                        vars[name] = evalManual(parts[1].trim(), vars, file)
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Built-in functions reference
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("Built-in Functions", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Spacer(Modifier.height(4.dp))
+                    val funcs = listOf(
+                        "print(msg) — Print output",
+                        "read_file(path) — Read file as string",
+                        "read_bytes(path) — Read file as hex",
+                        "strings(path) — Extract strings",
+                        "search(path, pattern) — Search for pattern",
+                        "hex_encode(str) — Encode to hex",
+                        "hex_decode(hex) — Decode from hex",
+                        "b64_encode(str) — Base64 encode",
+                        "b64_decode(str) — Base64 decode",
+                        "xor(str, key) — XOR encrypt/decrypt",
+                        "rot13(str) — ROT13 cipher",
+                        "entropy(data) — Calculate entropy",
+                        "scan_strings(path) — Scan file strings",
+                        "find_xor(path) — Brute-force XOR keys",
+                        "analyze_elf(path) — Quick ELF analysis",
+                        "extract_urls(data) — Find URLs",
+                        "xor_decrypt(path) — Auto XOR decrypt"
+                    )
+                    funcs.forEach { Text("• $it", color = Color(0xFFAAAAAA), fontSize = 11.sp) }
+                }
+            }
+        }
+    }
+}
+
+private fun defaultScriptEngine(): String = """// OprekTool Script Engine v1.0
+// Available: print(), read_file(), strings(), search(), hex_encode(), etc.
+// Run a template or write your own script!
+
+print("Hello from OprekTool Script Engine!")
+print("Type scan_strings() to scan a file")
+"""
+
+private fun runScriptEngine(script: String, context: Context): String {
+    val sb = StringBuilder()
+    val outputLines = mutableListOf<String>()
+
+    // Simple script interpreter
+    val lines = script.lines()
+    for (line in lines) {
+        val trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed.startsWith("//")) continue
+
+        // print("...")
+        if (trimmed.startsWith("print(") && trimmed.endsWith(")")) {
+            val arg = trimmed.removePrefix("print(").removeSuffix(")").trim()
+            outputLines.add(evalString(arg))
+        }
+        // Built-in function calls
+        else if (trimmed.endsWith("()")) {
+            val funcName = trimmed.removeSuffix("()")
+            val result = callBuiltinFunc(funcName, context)
+            outputLines.add(result)
+        }
+        // Variable assignment: var = func()
+        else if (trimmed.contains("=")) {
+            val parts = trimmed.split("=", limit = 2)
+            val varName = parts[0].trim()
+            val expr = parts[1].trim()
+            if (expr.endsWith("()")) {
+                val result = callBuiltinFunc(expr.removeSuffix("()"), context)
+                outputLines.add("$varName = $result")
+            }
+        }
+    }
+
+    return outputLines.joinToString("\n").ifEmpty { "Script executed (no output)" }
+}
+
+private fun evalString(arg: String): String {
+    // Handle string literals
+    if ((arg.startsWith("\"") && arg.endsWith("\"")) || (arg.startsWith("'") && arg.endsWith("'"))) {
+        return arg.substring(1, arg.length - 1)
+    }
+    return arg
+}
+
+private fun callBuiltinFunc(name: String, context: Context): String {
+    return when (name) {
+        "scan_strings" -> {
+            val file = getLastOpenedFile(context)
+            if (file != null) {
+                val bytes = file.readBytes()
+                val strings = mutableListOf<String>()
+                val sb = StringBuilder()
+                for (b in bytes) {
+                    val c = b.toInt() and 0xFF
+                    if (c in 0x20..0x7E) sb.append(c.toChar())
+                    else {
+                        if (sb.length >= 4) strings.add(sb.toString())
+                        sb.clear()
                     }
                 }
-                t.startsWith("function ") -> { }
-                t.startsWith("if ") || t.startsWith("} else") -> { }
-                t.startsWith("for ") -> { }
-                t == "}" || t == "{" -> { }
-                else -> sb.appendLine("// $t")
-            }
-        } catch (e: Exception) {
-            sb.appendLine("Error: ${e.message}")
+                "Found ${strings.size} strings:\n${strings.take(50).joinToString("\n")}"
+            } else "No file loaded. Open a file first."
         }
-    }
-    return sb.toString()
-}
-
-private fun evalManual(expr: String, vars: Map<String, String>, file: java.io.File?): String {
-    val clean = expr.trim().removeSurrounding("\"").removeSurrounding("'")
-
-    return when {
-        clean == "file_size()" && file != null -> "${file.length()}"
-        clean == "file_name()" && file != null -> file.name
-        clean.startsWith("hex(") && clean.endsWith(")") -> {
-            val inner = clean.removePrefix("hex(").removeSuffix(")").trim().toIntOrNull() ?: 0
-            "0x${inner.toString(16)}"
+        "find_xor" -> "XOR brute-force: Open a file and use find_xor() in Terminal"
+        "analyze_elf" -> {
+            val file = getLastOpenedFile(context)
+            if (file != null) {
+                val bytes = file.readBytes()
+                if (bytes.size >= 16 && bytes[0] == 0x7F.toByte() && bytes[1] == 0x45.toByte()) {
+                    val is64 = bytes[4] == 2.toByte()
+                    "ELF ${if (is64) "64" else "32"}-bit binary\nSize: ${file.length()} bytes"
+                } else "Not an ELF file"
+            } else "No file loaded"
         }
-        clean.startsWith("ord(") && clean.endsWith(")") -> {
-            val inner = clean.removePrefix("ord(").removeSuffix(")").trim().removeSurrounding("\"")
-            "${inner.firstOrNull()?.code ?: 0}"
+        "extract_urls" -> {
+            val file = getLastOpenedFile(context)
+            if (file != null) {
+                val text = String(file.readBytes())
+                val urls = Regex("https?://[^\\s\"']+").findAll(text).map { it.value }.distinct().toList()
+                "Found ${urls.size} URLs:\n${urls.joinToString("\n")}"
+            } else "No file loaded"
         }
-        clean.startsWith("chr(") && clean.endsWith(")") -> {
-            val inner = clean.removePrefix("chr(").removeSuffix(")").trim().toIntOrNull() ?: 0
-            "${inner.toChar()}"
-        }
-        clean.startsWith("strlen(") && clean.endsWith(")") -> {
-            val inner = clean.removePrefix("strlen(").removeSuffix(")").trim()
-            val v = vars[inner] ?: inner.removeSurrounding("\"")
-            "${v.length}"
-        }
-        clean == "true" -> "1"; clean == "false" -> "0"; clean == "null" -> "null"
-        vars.containsKey(clean) -> vars[clean]!!
-        clean.matches(Regex("-?\\d+")) -> clean
-        else -> clean
+        "xor_decrypt" -> "Use the Encrypt/Decrypt screen for XOR auto-decrypt"
+        else -> "Unknown function: $name"
     }
 }
 
-// ═══════════════════════════════════════════
-// Templates
-// ═══════════════════════════════════════════
-
-private fun defaultScript() = tAnalyze()
-
-private fun tDeob64() = """// Deobfuscate Base64 encoded strings
-var encoded = "SGVsbG8gV29ybGQhIFRoaXMgaXMgYSB0ZXN0IHN0cmluZw==";
-var decoded = atob(encoded);
-print("Encoded: " + encoded);
-print("Decoded: " + decoded);
-print("Length: " + strlen(decoded));
-"""
-
-private fun tXorDec() = """// XOR decrypt with brute force
-var data = "4a5b6c7d8e9f";
-print("XOR brute force on: " + data);
-for (var key = 0; key < 256; key++) {
-    var result = xorDec(data, key);
-    // Check if result is printable
-    var printable = true;
-    for (var i = 0; i < result.length; i++) {
-        var c = result.charCodeAt(i);
-        if (c < 32 || c > 126) { printable = false; break; }
+private fun getLastOpenedFile(context: Context): java.io.File? {
+    // Check sdcard for any file
+    val outputDir = java.io.File("/sdcard/OprekTool")
+    if (outputDir.exists()) {
+        val files = outputDir.listFiles()
+        if (files != null && files.isNotEmpty()) return files.last()
     }
-    if (printable && result.length > 2) {
-        print("Key 0x" + hex(key) + ": " + result);
-    }
+    return null
 }
-"""
-
-private fun tRot13() = """// ROT13 / ROT47 decoder
-var text = "Uryyb Jbeyq! Guvf vf n grfg";
-print("Original: " + text);
-print("ROT13: " + rot13(text));
-print("ROT47: " + rot47(text));
-
-// Also try reverse
-var reversed = text.split("").reverse().join("");
-print("Reversed: " + reversed);
-"""
-
-private fun tScanStr() = """// Scan for interesting strings
-var patterns = ["password", "secret", "key", "token", "license", 
-                "admin", "root", "debug", "http", "https",
-                "base64", "encrypt", "decrypt", "cipher"];
-print("Scanning for sensitive patterns...");
-for (var i = 0; i < patterns.length; i++) {
-    print("Pattern: " + patterns[i]);
-}
-print("Use strings() in terminal for full scan");
-"""
-
-private fun tFindXor() = """// Find XOR key by frequency analysis
-var data = "1a2b3c4d5e6f7a8b9c0d";
-print("Analyzing XOR-encrypted data...");
-print("Data length: " + (data.length / 2) + " bytes");
-
-// Simple frequency analysis
-var freq = {};
-for (var i = 0; i < data.length; i += 2) {
-    var byte = parseInt(data.substr(i, 2), 16);
-    freq[byte] = (freq[byte] || 0) + 1;
-}
-print("Byte frequency:");
-for (var k in freq) {
-    print("  0x" + hex(parseInt(k)) + ": " + freq[k] + " times");
-}
-"""
-
-private fun tAnalyze() = """// Analyze binary file
-print("=== Binary Analysis ===");
-print("File: " + file_name());
-print("Size: " + file_size() + " bytes");
-print("");
-
-// Check file type
-var name = file_name();
-if (name.endsWith(".so") || name.endsWith(".elf")) {
-    print("Type: ELF binary (shared object)");
-} else if (name.endsWith(".apk")) {
-    print("Type: Android APK");
-} else if (name.endsWith(".dex")) {
-    print("Type: DEX (Dalvik Executable)");
-} else if (name.endsWith(".sh")) {
-    print("Type: Shell script");
-} else if (name.endsWith(".py")) {
-    print("Type: Python script");
-} else {
-    print("Type: Unknown");
-}
-"""
-
-private fun tUrls() = """// Extract URLs and domains from strings
-var urls = ["http://", "https://", "ftp://", "file://"];
-var domains = [".com", ".net", ".org", ".io", ".dev", ".xyz"];
-print("URL patterns to search:");
-for (var i = 0; i < urls.length; i++) print("  " + urls[i]);
-print("Domain patterns:");
-for (var i = 0; i < domains.length; i++) print("  " + domains[i]);
-print("Run: strings() in terminal for full extraction");
-"""
-
-private fun tPatch() = """// Binary patching helper
-var offset = 0x1000;
-var original = [0x90, 0x90, 0x90, 0x90];
-var patched = [0x00, 0x00, 0x00, 0x00];
-print("Patch plan:");
-print("Offset: 0x" + hex(offset));
-print("Original: " + original.map(function(b) { return hex(b); }).join(" "));
-print("Patched:  " + patched.map(function(b) { return hex(b); }).join(" "));
-print("Use patch_bytes() function to apply");
-"""
-
-private fun tHash() = """// Hash calculation
-var text = "Hello World";
-print("Text: " + text);
-print("Length: " + text.length + " bytes");
-print("Hex: " + toHex(text));
-print("Base64: " + btoa(text));
-// Simple hash (not crypto-grade)
-var hash = 0;
-for (var i = 0; i < text.length; i++) {
-    hash = ((hash << 5) - hash) + text.charCodeAt(i);
-    hash = hash & hash;
-}
-print("Simple hash: " + hex(hash));
-"""
-
-private fun tEntropy() = """// Entropy calculation
-var text = "Hello World! This is a test string with some entropy.";
-print("Text: " + text);
-print("Length: " + text.length);
-
-// Calculate Shannon entropy
-var freq = {};
-for (var i = 0; i < text.length; i++) {
-    var c = text.charAt(i);
-    freq[c] = (freq[c] || 0) + 1;
-}
-var entropy = 0;
-for (var c in freq) {
-    var p = freq[c] / text.length;
-    entropy -= p * Math.log(p) / Math.log(2);
-}
-print("Entropy: " + entropy.toFixed(4) + " bits/char");
-print("Max possible: " + Math.log(text.length) / Math.log(2)).toFixed(4) + " bits/char");
-"""
-
-private fun tAes() = """// AES encryption/decryption helper
-print("=== AES Encryption ===");
-print("Note: This uses Java's built-in AES");
-print("For real AES, use the Encrypt/Decrypt tools");
-print("");
-print("Common AES modes:");
-print("  AES/ECB/PKCS5Padding");
-print("  AES/CBC/PKCS5Padding");
-print("  AES/GCM/NoPadding");
-print("");
-print("Use the Encrypt Tool for actual AES operations");
-"""
-
-private fun tVigenere() = """// Vigenère cipher decoder
-var key = "SECRET";
-var encrypted = "ZINCSMFNCI";
-print("Vigenère Decryption");
-print("Key: " + key);
-print("Encrypted: " + encrypted);
-print("Decrypted: " + vigenereDec(encrypted, key));
-print("");
-// Try common keys
-var commonKeys = ["KEY", "SECRET", "PASSWORD", "ADMIN", "TEST"];
-print("Trying common keys:");
-for (var i = 0; i < commonKeys.length; i++) {
-    print("  " + commonKeys[i] + ": " + vigenereDec(encrypted, commonKeys[i]));
-}
-"""

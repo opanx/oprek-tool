@@ -63,7 +63,7 @@ fun ApkSignerScreen(navController: NavController) {
             Modifier.padding(pad).padding(12.dp).verticalScroll(rememberScrollState())
         ) {
             // Mode selector
-            Text("Mode", color = Purple, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Mode", color = AccentPurple, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Spacer(Modifier.height(6.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 modes.forEachIndexed { i, m ->
@@ -72,7 +72,7 @@ fun ApkSignerScreen(navController: NavController) {
                         onClick = { selectedMode = i },
                         label = { Text(m, fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Purple.copy(alpha = 0.3f)
+                            selectedContainerColor = AccentPurple.copy(alpha = 0.3f)
                         )
                     )
                 }
@@ -125,7 +125,7 @@ fun ApkSignerScreen(navController: NavController) {
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Purple),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentPurple),
                 enabled = !isProcessing && inputPath.isNotEmpty()
             ) {
                 if (isProcessing) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
@@ -144,13 +144,13 @@ fun ApkSignerScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(12.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Output", color = Green, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Output", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         IconButton(onClick = {
                             val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             cb.setPrimaryClip(ClipData.newPlainText("output", output))
                             Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
                         }, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.ContentCopy, "Copy", tint = Green, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.ContentCopy, "Copy", tint = AccentGreen, modifier = Modifier.size(16.dp))
                         }
                     }
                     Spacer(Modifier.height(6.dp))

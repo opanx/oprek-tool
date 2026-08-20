@@ -50,7 +50,7 @@ fun NativeLibAnalyzerScreen(navController: NavController) {
         Column(
             Modifier.padding(pad).padding(12.dp).verticalScroll(rememberScrollState())
         ) {
-            Text("Target .so / ELF binary", color = Purple, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text("Target .so / ELF binary", color = AccentPurple, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Spacer(Modifier.height(8.dp))
 
             OutlinedTextField(
@@ -64,19 +64,21 @@ fun NativeLibAnalyzerScreen(navController: NavController) {
             Spacer(Modifier.height(8.dp))
 
             // Mode chips
-            Text("Analysis Mode", color = Green, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text("Analysis Mode", color = AccentGreen, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                modes.forEachIndexed { i, m ->
-                    FilterChip(
-                        selected = selectedMode == i,
-                        onClick = { selectedMode = i },
-                        label = { Text(m, fontSize = 11.sp) },
-                        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Cyan.copy(alpha = 0.3f))
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                for (row in modes.chunked(3)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        row.forEach { m ->
+                            val i = modes.indexOf(m)
+                            FilterChip(
+                                selected = selectedMode == i,
+                                onClick = { selectedMode = i },
+                                label = { Text(m, fontSize = 11.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(alpha = 0.3f))
+                            )
+                        }
+                    }
                 }
             }
 
@@ -97,7 +99,7 @@ fun NativeLibAnalyzerScreen(navController: NavController) {
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Cyan),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
                 enabled = !isProcessing && filePath.isNotEmpty()
             ) {
                 if (isProcessing) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
@@ -115,7 +117,7 @@ fun NativeLibAnalyzerScreen(navController: NavController) {
             ) {
                 Column(Modifier.padding(12.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Result", color = Green, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Result", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         IconButton(onClick = {
                             val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             cb.setPrimaryClip(ClipData.newPlainText("result", output))
@@ -359,7 +361,7 @@ private fun parseSections(bytes: ByteArray, is64: Boolean, isLE: Boolean): Strin
     // Get string table
     val strOff = if (shstrndx < shnum) {
         val sh = shoff + shstrndx * shentsize
-        if (is64) readELF64LE(bytes, (sh + 24).toInt()).toInt() else readELF32LE(bytes, sh + 16)
+        if (is64) readELF64LE(bytes, sh.toInt() + 24).toInt() else readELF32LE(bytes, sh + 16)
     } else 0
 
     sb.appendLine(String.format("%-20s %-10s %-12s %-12s %-8s", "Name", "Type", "Addr", "Offset", "Size"))
@@ -372,9 +374,9 @@ private fun parseSections(bytes: ByteArray, is64: Boolean, isLE: Boolean): Strin
         val name = if (strOff + nameIdx < bytes.size) readString(bytes, strOff + nameIdx) else "?"
         val type = readELF32LE(bytes, sh.toInt() + 4)
 
-        val addr = if (is64) readELF64LE(bytes, (sh + 16).toInt()) else readELF32LE(bytes, sh + 12).toLong()
-        val offset = if (is64) readELF64LE(bytes, (sh + 24).toInt()).toLong() else readELF32LE(bytes, sh + 16).toLong()
-        val size = if (is64) readELF64LE(bytes, (sh + 32).toInt()).toLong() else readELF32LE(bytes, sh + 20).toLong()
+        val addr = if (is64) readELF64LE(bytes, sh.toInt() + 16) else readELF32LE(bytes, sh + 12).toLong()
+        val offset = if (is64) readELF64LE(bytes, sh.toInt() + 24).toLong() else readELF32LE(bytes, sh + 16).toLong()
+        val size = if (is64) readELF64LE(bytes, sh.toInt() + 32).toLong() else readELF32LE(bytes, sh + 20).toLong()
 
         val typeName = when (type) {
             0 -> "NULL"; 1 -> "PROGBITS"; 2 -> "SYMTAB"; 3 -> "STRTAB"; 4 -> "RELA"
