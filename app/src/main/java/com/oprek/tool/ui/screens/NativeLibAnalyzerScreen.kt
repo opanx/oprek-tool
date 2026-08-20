@@ -43,7 +43,7 @@ fun NativeLibAnalyzerScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("🔧 Native Lib Analyzer", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(on = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } }
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } }
             )
         }
     ) { pad ->
@@ -123,7 +123,7 @@ fun NativeLibAnalyzerScreen(navController: NavController) {
                             cb.setPrimaryClip(ClipData.newPlainText("result", output))
                             Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
                         }, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Default.ContentCopy, "Copy", tint = Green, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.ContentCopy, "Copy", tint = AccentGreen, modifier = Modifier.size(16.dp))
                         }
                     }
                     Spacer(Modifier.height(6.dp))

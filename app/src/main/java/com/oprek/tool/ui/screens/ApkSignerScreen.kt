@@ -55,7 +55,7 @@ fun ApkSignerScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("🔐 APK Signer", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(on = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } }
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } }
             )
         }
     ) { pad ->

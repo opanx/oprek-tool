@@ -40,7 +40,7 @@ fun ScriptEngineScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("⚡ Script Engine", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(on = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = {
                         val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
