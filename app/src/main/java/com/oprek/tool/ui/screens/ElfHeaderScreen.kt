@@ -40,6 +40,12 @@ fun ElfHeaderScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        if (file.length() > 100 * 1024 * 1024) {
+
+            // File too large for in-memory processing
+
+        }
+
         val data = withContext(Dispatchers.IO) { file.readBytes() }
         if (data.size < 4 || data[0] != 0x7F.toByte() || data[1] != 'E'.code.toByte()) return@LaunchedEffect
         is64 = data[4] == 2.toByte()

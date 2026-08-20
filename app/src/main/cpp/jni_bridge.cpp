@@ -1,6 +1,9 @@
 #include <jni.h>
 #include <string>
 #include <cstring>
+#include <cstdio>
+#include <cstdint>
+#include <capstone/capstone.h>
 
 // C functions
 extern "C" {
@@ -9,6 +12,47 @@ extern "C" {
 #include "dex_parser.c"
 #include "obfuscate.c"
 #include "patch_utils.c"
+}
+
+// Capstone instances (one per arch)
+static csh cs_arm64_handle = 0;
+static csh cs_arm_handle = 0;
+static csh cs_x86_handle = 0;
+
+static bool initCapstone(int arch) {
+    switch (arch) {
+        case CS_ARCH_ARM64: {
+            if (cs_arm64_handle) return true;
+            cs_err err = cs_open(CS_ARCH_ARM64, CS_MODE_ARM, &cs_arm64_handle);
+            if (err) return false;
+            cs_option(cs_arm64_handle, CS_OPT_DETAIL, CS_OPT_ON);
+            return true;
+        }
+        case CS_ARCH_ARM: {
+            if (cs_arm_handle) return true;
+            cs_err err = cs_open(CS_ARCH_ARM, CS_MODE_ARM, &cs_arm_handle);
+            if (err) return false;
+            cs_option(cs_arm_handle, CS_OPT_DETAIL, CS_OPT_ON);
+            return true;
+        }
+        case CS_ARCH_X86: {
+            if (cs_x86_handle) return true;
+            cs_err err = cs_open(CS_ARCH_X86, CS_MODE_32, &cs_x86_handle);
+            if (err) return false;
+            cs_option(cs_x86_handle, CS_OPT_DETAIL, CS_OPT_ON);
+            return true;
+        }
+        default: return false;
+    }
+}
+
+static csh getHandle(int arch) {
+    switch (arch) {
+        case CS_ARCH_ARM64: return cs_arm64_handle;
+        case CS_ARCH_ARM: return cs_arm_handle;
+        case CS_ARCH_X86: return cs_x86_handle;
+        default: return 0;
+    }
 }
 
 // ======== ELF ========
@@ -27,20 +71,45 @@ Java_com_oprek_tool_core_NativeLib_elfGetInfo(JNIEnv *env, jclass, jbyteArray da
     jbyte *bytes = env->GetByteArrayElements(data, nullptr);
     ElfInfo info;
     int ret = elf_parse_info((const unsigned char *)bytes, len, &info);
+    if (ret < 0) {
+        env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
+        return env->NewStringUTF("Invalid ELF");
+    }
+
+    // Read machine type before releasing
+    uint16_t machine = (info.is_le) ?
+        ((unsigned char)*(bytes + 18) | ((unsigned char)*(bytes + 19) << 8)) :
+        (((unsigned char)*(bytes + 18) << 8) | (unsigned char)*(bytes + 19));
     env->ReleaseByteArrayElements(data, bytes, JNI_ABORT);
 
-    if (ret < 0) return env->NewStringUTF("Invalid ELF");
+    const char* arch_str = "unknown";
+    if (info.is_64) {
+        switch (machine) {
+            case 0xB7: arch_str = "AArch64"; break;
+            case 0x3E: arch_str = "x86_64"; break;
+            default: arch_str = "ELF64"; break;
+        }
+    } else {
+        switch (machine) {
+            case 0x28: arch_str = "ARM"; break;
+            case 0x03: arch_str = "x86"; break;
+            case 0x08: arch_str = "MIPS"; break;
+            default: arch_str = "ELF32"; break;
+        }
+    }
 
-    char buf[512];
+    char buf[1024];
     snprintf(buf, sizeof(buf),
         "Arch: %s %s\n"
-        "Entry: 0x%016lX\n"
-        "Program Headers: %u @ 0x%lX\n"
-        "Section Headers: %u @ 0x%lX\n"
+        "Machine: %s (0x%04X)\n"
+        "Entry: 0x%016llX\n"
+        "Program Headers: %u @ 0x%llX\n"
+        "Section Headers: %u @ 0x%llX\n"
         "Section StrTab idx: %u\n"
         "File size: %llu bytes",
         info.is_64 ? "ELF64" : "ELF32",
         info.is_le ? "Little Endian" : "Big Endian",
+        arch_str, machine,
         info.entry, info.phnum, info.phoff,
         info.shnum, info.shoff, info.shstrndx, info.file_size);
     return env->NewStringUTF(buf);
@@ -60,7 +129,7 @@ Java_com_oprek_tool_core_NativeLib_elfGetSections(JNIEnv *env, jclass, jbyteArra
 
     for (int i = 0; i < count; i++) {
         char buf[512];
-        snprintf(buf, sizeof(buf), "%s|%s|0x%lX|%lu|0x%lX|%u",
+        snprintf(buf, sizeof(buf), "%s|%s|0x%llX|%llu|0x%llX|%u",
             sections[i].name,
             elf_section_type_str(sections[i].type),
             sections[i].offset,
@@ -73,8 +142,10 @@ Java_com_oprek_tool_core_NativeLib_elfGetSections(JNIEnv *env, jclass, jbyteArra
     return result;
 }
 
-// ======== DISASSEMBLER (pure C - simple) ========
-// Capstone not bundled - use simple hex disassembly display
+// ======== DISASSEMBLER (CAPSTONE) ========
+// arch: 0=ARM, 1=ARM64, 2=X86
+// mode: 0=ARM, 1=THUMB, 2=ARM64, 3=X86_64, 4=X86_32
+
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_oprek_tool_core_NativeLib_disassemble(JNIEnv *env, jclass,
         jbyteArray code, jlong offset, jint arch, jint mode, jint count) {
@@ -82,23 +153,152 @@ Java_com_oprek_tool_core_NativeLib_disassemble(JNIEnv *env, jclass,
     jsize len = env->GetArrayLength(code);
     jbyte *bytes = env->GetByteArrayElements(code, nullptr);
 
-    std::string result;
-    int printed = 0;
-    uint64_t addr = (uint64_t)offset;
-    int i = 0;
-
-    while (i + 4 <= len && printed < count) {
-        // Simple hex display (real disasm needs Capstone)
-        char line[128];
-        uint32_t insn = bytes[i] | (bytes[i+1] << 8) | (bytes[i+2] << 16) | (bytes[i+3] << 24);
-        snprintf(line, sizeof(line), "0x%016llX:  %02X %02X %02X %02X    .word 0x%08X\n",
-            addr, (uint8_t)bytes[i], (uint8_t)bytes[i+1], (uint8_t)bytes[i+2], (uint8_t)bytes[i+3], insn);
-        result += line;
-        addr += 4;
-        i += 4;
-        printed++;
+    int cs_arch, cs_mode;
+    switch (arch) {
+        case 0: cs_arch = CS_ARCH_ARM; cs_mode = (mode == 1) ? CS_MODE_THUMB : CS_MODE_ARM; break;
+        case 1: cs_arch = CS_ARCH_ARM64; cs_mode = CS_MODE_ARM; break;
+        case 2: cs_arch = CS_ARCH_X86; cs_mode = (mode == 3) ? CS_MODE_64 : CS_MODE_32; break;
+        default: cs_arch = CS_ARCH_ARM64; cs_mode = CS_MODE_ARM; break;
     }
 
+    if (!initCapstone(cs_arch)) {
+        env->ReleaseByteArrayElements(code, bytes, JNI_ABORT);
+        return env->NewStringUTF("Error: Failed to initialize Capstone disassembler");
+    }
+
+    csh handle = getHandle(cs_arch);
+    if (!handle) {
+        env->ReleaseByteArrayElements(code, bytes, JNI_ABORT);
+        return env->NewStringUTF("Error: No Capstone handle");
+    }
+
+    cs_insn *insn = cs_malloc(handle);
+    std::string result;
+    char line[512];
+    const uint8_t *code_ptr = (const uint8_t *)bytes;
+    size_t code_len = (size_t)len;
+    uint64_t addr = (uint64_t)offset;
+
+    // Auto-detect ARM/THUMB for ARM mode
+    if (cs_arch == CS_ARCH_ARM && mode == 0) {
+        // Check if code starts with Thumb-2 instructions
+        if (code_len >= 4) {
+            uint32_t first_insn = *(uint32_t*)code_ptr;
+            if ((first_insn & 0xFFFF) < 0xE800) {
+                cs_option(handle, CS_OPT_MODE, CS_MODE_THUMB);
+            }
+        }
+    }
+
+    int printed = 0;
+    while (printed < count && addr < (uint64_t)(offset + code_len)) {
+        size_t remaining = code_len - (size_t)(addr - (uint64_t)offset);
+        if (remaining < 4) break;
+
+        if (cs_disasm_iter(handle, &code_ptr, &remaining, &addr, insn)) {
+            // Format: address  hex_bytes  mnemonic  operands
+            std::string hex_bytes;
+            for (int j = 0; j < insn->size; j++) {
+                char hb[4];
+                snprintf(hb, sizeof(hb), "%02X ", insn->bytes[j]);
+                hex_bytes += hb;
+            }
+            // Pad hex bytes to consistent width
+            while (hex_bytes.length() < 24) hex_bytes += " ";
+
+            snprintf(line, sizeof(line), "0x%016llX:  %s  %s %s\n",
+                insn->address, hex_bytes.c_str(), insn->mnemonic, insn->op_str);
+            result += line;
+            printed++;
+        } else {
+            // Unknown instruction - show raw bytes
+            snprintf(line, sizeof(line), "0x%016llX:  %02X %02X %02X %02X    .byte 0x%02X,0x%02X,0x%02X,0x%02X\n",
+                addr,
+                code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3],
+                code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3]);
+            result += line;
+            code_ptr += 4;
+            remaining -= 4;
+            addr += 4;
+            printed++;
+        }
+    }
+
+    cs_free(insn, 1);
+    env->ReleaseByteArrayElements(code, bytes, JNI_ABORT);
+    return env->NewStringUTF(result.c_str());
+}
+
+// ======== DISASSEMBLE FUNCTION (from symbol) ========
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_oprek_tool_core_NativeLib_disassembleFunction(JNIEnv *env, jclass,
+        jbyteArray code, jlong funcAddr, jlong funcSize, jint arch, jint mode) {
+
+    jsize len = env->GetArrayLength(code);
+    jbyte *bytes = env->GetByteArrayElements(code, nullptr);
+
+    int cs_arch, cs_mode;
+    switch (arch) {
+        case 0: cs_arch = CS_ARCH_ARM; cs_mode = (mode == 1) ? CS_MODE_THUMB : CS_MODE_ARM; break;
+        case 1: cs_arch = CS_ARCH_ARM64; cs_mode = CS_MODE_ARM; break;
+        case 2: cs_arch = CS_ARCH_X86; cs_mode = (mode == 3) ? CS_MODE_64 : CS_MODE_32; break;
+        default: cs_arch = CS_ARCH_ARM64; cs_mode = CS_MODE_ARM; break;
+    }
+
+    if (!initCapstone(cs_arch)) {
+        env->ReleaseByteArrayElements(code, bytes, JNI_ABORT);
+        return env->NewStringUTF("Error: Failed to initialize Capstone");
+    }
+
+    csh handle = getHandle(cs_arch);
+    if (!handle) {
+        env->ReleaseByteArrayElements(code, bytes, JNI_ABORT);
+        return env->NewStringUTF("Error: No Capstone handle");
+    }
+
+    cs_insn *insn = cs_malloc(handle);
+    std::string result;
+    char line[512];
+
+    const uint8_t *code_ptr = (const uint8_t *)bytes;
+    size_t code_len = (size_t)len;
+    uint64_t addr = (uint64_t)funcAddr;
+    uint64_t end_addr = addr + (uint64_t)funcSize;
+
+    while (addr < end_addr && addr < (uint64_t)code_len) {
+        size_t remaining = code_len - (size_t)(addr - (uint64_t)0);
+        if (remaining < 4) break;
+
+        if (cs_disasm_iter(handle, &code_ptr, &remaining, &addr, insn)) {
+            std::string hex_bytes;
+            for (int j = 0; j < insn->size; j++) {
+                char hb[4];
+                snprintf(hb, sizeof(hb), "%02X ", insn->bytes[j]);
+                hex_bytes += hb;
+            }
+            while (hex_bytes.length() < 24) hex_bytes += " ";
+
+            // Highlight return instructions
+            bool is_ret = (strcmp(insn->mnemonic, "ret") == 0) ||
+                          (strcmp(insn->mnemonic, "bx") == 0) ||
+                          (strcmp(insn->mnemonic, "pop") == 0);
+
+            snprintf(line, sizeof(line), "%s0x%016llX:  %s  %s %s%s\n",
+                is_ret ? "*" : " ",
+                insn->address, hex_bytes.c_str(), insn->mnemonic, insn->op_str,
+                is_ret ? "  ; <- return" : "");
+            result += line;
+        } else {
+            snprintf(line, sizeof(line), "  0x%016llX:  %02X %02X %02X %02X    .byte\n",
+                addr, code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3]);
+            result += line;
+            code_ptr += 4;
+            remaining -= 4;
+            addr += 4;
+        }
+    }
+
+    cs_free(insn, 1);
     env->ReleaseByteArrayElements(code, bytes, JNI_ABORT);
     return env->NewStringUTF(result.c_str());
 }
@@ -283,4 +483,12 @@ Java_com_oprek_tool_core_NativeLib_dexGetClasses(JNIEnv *env, jclass, jbyteArray
         env->SetObjectArrayElement(result, i, env->NewStringUTF(buf));
     }
     return result;
+}
+
+// ======== CLEANUP ========
+__attribute__((destructor))
+static void cleanup_capstone() {
+    if (cs_arm64_handle) { cs_close(&cs_arm64_handle); cs_arm64_handle = 0; }
+    if (cs_arm_handle) { cs_close(&cs_arm_handle); cs_arm_handle = 0; }
+    if (cs_x86_handle) { cs_close(&cs_x86_handle); cs_x86_handle = 0; }
 }

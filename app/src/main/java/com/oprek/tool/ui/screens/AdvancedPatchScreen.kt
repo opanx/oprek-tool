@@ -113,6 +113,12 @@ fun AdvancedPatchScreen(navController: NavController) {
                             Button(onClick = {
                                 scope.launch(Dispatchers.Default) {
                                     val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@launch
+                                    if (file.length() > 100 * 1024 * 1024) {
+
+                                        // File too large for in-memory processing
+
+                                    }
+
                                     val data = withContext(Dispatchers.IO) { file.readBytes() }
                                     var count = 0
                                     for (rec in recommendations) {
@@ -146,6 +152,12 @@ fun AdvancedPatchScreen(navController: NavController) {
                                 IconButton(onClick = {
                                     scope.launch(Dispatchers.Default) {
                                         val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@launch
+                                        if (file.length() > 100 * 1024 * 1024) {
+
+                                            // File too large for in-memory processing
+
+                                        }
+
                                         val data = withContext(Dispatchers.IO) { file.readBytes() }
                                         try {
                                             when {
@@ -199,6 +211,12 @@ fun AdvancedPatchScreen(navController: NavController) {
                     Button(onClick = {
                         scope.launch(Dispatchers.Default) {
                             val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@launch
+                            if (file.length() > 100 * 1024 * 1024) {
+
+                                // File too large for in-memory processing
+
+                            }
+
                             val data = withContext(Dispatchers.IO) { file.readBytes() }
                             val searchBytes = searchStr.toByteArray()
                             val replaceBytes = replaceStr.toByteArray().copyOf(searchBytes.size)
@@ -244,6 +262,12 @@ private fun applyQuickPatch(context: android.content.Context, offsetHex: String,
     if (file == null) { onResult("No file loaded"); return }
     try {
         val offset = offsetHex.removePrefix("0x").removePrefix("0X").toLong(16)
+        if (file.length() > 100 * 1024 * 1024) {
+
+            // File too large for in-memory processing
+
+        }
+
         val data = file.readBytes()
         when (type) {
             "nop" -> NativeLib.patchNop(data, offset)

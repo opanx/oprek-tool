@@ -34,6 +34,12 @@ fun ELFSymbolScreen(navController: NavController) {
         val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
         if (!file.name.endsWith(".so") && !file.name.endsWith(".elf")) return@LaunchedEffect
         scope.launch(Dispatchers.Default) {
+            if (file.length() > 100 * 1024 * 1024) {
+
+                // File too large for in-memory processing
+
+            }
+
             val data = withContext(Dispatchers.IO) { file.readBytes() }
             try {
                 val sections = withContext(Dispatchers.IO) { com.oprek.tool.core.NativeLib.elfGetSections(data) }

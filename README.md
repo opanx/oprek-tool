@@ -1,193 +1,132 @@
-# ⚡ OprekTool v0.0.4
+# Oprek Tool
 
-**Professional-Grade Android Reverse Engineering Toolkit**
+> 🔬 Professional Binary Analysis & Reverse Engineering Tool for Android
 
-> A mobile-first reverse engineering tool inspired by IDA Pro, Ghidra, and Binary Ninja. Analyze, disassemble, patch, and reverse engineer ELF, APK, DEX, PE, and shell scripts — all offline on your Android device.
+**Copyright © Panxcz & Freebuff**
 
-![Build](https://img.shields.io/badge/build-passing-brightgreen)
-![Version](https://img.shields.io/badge/version-0.0.4-blue)
-![License](https://img.shields.io/badge/license-MIT-orange)
-![SDK](https://img.shields.io/badge/SDK-26--35-brightgreen)
+An all-in-one Android app for binary analysis, disassembly, patching, and reverse engineering. Built with Jetpack Compose + native Capstone disassembler.
 
----
+## Features (55+ Tools)
 
-## 📱 Download
+### 🔧 Binary Analysis
+| Tool | Description | Auto |
+|------|-------------|------|
+| Hex Viewer | View binary hex dump with ASCII | ✅ |
+| Strings | Extract printable strings with search | ✅ |
+| ELF Info | Parse ELF headers, entry point | ✅ |
+| APK Info | Parse APK structure, DEX detection | ✅ |
+| Android Tools | DEX parser, class listing | ✅ |
+| File Info | Magic bytes, type detection, hashes | ✅ |
+| Hash Calculator | MD5, SHA-1, SHA-256, SHA-512, CRC32 | ✅ |
 
-| Build | Status |
-|-------|--------|
-| **Debug APK** | [Download from Actions](https://github.com/opanx/oprek-tool/actions) → latest run → **OprekTool-debug** |
-| **Release APK** | [Download from Actions](https://github.com/opanx/oprek-tool/actions) → latest run → **OprekTool-release** |
+### 📖 Disassembly & Analysis
+| Tool | Description | Auto |
+|------|-------------|------|
+| **Disassembler (Capstone)** | ARM32/ARM64/x86/x86_64 real disassembly | ✅ |
+| Disasm Advanced | Full function disassembly with control flow | ✅ |
+| ELF Full Header | All ELF header fields | ✅ |
+| Program Headers | Segment viewer (PT_LOAD, etc.) | ✅ |
+| Section Headers | .text, .data, .rodata, .symtab | ✅ |
+| Symbol Table | .symtab + .dynsym, filter FUNC/OBJECT | ✅ |
+| Dynamic Section | DT_NEEDED, DT_INIT, DT_FINI | ✅ |
+| Relocations | R_ARM, R_AARCH64, R_X86_64 | ✅ |
+| GOT / PLT | Import table viewer | ✅ |
+| Function List | All functions with search | ✅ |
+| XREF Viewer | Cross-reference finder | ✅ |
+| Entropy Analyzer | Per-block entropy visualization | ✅ |
+| IDA String Window | Type-tagged strings (URL/CMD/LIB) | ✅ |
 
----
-
-## 🔥 Features (55+ Tools)
-
-### 📦 Binary Analysis
-| Tool | Description |
-|------|-------------|
-| **ELF Info** | Parse ELF headers, sections, symbols |
-| **ELF Full Header** | All ELF fields + architecture detection |
-| **Program Headers** | PT_LOAD/PT_DYNAMIC viewer with permission colors |
-| **Section Headers** | .text/.data/.symtab/.dynsym/.got/.plt |
-| **Symbol Table** | Full .symtab + .dynsym with search/filter |
-| **Dynamic Section** | DT_NEEDED, DT_SONAME, DT_INIT/DT_FINI |
-| **Relocations** | R_ARM, R_AARCH64, R_X86_64 |
-| **GOT / PLT** | Import table viewer |
-| **Function List** | All functions with size/type/binding |
-| **APK Info** | List entries, detect DEX/native libs |
-| **Android Tools** | DEX header, class dump |
-| **Manifest Reader** | APK permissions/entries |
-
-### 🔍 Disassembly & Analysis
-| Tool | Description |
-|------|-------------|
-| **Disassembler** | ARM32/ARM64/x86 instruction decode |
-| **Disasm Advanced** | Full disassembly with hex bytes |
-| **XREF Viewer** | Cross-reference finder |
-| **IDA Strings** | Type-tagged string window (URL/CMD/LIB) |
-| **Entropy Analyzer** | Per-block entropy visualization |
-| **Packer Detection** | UPX/Themida/OLLMV detection |
-| **Unpacker** | UPX detection + entropy analysis |
-
-### 🔧 Patching
-| Tool | Description |
-|------|-------------|
-| **Patch Editor** | Single + bulk binary patch |
-| **Adv. Patch** | Auto-detect login/license/anti-debug |
-| **Patch Instruction** | NOP/RET/RET X0=0/JMP |
-| **Patch Branch** | Conditional → NOP/JMP |
-| **Auto Patch Login** | Auto-scan + bypass login checks |
-| **Patch String** | Search & replace in binary |
-| **Patch Anti-Debug** | NOP ptrace/frida/debugger checks |
+### 🛠️ Patching
+| Tool | Description | Auto |
+|------|-------------|------|
+| Patch Editor | Manual hex patch | ✅ |
+| Adv. Patch | Auto-detect login/license patterns | ✅ |
+| Patch Instruction | NOP/RET/JMP at address | ✅ |
+| Patch Branch | Conditional → NOP one-by-one | ✅ |
+| Auto Patch Login | Auto-scan "wrong/invalid" + bypass | ✅ |
+| Patch String | Search & replace in binary | ✅ |
+| Patch Anti-Debug | NOP ptrace/frida/debugger checks | ✅ |
 
 ### 🔐 Deobfuscation & Encoding
-| Tool | Description |
-|------|-------------|
-| **Deobfuscate** | Auto-scan Base64/Hex/XOR/Unicode |
-| **Obfuscate** | XOR/AES/ROT13/Base64+XOR |
-| **Shell Deobfuscate** | Decode shell obfuscation |
-| **XOR Brute Force** | Key 0x00-0xFF with entropy scoring |
-| **String Encryptor** | XOR/AES/ROT13 encode |
-| **Base64/Hex** | Encode/decode strings |
-
-### 🛠️ Utilities
-| Tool | Description |
-|------|-------------|
-| **Hash Calculator** | MD5/SHA1/SHA256/SHA512/CRC32 |
-| **Key Generator** | Random keys with charset config |
-| **Diff Tool** | Compare two binary files |
-| **File Info** | MD5/SHA256, 20+ magic bytes |
-| **Bookmarks** | Save important offsets |
-| **Session Manager** | Save/load analysis state |
-| **Export Report** | Save analysis as TXT |
-| **Recent Files** | History with SharedPrefs |
+| Tool | Description | Auto |
+|------|-------------|------|
+| Deobfuscate | Auto-detect obfuscated strings | ✅ |
+| Obfuscate | XOR/AES/ROT13/Base64 encryption | ✅ |
+| Shell Deobfuscate | Base64, ROT13, URL decode, hex | ✅ |
+| String Encryptor | XOR/AES/ROT13/Base64+XOR | ✅ |
+| XOR Brute Force | Key 0x00-0xFF, entropy score | ✅ |
+| Base64/Hex | Encode/decode converter | ✅ |
 
 ### 🐚 Shell Script Tools
-| Tool | Description |
-|------|-------------|
-| **Shell Script** | Parse + analyze scripts |
-| **Shell Patcher** | Edit URLs/keys/commands |
-| **Shell Deobfuscate** | Decode shell obfuscation |
-
-### 🎮 Hooking & Debugging
-| Tool | Description |
-|------|-------------|
-| **Frida Hook** | Generate hook scripts |
-| **Anti-Debug** | Detect debuggers + root |
-| **Inline Hook** | LD_PRELOAD + trampoline |
-
-### 📱 Android Tools
-| Tool | Description |
-|------|-------------|
-| **Logcat** | Capture Android logs |
-| **Terminal** | Shell executor |
-| **Hex Copy** | Export as C/Python/hex |
-| **Hex Viewer** | View + edit raw bytes |
-| **Strings** | Extract readable text |
+| Tool | Description | Auto |
+|------|-------------|------|
+| Shell Script Analyzer | Parse commands, URLs, functions | ✅ |
+| Shell Script Patcher | Edit URLs, keys, tokens | ✅ |
+| Shell Patcher | Binary extract from .sh | ✅ |
 
 ### 🎮 Game Analysis
-| Tool | Description |
-|------|-------------|
-| **Lua Analyzer** | Parse .lua scripts |
-| **Pak Archive** | Analyze .pak/.paks files |
+| Tool | Description | Auto |
+|------|-------------|------|
+| Lua Analyzer | Parse .lua functions, strings | ✅ |
+| Pak Archive | .pak/.paks/.unity3d parser | ✅ |
 
----
+### 🛡️ Hooking & Debugging
+| Tool | Description | Auto |
+|------|-------------|------|
+| Frida Hook | Generate Frida scripts | ✅ |
+| Anti-Debug | Detect debug/tracer/frida | ✅ |
+| Hook Generator | Auto-detect exported functions | ✅ |
 
-## 🏗️ Tech Stack
+### 📊 Utilities
+| Tool | Description | Auto |
+|------|-------------|------|
+| Diff Tool | Binary comparison | ✅ |
+| Manifest Reader | AndroidManifest.xml parser | ✅ |
+| Bookmarks | Save addresses with notes | ✅ |
+| Export Report | HTML/JSON/TXT export | ✅ |
+| Session Manager | Save/load analysis state | ✅ |
+| Memory Analyzer | Raw memory dump analysis | ✅ |
+| Memory Dump | ELF scan + extract strings | ✅ |
+| Logcat | Real-time Android log viewer | ✅ |
+| Key Generator | Generate keys/licenses | ✅ |
+| Hex Copy | Export as C/Python array | ✅ |
+| Terminal | Built-in shell | ✅ |
 
-- **Language:** Kotlin + C++ (JNI)
-- **UI:** Jetpack Compose + Material 3
-- **Architecture:** MVVM + StateFlow + Coroutines
-- **Native:** ELF/PE/DEX parsers, obfuscation engine
+### 🔍 Packer & Protection
+| Tool | Description | Auto |
+|------|-------------|------|
+| Packer Detection | UPX/Themida/O-LLVM detect | ✅ |
+| Unpacker | Auto UPX unpack + manual dump | ✅ |
+
+## Tech Stack
+
+- **Language:** Kotlin + Jetpack Compose
+- **Native:** C/C++ with Capstone 5.0.3 disassembler
+- **Build:** Gradle KTS + CMake
 - **Min SDK:** 26 (Android 8.0)
 - **Target SDK:** 35 (Android 15)
-- **120fps** support on capable devices
+- **ABI:** arm64-v8a, armeabi-v7a, x86_64
 
----
-
-## 📂 Output Directory
-
-All tool outputs are saved to:
-```
-/sdcard/OprekTool/output/
-├── elf/        (headers, sections, symbols)
-├── strings/    (extracted strings)
-├── disasm/     (disassembly output)
-├── patches/    (all patch results)
-├── analysis/   (entropy, packer, anti-debug)
-├── hooks/      (frida scripts, inline hooks)
-├── shell/      (shell analysis, deobfuscation)
-├── encode/     (base64, obfuscate, encrypt)
-├── bookmarks/  (saved bookmarks)
-└── info/       (file info, manifest)
-```
-
----
-
-## 🚀 Build Instructions
+## Build
 
 ```bash
-# Clone
 git clone https://github.com/opanx/oprek-tool.git
 cd oprek-tool
-
-# Build Debug
 ./gradlew assembleDebug
-
-# Build Release
-./gradlew assembleRelease
-
-# APK Output
-app/build/outputs/apk/debug/app-debug.apk
-app/build/outputs/apk/release/app-release.apk
 ```
 
----
+Or download the latest APK from [Releases](https://github.com/opanx/oprek-tool/releases).
 
-## 👤 Owner & Community
+## Owner
 
-| Link | Description |
-|------|-------------|
-| [@Gk_Gene](https://t.me/Gk_Gene) | Owner / Developer |
-| [t.me/kembungjir](https://t.me/kembungjir) | Channel |
-| [t.me/lazy_fat_catt](https://t.me/lazy_fat_catt) | Channel |
+- **@Gk_Gene** — Developer & Owner
 
----
+## Telegram
 
-## 📋 Known Limitations
+- Channel: [t.me/kembungjir](https://t.me/kembungjir)
+- Channel: [t.me/lazy_fat_catt](https://t.me/lazy_fat_catt)
+- DM: [t.me/Gk_Gene](https://t.me/Gk_Gene)
 
-- Disassembler uses hex display (Capstone native not bundled yet)
-- Decompiler (pseudo-C) not available yet
-- CFG visualization not available yet
-- Room DB for bookmarks not implemented yet
-- Some advanced features require root access
+## License
 
----
-
-## 📄 License
-
-MIT License - Free to use and modify
-
----
-
-**© Panxcz & Freebuff** — Built with ❤️ for the reverse engineering community
+Copyright © 2024 Panxcz & Freebuff. All rights reserved.

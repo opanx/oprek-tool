@@ -39,6 +39,12 @@ fun HashCalculatorScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         val file = java.io.File(context.cacheDir, "oprek").listFiles()?.firstOrNull()
         if (file != null) {
+            if (file.length() > 100 * 1024 * 1024) {
+
+                // File too large for in-memory processing
+
+            }
+
             val bytes = file.readBytes()
             input = file.name + " (" + bytes.size + " bytes)"
             results = mapOf(

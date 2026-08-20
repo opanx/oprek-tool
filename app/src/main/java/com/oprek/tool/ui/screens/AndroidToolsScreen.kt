@@ -41,6 +41,12 @@ fun AndroidToolsScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         try { NativeLib.dexValidate(byteArrayOf()); hasNative = true } catch (_: Exception) {}
         val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        if (file.length() > 100 * 1024 * 1024) {
+
+            // File too large for in-memory processing
+
+        }
+
         val data = withContext(Dispatchers.IO) { file.readBytes() }
 
         when {
