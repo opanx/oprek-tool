@@ -48,7 +48,7 @@ add_library(oprek_native SHARED
 target_link_libraries(oprek_native
     log
     android
-    capstone-static
+    capstone
 )
 
 target_include_directories(oprek_native PRIVATE
