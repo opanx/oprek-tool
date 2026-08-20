@@ -23,7 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.oprek.tool.core.AnalysisEngine
+import com.oprek.tool.engine.AnalysisEngine
 import com.oprek.tool.core.NativeLib
 import com.oprek.tool.core.StreamingIO
 import com.oprek.tool.engine.DecompilerEngine
@@ -61,10 +61,9 @@ fun DecompilerScreen(navController: NavController) {
         if (file != null) {
             try {
                 val analysis = withContext(Dispatchers.IO) { AnalysisEngine.analyzeElf(file) }
-                symbols = analysis.symbols.filter { it.isFunc && it.stValue > 0 }.map { "${it.stName} @ 0x${java.lang.Long.toHexString(it.stValue)}" }
-                // Also add dynsym
-                val dynSyms = analysis.dynsym.filter { it.isFunc && it.stValue > 0 }.map { "${it.stName} @ 0x${java.lang.Long.toHexString(it.stValue)}" }
-                symbols = (symbols + dynSyms).distinct().take(500)
+                val funcSyms = analysis.symbols.filter { s -> s.isFunc && s.stValue > 0 }.map { s -> "${s.stName} @ 0x${java.lang.Long.toHexString(s.stValue)}" }
+                val dynSyms = analysis.dynsym.filter { s -> s.isFunc && s.stValue > 0 }.map { s -> "${s.stName} @ 0x${java.lang.Long.toHexString(s.stValue)}" }
+                symbols = (funcSyms + dynSyms).distinct().take(500)
             } catch (_: Exception) {}
         }
     }

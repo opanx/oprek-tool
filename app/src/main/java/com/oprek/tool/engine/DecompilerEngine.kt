@@ -76,7 +76,7 @@ object DecompilerEngine {
 
     data class BasicBlock(
         val startAddr: Long,
-        val endAddr: Long,
+        var endAddr: Long,
         val stmts: MutableList<IRStmt> = mutableListOf(),
         val successors: MutableList<Long> = mutableListOf(),
         var predAddrs: MutableList<Long> = mutableListOf()
@@ -508,8 +508,8 @@ object DecompilerEngine {
 
     private fun findBlockForAddr(blocks: Map<Long, BasicBlock>, addr: Long): Long? {
         // Find the block whose range contains this address
-        for ((start, block) in blocks) {
-            if (addr >= start && addr <= block.endAddr) return start
+        for ((start, b) in blocks) {
+            if (addr >= start && addr <= b.endAddr) return start
         }
         // Find the nearest block before this address
         return blocks.keys.filter { it <= addr }.maxOrNull()
@@ -601,12 +601,12 @@ object DecompilerEngine {
                     }
                     is IRStmt.Branch -> {
                         // Generate if/else structure
-                        val condStr = formatExpr(stmt.cond)
-                        sb.appendLine("$indif ($condStr) {")
+                        val condStr = formatExpr(stmt.cond ?: IRExpr.Const(0))
+                        sb.appendLine("${ind}if ($condStr) {")
                         genBlock(stmt.target, depth + 1)
                         val fallThrough = findNextBlockStart(cfg.blocks, block.endAddr - 4)
                         if (fallThrough != null && fallThrough in cfg.blocks && fallThrough !in visited) {
-                            sb.appendLine("$ind} else {")
+                            sb.appendLine("${ind}} else {")
                             genBlock(fallThrough, depth + 1)
                         }
                         sb.appendLine("$ind}")
@@ -615,7 +615,7 @@ object DecompilerEngine {
                         if (stmt.target > 0) genBlock(stmt.target, depth)
                     }
                     is IRStmt.Return -> {
-                        sb.appendLine("$indreturn${if (stmt.value != null) " ${formatExpr(stmt.value)}" else ""};")
+                        sb.appendLine("${ind}return${if (stmt.value != null) " ${formatExpr(stmt.value)}" else ""};")
                     }
                     is IRStmt.CallStmt -> {
                         val argsStr = stmt.args.joinToString(", ") { formatExpr(it) }
