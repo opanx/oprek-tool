@@ -164,6 +164,9 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("Script Engine", "IDC-like scripting", Icons.Outlined.Code, AccentPurple, "scripting"),
                 ToolItem("Python Script", "Deobfuscate/Encrypt/Decrypt", Icons.Outlined.Code, AccentGreen, "python"),
                 ToolItem("Tools & Downloads", "SDK/NDK/RE tools links", Icons.Outlined.Link, AccentCyan, "toolsdl"),
+                ToolItem("Script Engine", "JavaScript runtime", Icons.Outlined.Code, AccentCyan, "scriptengine"),
+                ToolItem("APK Signer", "Sign/Verify APK", Icons.Outlined.Security, AccentOrange, "apksigner"),
+                ToolItem("Native Lib Analyzer", "Deep .so/ELF analysis", Icons.Outlined.Memory, AccentPurple, "nativelib"),
             )
 
             LazyVerticalGrid(

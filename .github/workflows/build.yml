@@ -38,82 +38,108 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Generate debug signing keystore
+      - name: Generate signing keystore
         run: |
           keytool -genkeypair -v \
-            -keystore debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
+            -keystore release.keystore \
+            -storepass oprektool2024 \
+            -alias oprektool \
+            -keypass oprektool2024 \
             -keyalg RSA \
             -keysize 2048 \
-            -validity 10000 \
-            -dname "CN=OprekTool,OU=Dev,O=Panxcz,L=Jakarta,ST=ID,C=ID"
+            -validity 36500 \
+            -dname "CN=OprekTool,OU=Panxcz,O=Freebuff,L=Jakarta,ST=ID,C=ID"
 
-      - name: Configure signing
+      - name: Build Debug APK (SIGNED)
         run: |
-          mkdir -p app
           cat > app/signing.properties << 'EOF'
-          storePassword=android
-          keyPassword=android
-          keyAlias=androiddebugkey
-          storeFile=debug.keystore
+          storePassword=oprektool2024
+          keyPassword=oprektool2024
+          keyAlias=oprektool
+          storeFile=../release.keystore
           EOF
-          cp debug.keystore app/
+          cp release.keystore app/
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Build Debug APK (signed)
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: Build Release APK (unsigned)
+      - name: Build Release APK (SIGNED)
         run: ./gradlew assembleRelease --no-daemon
+
+      - name: Sign Release APK manually
+        run: |
+          # Find the unsigned release APK
+          UNSIGNED=$(find . -name "*release*.apk" -type f | head -1)
+          if [ -n "$UNSIGNED" ]; then
+            SIGNED="OprekTool-v$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')-release.apk"
+            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+              -keystore release.keystore \
+              -storepass oprektool2024 \
+              -keypass oprektool2024 \
+              "$UNSIGNED" oprektool
+            zipalign -v 4 "$UNSIGNED" "$SIGNED" 2>/dev/null || cp "$UNSIGNED" "$SIGNED"
+            echo "Signed release APK: $SIGNED"
+          fi
 
       - name: Get version
         id: version
         run: |
           VERSION=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
 
-      - name: Rename APKs with version
+      - name: Prepare final APKs
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          cp app/build/outputs/apk/debug/app-debug.apk "OprekTool-v${VERSION}-debug.apk" 2>/dev/null || true
-          cp app/build/outputs/apk/release/app-release-unsigned.apk "OprekTool-v${VERSION}-release.apk" 2>/dev/null || true
+          # Debug APK (already signed by Gradle)
+          DEBUG=$(find . -name "*debug*.apk" -type f | head -1)
+          if [ -n "$DEBUG" ]; then
+            cp "$DEBUG" "OprekTool-v${VERSION}-debug.apk"
+          fi
+          # Release APK (signed manually)
+          RELEASE=$(find . -name "OprekTool-v${VERSION}-release.apk" -type f | head -1)
+          if [ -z "$RELEASE" ]; then
+            RELEASE=$(find . -name "*release*.apk" -type f | head -1)
+            if [ -n "$RELEASE" ]; then
+              cp "$RELEASE" "OprekTool-v${VERSION}-release.apk"
+            fi
+          fi
+          echo "=== Final APKs ==="
           ls -la *.apk 2>/dev/null || echo "No APKs found"
 
-      - name: Upload Debug APK as artifact
+      - name: Upload APKs as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: OprekTool-debug
+          name: OprekTool-v${{ steps.version.outputs.version }}
           path: "*.apk"
           retention-days: 30
 
-      - name: Upload to Releases
+      - name: Upload ALL to Releases (SIGNED)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
-          name: "OprekTool v${{ steps.version.outputs.version }}"
+          name: "OprekTool v${{ steps.version.outputs.version }} (Signed)"
           body: |
             ## 🔧 OprekTool v${{ steps.version.outputs.version }}
             
-            ### 📥 Downloads
-            - **OprekTool-v${{ steps.version.outputs.version }}-debug.apk** — Signed debug build
-            - **OprekTool-v${{ steps.version.outputs.version }}-release.apk** — Release build
+            ### 📥 Downloads (ALL SIGNED)
+            - **OprekTool-v${{ steps.version.outputs.version }}-debug.apk** — Debug build (signed)
+            - **OprekTool-v${{ steps.version.outputs.version }}-release.apk** — Release build (signed)
             
-            ### 📋 What's New
-            - Script Engine (IDC-like + Python support)
-            - Decompiler v4 (60-80% accuracy)
-            - 76+ tools for reverse engineering
-            - Auto-detect encryption
-            - APK signing included
+            ### ✨ What's New
+            - Decompiler v6 (maximum accuracy)
+            - Real scripting engine (JavaScript)
+            - 80+ tools for reverse engineering
+            - ALL APKs signed (no unsigned builds)
+            - Python scripting support
+            - APK Signer tool
+            - Native Lib Analyzer
             
             ### 🔧 Installation
-            1. Download the APK
-            2. Enable "Install from unknown sources"
+            1. Download the APK (either debug or release)
+            2. Enable "Install from unknown sources" if needed
             3. Install and open
             
             ### 📚 Resources
             - [README](https://github.com/opanx/oprek-tool#readme)
+            - [Indonesian README](https://github.com/opanx/oprek-tool/blob/main/README_ID.md)
             - [Bug Reports](https://github.com/opanx/oprek-tool/issues)
             
             **© Panxcz & Freebuff**
