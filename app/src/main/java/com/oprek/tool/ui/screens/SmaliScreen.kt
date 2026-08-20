@@ -70,7 +70,7 @@ fun SmaliScreen(navController: NavController) {
                         val classes = withContext(Dispatchers.IO) { NativeLib.dexGetClasses(data) }
                         val filtered = if (classFilter.isNotEmpty()) classes.filter { it.contains(classFilter, true) } else classes
                         val smaliParts = mutableListOf<String>()
-                        for (cls in filtered) {
+                        filtered.toList().forEach { cls ->
                             val parts = cls.split("|")
                             val name = parts.getOrElse(0) { "?" }
                             val flags = parts.getOrElse(1) { "0" }

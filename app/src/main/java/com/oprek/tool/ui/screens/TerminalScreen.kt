@@ -113,7 +113,8 @@ fun TerminalScreen(navController: NavController) {
                         for (i in data.indices step 16) {
                             val hex = data.drop(i).take(16).joinToString(" ") { "%02X".format(it) }
                             val asc = data.drop(i).take(16).map { if (it.toInt() in 0x20..0x7E) it.toInt().toChar() else '.' }.joinToString("")
-                            withContext(Dispatchers.Main) { addLine("${"%08X".format(i)}: $hex  |$asc|") }
+                            val addr = String.format("%08X", i.toLong())
+                            withContext(Dispatchers.Main) { addLine("$addr: $hex  |$asc|") }
                         }
                     }
                     "strings" -> withContext(Dispatchers.IO) {
