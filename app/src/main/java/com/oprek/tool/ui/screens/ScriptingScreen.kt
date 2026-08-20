@@ -8,7 +8,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -229,7 +229,7 @@ private fun executeScript(script: String, context: Context): String {
                     if (parts.size >= 2 && file != null) {
                         val offset = parts[0].trim().toLongOrNull() ?: 0L
                         val count = parts[1].trim().toIntOrNull() ?: 20
-                        val data = StreamingIO.readRange(file, offset.toInt(), count * 8)
+                        val data = StreamingIO.readRange(file, offset, count * 8)
                         val result = NativeLib.disassemble(data, offset, 1, 2, count)
                         sb.appendLine(result)
                     }
