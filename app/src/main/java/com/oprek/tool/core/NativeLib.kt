@@ -43,25 +43,23 @@ object NativeLib {
     external fun searchPattern(data: ByteArray, pattern: ByteArray, start: Long): Long
 
     // Capstone constants
-    companion object {
-        const val ARCH_ARM = 0
-        const val ARCH_ARM64 = 1
-        const val ARCH_X86 = 2
+    const val ARCH_ARM = 0
+    const val ARCH_ARM64 = 1
+    const val ARCH_X86 = 2
 
-        const val MODE_ARM = 0
-        const val MODE_THUMB = 1
-        const val MODE_ARM64 = 2
-        const val MODE_X86_64 = 3
-        const val MODE_X86_32 = 4
+    const val MODE_ARM = 0
+    const val MODE_THUMB = 1
+    const val MODE_ARM64 = 2
+    const val MODE_X86_64 = 3
+    const val MODE_X86_32 = 4
 
-        fun detectArchFromElf(eMachine: Int): Pair<Int, Int> {
-            return when (eMachine) {
-                0x28 -> ARCH_ARM to MODE_ARM
-                0xB7 -> ARCH_ARM64 to MODE_ARM64
-                0x03 -> ARCH_X86 to MODE_X86_32
-                0x3E -> ARCH_X86 to MODE_X86_64
-                else -> ARCH_ARM64 to MODE_ARM64
-            }
+    fun detectArchFromElf(eMachine: Int): Pair<Int, Int> {
+        return when (eMachine) {
+            0x28 -> ARCH_ARM to MODE_ARM
+            0xB7 -> ARCH_ARM64 to MODE_ARM64
+            0x03 -> ARCH_X86 to MODE_X86_32
+            0x3E -> ARCH_X86 to MODE_X86_64
+            else -> ARCH_ARM64 to MODE_ARM64
         }
     }
 }

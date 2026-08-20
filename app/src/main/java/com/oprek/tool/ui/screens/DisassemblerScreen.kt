@@ -66,9 +66,9 @@ fun DisassemblerScreen(navController: NavController) {
                     } else {
                         ((headerBytes[18].toInt() and 0xFF) shl 8) or (headerBytes[19].toInt() and 0xFF)
                     }
-                    val (arch, mode) = NativeLib.detectArchFromElf(machine)
-                    archIndex = arch
-                    modeIndex = mode
+                    val archMode = NativeLib.detectArchFromElf(machine)
+                    archIndex = archMode.first
+                    modeIndex = archMode.second
                     autoDetectedArch = when (machine) {
                         0x28 -> "ARM"
                         0xB7 -> "AArch64"

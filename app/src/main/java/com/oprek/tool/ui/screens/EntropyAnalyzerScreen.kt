@@ -35,10 +35,7 @@ fun EntropyAnalyzerScreen(navController: NavController) {
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { scope.launch(Dispatchers.IO) {
-            try { if (file.length() > 100 * 1024 * 1024) {
-     // File too large for in-memory processing
- }
- val b = context.contentResolver.openInputStream(it)?.readBytes() ?: byteArrayOf(); withContext(Dispatchers.Main) { fileBytes = b; loaded = true } } catch (_: Exception) {}
+            try { val b = context.contentResolver.openInputStream(it)?.readBytes() ?: byteArrayOf(); withContext(Dispatchers.Main) { fileBytes = b; loaded = true } } catch (_: Exception) {}
         }}
     }
 
