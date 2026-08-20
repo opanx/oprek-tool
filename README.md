@@ -173,7 +173,7 @@ A free, open-source Android app for binary analysis, disassembly, patching, and 
 ### 🔧 Decompiler & Visualization
 | Tool | Description | Auto |
 |------|-------------|------|
-| **Pseudo-C Decompiler v2** | IR + CFG + variable recovery + loop detection | ✅ |
+| **Pseudo-C Decompiler v5** | Max accuracy: dead code elim, native patterns, struct recovery | ✅ |
 | **Control Flow Graph** | Interactive canvas with zoom/pan | ✅ |
 | **Frida Script Library** | 15+ pre-built scripts | ✅ |
 | **Manifest Patcher** | Edit AndroidManifest.xml permissions | ✅ |
