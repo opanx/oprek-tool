@@ -1,167 +1,193 @@
-# ⚡ OprekTool v2.0 — Android Reverse Engineering Toolkit
+# ⚡ OprekTool v0.0.4
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Android-26%2B-brightgreen" alt="Min SDK"/>
-  <img src="https://img.shields.io/badge/Version-2.0-blue" alt="Version"/>
-  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License"/>
-  <img src="https://img.shields.io/badge/Tools-34-orange" alt="Tools"/>
-  <img src="https://img.shields.io/badge/FPS-120-red" alt="120fps"/>
-</p>
+**Professional-Grade Android Reverse Engineering Toolkit**
 
-<p align="center">
-  <b>34 tools, fully offline, native C++ backend, 120fps smooth UI</b>
-</p>
+> A mobile-first reverse engineering tool inspired by IDA Pro, Ghidra, and Binary Ninja. Analyze, disassemble, patch, and reverse engineer ELF, APK, DEX, PE, and shell scripts — all offline on your Android device.
+
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+![Version](https://img.shields.io/badge/version-0.0.4-blue)
+![License](https://img.shields.io/badge/license-MIT-orange)
+![SDK](https://img.shields.io/badge/SDK-26--35-brightgreen)
 
 ---
 
-## 📥 Download
+## 📱 Download
 
-**[⬇️ Download APK (Latest)](https://github.com/opanx/oprek-tool/actions)**
-
-> Klik action terbaru → download **OprekTool-debug** atau **OprekTool-release**
-
----
-
-## 📱 Owner & Contact
-
-| | |
-|---|---|
-| 👤 **Owner** | **@Gk_Gene** |
-| 📢 **Channel 1** | **[t.me/kembungjir](https://t.me/kembungjir)** (non-official) |
-| 📢 **Channel 2** | **[t.me/lazy_fat_catt](https://t.me/lazy_fat_catt)** |
-| 💬 **Telegram** | **[t.me/Gk_Gene](https://t.me/Gk_Gene)** |
+| Build | Status |
+|-------|--------|
+| **Debug APK** | [Download from Actions](https://github.com/opanx/oprek-tool/actions) → latest run → **OprekTool-debug** |
+| **Release APK** | [Download from Actions](https://github.com/opanx/oprek-tool/actions) → latest run → **OprekTool-release** |
 
 ---
 
-## 🛠️ Features (34 Tools)
+## 🔥 Features (55+ Tools)
 
-### Binary Analysis
-| Tool | Description | Auto |
-|------|-------------|------|
-| 🔍 **Hex Viewer** | View & edit raw bytes, hex+ASCII | ✅ |
-| 📝 **Strings** | Extract text, **real-time search + highlight** | ✅ |
-| 📦 **Disassembler** | ARM32/ARM64/x86 (Capstone bridge) | ✅ Auto-detect arch |
-| 📋 **ELF Info** | Parse headers, sections, symbols | ✅ |
-| 📱 **APK Info** | Analyze APK structure, DEX, native libs | ✅ |
-| 🤖 **Android Tools** | DEX header, class dump | ✅ |
+### 📦 Binary Analysis
+| Tool | Description |
+|------|-------------|
+| **ELF Info** | Parse ELF headers, sections, symbols |
+| **ELF Full Header** | All ELF fields + architecture detection |
+| **Program Headers** | PT_LOAD/PT_DYNAMIC viewer with permission colors |
+| **Section Headers** | .text/.data/.symtab/.dynsym/.got/.plt |
+| **Symbol Table** | Full .symtab + .dynsym with search/filter |
+| **Dynamic Section** | DT_NEEDED, DT_SONAME, DT_INIT/DT_FINI |
+| **Relocations** | R_ARM, R_AARCH64, R_X86_64 |
+| **GOT / PLT** | Import table viewer |
+| **Function List** | All functions with size/type/binding |
+| **APK Info** | List entries, detect DEX/native libs |
+| **Android Tools** | DEX header, class dump |
+| **Manifest Reader** | APK permissions/entries |
 
-### Patching & Deobfuscation
-| Tool | Description | Auto |
-|------|-------------|------|
-| 🔧 **Patch Editor** | Single + bulk binary patch | ✅ |
-| 🔧 **Adv. Patch** | NOP/RET/String patch + **auto-detect** | ✅ Auto-scan |
-| 🔓 **Deobfuscate** | Decode Base64/Hex/XOR/URL/Unicode | ✅ Auto-scan |
-| 🔒 **Obfuscate** | Encode Base64/Hex/XOR/ROT13 | ✅ |
-| 📜 **Shell Script** | Parse .sh, extract commands/URLs/functions | ✅ |
-| 🔧 **Shell Patcher** | Edit URLs/keys/commands in .sh | ✅ |
+### 🔍 Disassembly & Analysis
+| Tool | Description |
+|------|-------------|
+| **Disassembler** | ARM32/ARM64/x86 instruction decode |
+| **Disasm Advanced** | Full disassembly with hex bytes |
+| **XREF Viewer** | Cross-reference finder |
+| **IDA Strings** | Type-tagged string window (URL/CMD/LIB) |
+| **Entropy Analyzer** | Per-block entropy visualization |
+| **Packer Detection** | UPX/Themida/OLLMV detection |
+| **Unpacker** | UPX detection + entropy analysis |
 
-### Hooking & Anti-Debug
-| Tool | Description | Auto |
-|------|-------------|------|
-| 🪝 **Frida Hook** | Generate Frida hook scripts | ✅ |
-| 🪝 **Hook Generator** | LD_PRELOAD + ARM64 trampoline | ✅ |
-| 🛡️ **Anti-Debug** | Detect TracerPid, ptrace, debugger apps | ✅ |
+### 🔧 Patching
+| Tool | Description |
+|------|-------------|
+| **Patch Editor** | Single + bulk binary patch |
+| **Adv. Patch** | Auto-detect login/license/anti-debug |
+| **Patch Instruction** | NOP/RET/RET X0=0/JMP |
+| **Patch Branch** | Conditional → NOP/JMP |
+| **Auto Patch Login** | Auto-scan + bypass login checks |
+| **Patch String** | Search & replace in binary |
+| **Patch Anti-Debug** | NOP ptrace/frida/debugger checks |
 
-### Tools & Utilities
-| Tool | Description | Auto |
-|------|-------------|------|
-| 🔐 **Hash Calculator** | MD5/SHA-1/SHA-256/SHA-512/CRC32 | ✅ Auto-calc |
-| 🔑 **Key Generator** | Random keys, custom charset | ✅ |
-| 🔄 **Base64/Hex** | Encode/decode strings | ✅ Auto-detect |
-| ⚖️ **Diff Tool** | Binary file comparison | ✅ Auto-compare |
-| 📋 **Manifest Reader** | APK permissions & entries | ✅ |
-| 📌 **Bookmarks** | Save important offsets | ✅ Auto-scan |
-| 📤 **Export Report** | Save analysis as TXT | ✅ |
-| 🕐 **Recent Files** | History with SharedPrefs | ✅ |
-| 📊 **Memory Analyzer** | Entropy, packer detection | ✅ |
-| 📋 **Logcat** | Capture & filter Android logs | ✅ Auto-refresh |
-| 📦 **ELF Full Header** | Complete ELF header display | ✅ |
-| 🧩 **Packer Detection** | UPX/Themida/OLLMV detection | ✅ |
-| 🧠 **Memory Dump** | Analyze raw memory dumps | ✅ |
-| 🌙 **Lua Analyzer** | Parse .lua scripts, detect obfuscation | ✅ |
-| 📦 **Pak Archive** | Analyze .pak/.paks/.unity3d | ✅ |
-| 💻 **Terminal** | Shell emulator + built-in commands | ✅ |
-| 📋 **Hex Copy** | Export bytes as C/Python/hex | ✅ |
-| 🔍 **ELF Symbols** | Symbol table + dynamic sections | ✅ |
-| 🔎 **Search** | Find byte patterns in binary | ✅ |
+### 🔐 Deobfuscation & Encoding
+| Tool | Description |
+|------|-------------|
+| **Deobfuscate** | Auto-scan Base64/Hex/XOR/Unicode |
+| **Obfuscate** | XOR/AES/ROT13/Base64+XOR |
+| **Shell Deobfuscate** | Decode shell obfuscation |
+| **XOR Brute Force** | Key 0x00-0xFF with entropy scoring |
+| **String Encryptor** | XOR/AES/ROT13 encode |
+| **Base64/Hex** | Encode/decode strings |
+
+### 🛠️ Utilities
+| Tool | Description |
+|------|-------------|
+| **Hash Calculator** | MD5/SHA1/SHA256/SHA512/CRC32 |
+| **Key Generator** | Random keys with charset config |
+| **Diff Tool** | Compare two binary files |
+| **File Info** | MD5/SHA256, 20+ magic bytes |
+| **Bookmarks** | Save important offsets |
+| **Session Manager** | Save/load analysis state |
+| **Export Report** | Save analysis as TXT |
+| **Recent Files** | History with SharedPrefs |
+
+### 🐚 Shell Script Tools
+| Tool | Description |
+|------|-------------|
+| **Shell Script** | Parse + analyze scripts |
+| **Shell Patcher** | Edit URLs/keys/commands |
+| **Shell Deobfuscate** | Decode shell obfuscation |
+
+### 🎮 Hooking & Debugging
+| Tool | Description |
+|------|-------------|
+| **Frida Hook** | Generate hook scripts |
+| **Anti-Debug** | Detect debuggers + root |
+| **Inline Hook** | LD_PRELOAD + trampoline |
+
+### 📱 Android Tools
+| Tool | Description |
+|------|-------------|
+| **Logcat** | Capture Android logs |
+| **Terminal** | Shell executor |
+| **Hex Copy** | Export as C/Python/hex |
+| **Hex Viewer** | View + edit raw bytes |
+| **Strings** | Extract readable text |
+
+### 🎮 Game Analysis
+| Tool | Description |
+|------|-------------|
+| **Lua Analyzer** | Parse .lua scripts |
+| **Pak Archive** | Analyze .pak/.paks files |
 
 ---
 
-## 🎮 Performance
+## 🏗️ Tech Stack
 
-- **120fps** — smooth scrolling on high refresh rate displays
-- **Native C++** — ELF/PE/DEX parsers, XOR, patching via JNI
-- **Coroutines** — all heavy processing on background threads
-- **5MB scan limit** — prevents OOM on large files
-
----
-
-## 🔧 Tech Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Language | Kotlin |
-| UI | Jetpack Compose (Material 3) |
-| Architecture | MVVM + StateFlow |
-| Native | C++ (ELF/PE/DEX parsers, XOR, patching) |
-| Build | Gradle 8.11 + AGP 8.7.3 |
-| CI/CD | GitHub Actions |
-| Min SDK | 26 (Android 8.0) |
-| Target SDK | 35 (Android 15) |
+- **Language:** Kotlin + C++ (JNI)
+- **UI:** Jetpack Compose + Material 3
+- **Architecture:** MVVM + StateFlow + Coroutines
+- **Native:** ELF/PE/DEX parsers, obfuscation engine
+- **Min SDK:** 26 (Android 8.0)
+- **Target SDK:** 35 (Android 15)
+- **120fps** support on capable devices
 
 ---
 
-## 📂 Project Structure
+## 📂 Output Directory
 
+All tool outputs are saved to:
 ```
-oprek-tool/
-├── app/src/main/
-│   ├── java/com/oprek/tool/
-│   │   ├── MainActivity.kt          # Entry point (120fps)
-│   │   ├── MainViewModel.kt         # State management
-│   │   ├── Navigation.kt            # 34 screen routes
-│   │   ├── core/
-│   │   │   ├── FileAnalyzer.kt      # Core analysis engine
-│   │   │   ├── NativeLib.kt         # JNI bridge
-│   │   │   └── FileUtils.kt         # File I/O
-│   │   ├── utils/
-│   │   │   ├── PatternDetector.kt   # Auto-detect patterns
-│   │   │   └── ShellScriptParser.kt # Shell script analysis
-│   │   └── ui/screens/              # 27+ screen files
-│   ├── cpp/                         # Native C/C++
-│   │   ├── CMakeLists.txt
-│   │   ├── jni_bridge.cpp
-│   │   ├── elf_parser.c
-│   │   ├── pe_parser.c
-│   │   ├── dex_parser.c
-│   │   ├── obfuscate.c
-│   │   └── patch_utils.c
-│   └── res/
-├── .github/workflows/build.yml      # CI/CD
-└── README.md
+/sdcard/OprekTool/output/
+├── elf/        (headers, sections, symbols)
+├── strings/    (extracted strings)
+├── disasm/     (disassembly output)
+├── patches/    (all patch results)
+├── analysis/   (entropy, packer, anti-debug)
+├── hooks/      (frida scripts, inline hooks)
+├── shell/      (shell analysis, deobfuscation)
+├── encode/     (base64, obfuscate, encrypt)
+├── bookmarks/  (saved bookmarks)
+└── info/       (file info, manifest)
 ```
 
 ---
 
-## 🏗️ Build
+## 🚀 Build Instructions
 
 ```bash
+# Clone
 git clone https://github.com/opanx/oprek-tool.git
 cd oprek-tool
+
+# Build Debug
 ./gradlew assembleDebug
-# APK at: app/build/outputs/apk/debug/app-debug.apk
+
+# Build Release
+./gradlew assembleRelease
+
+# APK Output
+app/build/outputs/apk/debug/app-debug.apk
+app/build/outputs/apk/release/app-release.apk
 ```
 
 ---
 
-## ©️ Copyright
+## 👤 Owner & Community
 
-**© Panxcz & Freebuff**
-
-Built with ❤️ by [opanx](https://github.com/opanx)
+| Link | Description |
+|------|-------------|
+| [@Gk_Gene](https://t.me/Gk_Gene) | Owner / Developer |
+| [t.me/kembungjir](https://t.me/kembungjir) | Channel |
+| [t.me/lazy_fat_catt](https://t.me/lazy_fat_catt) | Channel |
 
 ---
 
-## ⚠️ Disclaimer
+## 📋 Known Limitations
 
-For educational and security research purposes only. Use responsibly.
+- Disassembler uses hex display (Capstone native not bundled yet)
+- Decompiler (pseudo-C) not available yet
+- CFG visualization not available yet
+- Room DB for bookmarks not implemented yet
+- Some advanced features require root access
+
+---
+
+## 📄 License
+
+MIT License - Free to use and modify
+
+---
+
+**© Panxcz & Freebuff** — Built with ❤️ for the reverse engineering community

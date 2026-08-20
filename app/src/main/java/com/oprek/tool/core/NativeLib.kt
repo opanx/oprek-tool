@@ -2,7 +2,11 @@ package com.oprek.tool.core
 
 object NativeLib {
     init {
-        System.loadLibrary("oprek_native")
+        try {
+            System.loadLibrary("oprek_native")
+        } catch (e: UnsatisfiedLinkError) {
+            android.util.Log.e("NativeLib", "Failed to load native library: \${e.message}")
+        }
     }
 
     // ELF

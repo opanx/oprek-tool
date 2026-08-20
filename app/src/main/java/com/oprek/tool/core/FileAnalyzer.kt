@@ -214,6 +214,16 @@ object FileAnalyzer {
             b.startsWith(byteArrayOf(0xCA.toByte(), 0xFE.toByte(), 0xBA.toByte(), 0xBE.toByte())) -> "DEX/Class"
             b.startsWith(byteArrayOf(0x23.toByte(), 0x21.toByte())) -> "Shell Script (#!/)"
             b[0] == 0x4D.toByte() && b[1] == 0x5A.toByte() -> "PE/EXE"
+            b.size > 4 && b[0] == 0xFE.toByte() && b[1] == 0xED.toByte() && b[2] == 0xFA.toByte() && b[3] == 0xCE.toByte() -> "Mach-O 32-bit"
+            b.size > 4 && b[0] == 0xFE.toByte() && b[1] == 0xED.toByte() && b[2] == 0xFA.toByte() && b[3] == 0xCF.toByte() -> "Mach-O 64-bit"
+            b.size > 4 && b[0] == 0x64.toByte() && b[1] == 0x65.toByte() && b[2] == 0x78.toByte() && b[3] == 0x0A.toByte() -> "DEX"
+            b.size > 4 && b[0] == 0x50.toByte() && b[1] == 0x4B.toByte() && b[2] == 0x03.toByte() && b[3] == 0x04.toByte() -> "ZIP/APK/JAR"
+            b.size > 2 && b[0] == 0x23.toByte() && b[1] == 0x21.toByte() -> "Shell Script (#!)"
+            b.size > 4 && b[0] == 0x42.toByte() && b[1] == 0x5A.toByte() && b[2] == 0x68.toByte() -> "BZip2"
+            b.size > 4 && b[0] == 0x1F.toByte() && b[1] == 0x8B.toByte() -> "GZip"
+            b.size > 4 && b[0] == 0x89.toByte() && b[1] == 0x50.toByte() && b[2] == 0x4E.toByte() && b[3] == 0x47.toByte() -> "PNG"
+            b.size > 4 && b[0] == 0xFF.toByte() && b[1] == 0xD8.toByte() && b[2] == 0xFF.toByte() -> "JPEG"
+            b.size > 4 && b[0] == 0x47.toByte() && b[1] == 0x49.toByte() && b[2] == 0x46.toByte() -> "GIF" 
             else -> "Unknown (${b.take(4).joinToString("") { "%02x".format(it) }})"
         }
     }
