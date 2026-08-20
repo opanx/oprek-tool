@@ -114,6 +114,7 @@ private fun calcEntropy(data: ByteArray): Double {
     val freq = IntArray(256); for (b in data) freq[b.toInt() and 0xFF]++
     var e = 0.0; for (f in freq) if (f > 0) { val p = f.toDouble() / data.size; e -= p * ln(p) / ln(2.0) }
     return e
+}
 
 private fun findSubArray(haystack: ByteArray, needle: ByteArray): Int {
     if (needle.isEmpty()) return -1
