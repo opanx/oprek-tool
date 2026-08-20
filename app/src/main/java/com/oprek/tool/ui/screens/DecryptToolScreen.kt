@@ -238,10 +238,10 @@ private fun decryptData(input: String, method: Int, key: String, shift: Int): St
             }.joinToString("")
         }
         8 -> { // RC4
-            val keyBytes = key.toByteArray().ifEmpty { "key".toByteArray() }
+            val keyBytes = if (key.isNotEmpty()) key.toByteArray() else "key".toByteArray()
             val s = IntArray(256) { it }
             var j = 0
-            for (i in 0 until 256) { j = (j + s[i] + keyBytes[i % keyBytes.size].toInt()) and 0xFF; val t = s[i]; s[i] = s[j]; s[j] = t }
+            for (i in 0 until 256) { j = (j + s[i] + (keyBytes[i % keyBytes.size].toInt() and 0xFF)) and 0xFF; val t = s[i]; s[i] = s[j]; s[j] = t }
             var x = 0; var y = 0
             val bytes = hexToBytes(input)
             val result = mutableListOf<Int>()
