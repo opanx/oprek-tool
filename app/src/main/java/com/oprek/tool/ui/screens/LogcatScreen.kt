@@ -53,7 +53,7 @@ fun LogcatScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("📋 Logcat", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
                 actions = {
                     IconButton(onClick = { lines.clear(); lineCount = 0 }) { Icon(Icons.Default.DeleteSweep, "Clear") }
                     IconButton(onClick = {

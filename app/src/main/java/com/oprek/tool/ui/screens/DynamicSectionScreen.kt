@@ -26,7 +26,7 @@ fun DynamicSectionScreen(navController: NavController) {
     var entries by remember { mutableStateOf(listOf<com.oprek.tool.engine.DynamicEntry>()) }
     Scaffold(topBar = {
         TopAppBar(title = { Text("Dynamic Section", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         LazyColumn(Modifier.padding(padding).padding(horizontal = 12.dp)) {

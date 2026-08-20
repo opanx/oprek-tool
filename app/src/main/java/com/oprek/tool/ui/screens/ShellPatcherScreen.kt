@@ -49,7 +49,7 @@ fun ShellPatcherScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("🔧 Shell Patcher", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
                 actions = {
                     IconButton(onClick = {
                         val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@IconButton
@@ -116,7 +116,7 @@ fun ShellPatcherScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { "Shell patched" } },
+                content = { "Shell patched" },
                 filename = "patched_shell.sh",
                 subfolder = "shell"
             )

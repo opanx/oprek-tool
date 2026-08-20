@@ -54,7 +54,7 @@ fun ShellScriptScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("📜 Shell Script Analyzer", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
                 actions = {
                     IconButton(onClick = {
                         clipboard.setPrimaryClip(ClipData.newPlainText("script", rawContent))
@@ -188,6 +188,9 @@ fun SimpleList(items: List<String>, type: String, color: androidx.compose.ui.gra
                     }
                 }
             }
+        }
+    }
+
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
@@ -196,6 +199,4 @@ fun SimpleList(items: List<String>, type: String, color: androidx.compose.ui.gra
                 subfolder = "shell"
             )
 
-        }
-    }
 }

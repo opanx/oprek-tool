@@ -33,7 +33,7 @@ fun SymbolTableScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Symbol Table", fontWeight = FontWeight.Bold) },
-            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
+            navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding)) {
@@ -81,7 +81,7 @@ fun SymbolTableScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { "${symbols.size} symbols" } symbols" },
+                content = { "${symbols.size} symbols" } symbols" } symbols" },
                 filename = "symbols.txt",
                 subfolder = "elf"
             )

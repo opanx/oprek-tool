@@ -75,7 +75,7 @@ fun AndroidToolsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("🤖 Android Tools", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg))
         },
         containerColor = DarkBg
