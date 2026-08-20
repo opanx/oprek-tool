@@ -108,7 +108,7 @@ fun LogcatScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { logs.joinToString("\n") },
+                content = { "Logcat captured" },
                 filename = "logcat.txt",
                 subfolder = "logcat"
             )

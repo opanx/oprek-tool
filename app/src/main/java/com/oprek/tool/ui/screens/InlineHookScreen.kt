@@ -130,7 +130,7 @@ original_${funcName}:
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { script },
+                content = { "Hook script generated" },
                 filename = "inline_hook.c",
                 subfolder = "hooks"
             )

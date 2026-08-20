@@ -104,7 +104,7 @@ fun HashCalculatorScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { results },
+                content = { "Hash calculation complete" },
                 filename = "hashes.txt",
                 subfolder = "hash"
             )

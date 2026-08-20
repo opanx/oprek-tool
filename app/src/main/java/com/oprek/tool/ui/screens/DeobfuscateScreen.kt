@@ -152,9 +152,9 @@ fun DeobfuscateScreen(navController: NavController) {
                 Column(Modifier.padding(12.dp)) {
                     Text("Manual Mode", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentCyan)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.take(4).forEach { (k, l) -> ModeChip(l, selectedMode == k) { selectedMode = k } }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.take(4).forEach { (k, l) -> FilterChip(selected = selectedMode == k, onClick = { selectedMode = k }, label = { Text(l, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(0.3f))) }
                     Spacer(Modifier.height(6.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.drop(4).forEach { (k, l) -> ModeChip(l, selectedMode == k) { selectedMode = k } }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { modes.drop(4).forEach { (k, l) -> FilterChip(selected = selectedMode == k, onClick = { selectedMode = k }, label = { Text(l, fontSize = 10.sp) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(0.3f))) }
                 }
             }
 
@@ -197,7 +197,7 @@ fun DeobfuscateScreen(navController: NavController) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { outputText.ifEmpty { "No results" } },
+                content = { "Deobfuscation complete" } },
                 filename = "deobfuscated.txt",
                 subfolder = "deobfuscate"
             )
@@ -207,12 +207,6 @@ fun DeobfuscateScreen(navController: NavController) {
     }
 }
 
-@Composable
-fun ModeChip(text: String, selected: Boolean, onClick: () -> Unit) {
-    FilterChip(selected = selected, onClick = onClick, label = { Text(text, fontSize = 10.sp) },
-        colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(alpha = 0.3f), selectedLabelColor = AccentPurple),
-        modifier = Modifier.height(32.dp))
-}
 
 private fun processDeobfuscate(input: String, mode: String): String {
     if (input.isBlank()) return ""

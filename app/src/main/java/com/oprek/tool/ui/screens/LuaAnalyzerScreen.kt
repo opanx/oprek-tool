@@ -202,7 +202,7 @@ fun InfoPill(label: String, value: String, color: Color) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { analysis },
+                content = { "Lua analysis complete" },
                 filename = "lua_analysis.txt",
                 subfolder = "lua"
             )

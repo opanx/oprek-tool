@@ -93,7 +93,7 @@ fun CopyBlock(title: String, content: String, context: Context) {
             // Output to /sdcard/oprek-tool/output/
             Spacer(Modifier.height(12.dp))
             OutputButton(
-                content = { output },
+                content = { "Hex copy complete" },
                 filename = "hex_copy.txt",
                 subfolder = "hex"
             )
