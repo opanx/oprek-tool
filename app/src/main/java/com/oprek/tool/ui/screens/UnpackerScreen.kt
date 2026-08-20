@@ -57,8 +57,8 @@ fun UnpackerScreen(navController: NavController) {
                         Text("Size: ${fileBytes.size} bytes", color = TextSecondary, fontSize = 12.sp)
                         Spacer(Modifier.height(12.dp))
                         // Detect packer
-                        val hasUPX = fileBytes.indexOf("UPX!".toByteArray()) >= 0
-                        val hasThemida = fileBytes.indexOf("Themida".toByteArray()) >= 0 || fileBytes.indexOf("WinLicense".toByteArray()) >= 0
+                        val hasUPX = findSubArray(fileBytes, "UPX!".toByteArray()) >= 0
+                        val hasThemida = findSubArray(fileBytes, "Themida".toByteArray()) >= 0 || findSubArray(fileBytes, "WinLicense".toByteArray()) >= 0
                         val entropy = calcEntropy(fileBytes)
                         packer = when {
                             hasUPX -> "UPX Packed"
@@ -75,7 +75,7 @@ fun UnpackerScreen(navController: NavController) {
                     Button(onClick = {
                         status = "Attempting UPX unpack... (requires UPX binary on device)"
                         // Search for UPX signature and try basic unpack
-                        val upxIdx = fileBytes.indexOf("UPX!".toByteArray())
+                        val upxIdx = findSubArray(fileBytes, "UPX!".toByteArray())
                         if (upxIdx >= 0) {
                             status = "UPX signature found at offset 0x${"%X".format(upxIdx)}\n" +
                                 "Manual: Run 'upx -d $fileName' on a Linux system\n" +
@@ -114,4 +114,15 @@ private fun calcEntropy(data: ByteArray): Double {
     val freq = IntArray(256); for (b in data) freq[b.toInt() and 0xFF]++
     var e = 0.0; for (f in freq) if (f > 0) { val p = f.toDouble() / data.size; e -= p * ln(p) / ln(2.0) }
     return e
+
+private fun findSubArray(haystack: ByteArray, needle: ByteArray): Int {
+    if (needle.isEmpty()) return -1
+    outer@ for (i in 0..haystack.size - needle.size) {
+        for (j in needle.indices) {
+            if (haystack[i + j] != needle[j]) continue@outer
+        }
+        return i
+    }
+    return -1
+}
 }

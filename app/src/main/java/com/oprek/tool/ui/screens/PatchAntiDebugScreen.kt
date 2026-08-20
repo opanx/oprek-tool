@@ -63,7 +63,7 @@ fun PatchAntiDebugScreen(navController: NavController) {
                         for (kw in antiDbg) {
                             if (lower.contains(kw)) {
                                 val branchOff = findBranchNear(fileBytes, off.toInt(), s.length)
-                                if (branchOff >= 0) found.add(branchOff.toLong() to kw to s)
+                                if (branchOff >= 0) found.add(Triple(branchOff.toLong(), kw, s))
                                 break
                             }
                         }

@@ -67,7 +67,7 @@ fun AutoPatchLoginScreen(navController: NavController) {
                                         // Find nearby branch (scan backwards/forwards)
                                         val branchOff = findNearestBranch(fileBytes, start.toInt(), sb.length)
                                         if (branchOff >= 0) {
-                                            found.add(branchOff.toLong() to login to sb.toString())
+                                            found.add(Triple(branchOff.toLong(), login, sb.toString()))
                                         }
                                         break
                                     }
@@ -89,8 +89,8 @@ fun AutoPatchLoginScreen(navController: NavController) {
                                     Text("\"$keyword\" near \"$str\"", color = TextSecondary, fontSize = 10.sp)
                                 }
                                 Button(onClick = {
-                                    // NOP the branch (4 bytes)
-                                    for (j in 0..3) fileBytes[addr.toInt()+j] = byteArrayOf(0x1F, 0x20, 0x03, 0xD5.toByte())[j]
+                                    val nop = byteArrayOf(0x1F, 0x20, 0x03, 0xD5.toByte())
+                                    for (j in 0..3) fileBytes[addr.toInt()+j] = nop[j]
                                     patchedCount++
                                     findings = findings.filter { it.first != addr }
                                 }, colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)) { Text("BYPASS", fontSize = 9.sp) }

@@ -66,8 +66,8 @@ fun PatchInstructionScreen(navController: NavController) {
                         val orig = "%02X %02X %02X %02X".format(fileBytes[off.toInt()], fileBytes[off.toInt()+1], fileBytes[off.toInt()+2], fileBytes[off.toInt()+3])
                         val patched = when (insnType) {
                             "NOP" -> byteArrayOf(0x1F, 0x20, 0x03, 0xD5.toByte()) // ARM64 NOP
-                            "RET" -> byteArrayOf(0xC0, 0x03, 0x5F, 0xD6.toByte()) // ARM64 RET
-                            "RET X0=0" -> byteArrayOf(0x00, 0x00, 0x80, 0x52.toByte()) + byteArrayOf(0xC0, 0x03, 0x5F, 0xD6.toByte()) // MOV W0,#0; RET
+                            "RET" -> byteArrayOf(0xC0.toByte(), 0x03, 0x5F, 0xD6.toByte()) // ARM64 RET
+                            "RET X0=0" -> byteArrayOf(0x00, 0x00, 0x80.toByte(), 0x52.toByte()) + byteArrayOf(0xC0.toByte(), 0x03, 0x5F, 0xD6.toByte()) // MOV W0,#0; RET
                             "JMP" -> byteArrayOf(0x00, 0x00, 0x00, 0x14.toByte()) // B . (self-loop)
                             else -> byteArrayOf(0x1F, 0x20, 0x03, 0xD5.toByte())
                         }

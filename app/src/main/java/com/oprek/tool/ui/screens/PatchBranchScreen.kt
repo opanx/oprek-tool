@@ -73,8 +73,8 @@ fun PatchBranchScreen(navController: NavController) {
                                     Text(cond, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                                 }
                                 Button(onClick = {
-                                    fileBytes[addr.toInt()] = 0x1F; fileBytes[addr.toInt()+1] = 0x20
-                                    fileBytes[addr.toInt()+2] = 0x03; fileBytes[addr.toInt()+3] = 0xD5.toByte()
+                                    val nop = byteArrayOf(0x1F, 0x20, 0x03, 0xD5.toByte())
+                                    for (j in 0..3) fileBytes[addr.toInt()+j] = nop[j]
                                     patchedCount++
                                     branches = branches.filter { it.first != addr }
                                 }, colors = ButtonDefaults.buttonColors(containerColor = AccentRed)) { Text("NOP", fontSize = 10.sp) }

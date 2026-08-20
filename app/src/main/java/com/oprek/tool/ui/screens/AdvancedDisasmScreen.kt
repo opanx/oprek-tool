@@ -130,9 +130,9 @@ private fun decodeInsnARM64(insn: Int): String {
     if (ldr == 0x1E5) return "LDR W${(insn and 0x1F)}, [X${(insn shr 5) and 0x1F}]"
     if (ldr == 0x1E0) return "STR X${(insn and 0x1F)}, [X${(insn shr 5) and 0x1F}]"
     // RET
-    if (insn == 0xD65F03C0) return "RET"
+    if (insn == 0xD65F03C0.toInt()) return "RET"
     // NOP
-    if (insn == 0xD503201F) return "NOP"
+    if (insn == 0xD503201F.toInt()) return "NOP"
     // STP
     val stp = (insn shr 22) and 0x1FF
     if (stp == 0x1A5) return "STP X29, X30, [SP, #-0x10]!"

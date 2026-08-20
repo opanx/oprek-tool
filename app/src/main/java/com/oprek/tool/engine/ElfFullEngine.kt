@@ -53,7 +53,7 @@ object ElfFullEngine {
     private fun isElf(): Boolean = data.size >= 4 && data[0] == 0x7F.toByte() && data[1] == 0x45.toByte() && data[2] == 0x4C.toByte() && data[3] == 0x46.toByte()
 
     fun parseHeader(): ElfFullHeader {
-        if (!isElf()) return ElfFullHeader("N/A","N/A","N/A","N/A","N/A",0,0,0,0,0,0,0,0,0,0,"Invalid ELF")
+        if (!isElf()) return ElfFullHeader("N/A","N/A","N/A","N/A","N/A",0,0,0,0,0,0,0,0,0,0,0,"Invalid ELF")
         val machine = rU16(18)
         val machineStr = when(machine) { 0x03->"x86"; 0x08->"MIPS"; 0x14->"ARM"; 0x28->"AArch64"; 0x3E->"x86_64"; 0xB7->"AArch64"; else->"0x${machine.toString(16)}" }
         val eType = when(val t = rU16(16)) { 1->"ET_REL"; 2->"ET_EXEC"; 3->"ET_DYN"; 4->"ET_CORE"; else->"0x${t.toString(16)}" }
@@ -188,8 +188,8 @@ object ElfFullEngine {
             if (a + 4 > data.size) break
             val insn = rU32At(a); val opc = (insn shr 26) and 0x3F
             if (opc == 0x25L || opc == 0x05L) {
-                val imm26 = insn and 0x3FFFFFF
-                val signExt = if (imm26 and 0x2000000 != 0L) (imm26 or 0xFFFFFFFFFC000000L) else imm26
+                val imm26 = insn and 0x3FFFFFFL
+                val signExt = if (imm26 and 0x2000000L != 0L) (imm26 or (-0x4000000L)) else imm26
                 val bt = a + signExt * 4
                 if (bt == targetAddr) results.add(a)
             }

@@ -54,7 +54,7 @@ fun IdaStringWindowScreen(navController: NavController) {
                                 s.contains("chmod") || s.contains("curl") || s.contains("echo") -> "CMD"
                                 else -> "STR"
                             }
-                            result.add(start to s to type)
+                            result.add(Triple(start, s, type))
                         }
                         sb.clear()
                     }
