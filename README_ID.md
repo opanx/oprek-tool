@@ -85,7 +85,7 @@ Aplikasi Android gratis & open-source untuk analisis binary, disassembly, patchi
 
 5. **Streaming I/O** — Handle file sampai 200MB tanpa crash
 
-6. **75+ Tools** — Lebih banyak tools dalam satu app dari tool RE manapun
+6. **80+ Tools** — Lebih banyak tools dalam satu app dari tool RE manapun
 
 ### ⚠️ Kekurangan OprekTool (Jujur)
 
@@ -128,7 +128,7 @@ Aplikasi Android gratis & open-source untuk analisis binary, disassembly, patchi
 
 ---
 
-## Fitur (75+ Tools)
+## Fitur (80+ Tools)
 
 *(Lihat versi English untuk daftar lengkap)*
 

@@ -48,6 +48,7 @@ A free, open-source Android app for binary analysis, disassembly, patching, and 
 | **Auto-Detect Encryption** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Shell Script Cracking** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Auto Patch Login** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **IL2CPP Dumper** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Frida Hook Gen** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Anti-Debug Patcher** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **APK/DEX Analysis** | ✅ | Partial | Partial | ❌ | ❌ | ✅ |
@@ -92,7 +93,7 @@ A free, open-source Android app for binary analysis, disassembly, patching, and 
 
 6. **120fps UI** — Smooth scrolling, responsive interface
 
-7. **75+ Tools** — More tools in one app than any other single RE tool
+7. **80+ Tools** — More tools in one app than any other single RE tool
 
 8. **Offline First** — Works completely offline, no internet required, no telemetry
 
@@ -217,6 +218,7 @@ A free, open-source Android app for binary analysis, disassembly, patching, and 
 ### 🎮 Game Analysis
 | Tool | Description | Auto |
 |------|-------------|------|
+| **IL2CPP Dumper** | Dump libil2cpp.so + global-metadata.dat metadata (classes/methods/fields) | ✅ |
 | Lua Analyzer | Parse .lua functions, strings | ✅ |
 | Pak Archive | .pak/.paks/.unity3d parser | ✅ |
 
