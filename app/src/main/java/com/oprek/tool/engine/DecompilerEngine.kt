@@ -325,14 +325,14 @@ if (lines.isEmpty()) return "// No disassembly provided\n"
                 "cbz", "cbnz" -> {
                     val parts = insn.operands.split(",").map { it.trim() }
                     if (parts.size >= 2) {
-                        val op = if (insn.mnemonic == "cbz") "==" : "!="
+                        val op = if (insn.mnemonic == "cbz") "==" else "!="
                         lines.add("$indent${addr} if (${parts[0]} $op 0) goto ${parts[1]};")
                     }
                 }
                 "tbz", "tbnz" -> {
                     val parts = insn.operands.split(",").map { it.trim() }
                     if (parts.size >= 3) {
-                        val op = if (insn.mnemonic == "tbz") "==" : "!="
+                        val op = if (insn.mnemonic == "tbz") "==" else "!="
                         lines.add("$indent${addr} if ((${parts[0]} >> ${parts[1]}) $op 0) goto ${parts[2]};")
                     }
                 }
