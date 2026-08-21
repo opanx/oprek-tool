@@ -317,7 +317,7 @@ if (lines.isEmpty()) return "// No disassembly provided\n"
                 }
                 "b", "br" -> {
                     if (insn.mnemonic == "b") {
-                        lines.add("$indent${addr}goto ${insn.operands};")
+                        lines.add("$indent${addr} goto ${insn.operands};")
                     } else {
                         lines.add("$indent$addr// br ${insn.operands}")
                     }
@@ -326,14 +326,14 @@ if (lines.isEmpty()) return "// No disassembly provided\n"
                     val parts = insn.operands.split(",").map { it.trim() }
                     if (parts.size >= 2) {
                         val op = if (insn.mnemonic == "cbz") "==" : "!="
-                        lines.add("$indent${addr}if (${parts[0]} $op 0) goto ${parts[1]};")
+                        lines.add("$indent${addr} if (${parts[0]} $op 0) goto ${parts[1]};")
                     }
                 }
                 "tbz", "tbnz" -> {
                     val parts = insn.operands.split(",").map { it.trim() }
                     if (parts.size >= 3) {
                         val op = if (insn.mnemonic == "tbz") "==" : "!="
-                        lines.add("$indent${addr}if ((${parts[0]} >> ${parts[1]}) $op 0) goto ${parts[2]};")
+                        lines.add("$indent${addr} if ((${parts[0]} >> ${parts[1]}) $op 0) goto ${parts[2]};")
                     }
                 }
 
@@ -363,7 +363,7 @@ if (lines.isEmpty()) return "// No disassembly provided\n"
 
                 // ─── Return ───
                 "ret" -> {
-                    lines.add("$indent${addr}return;")
+                    lines.add("$indent${addr} return;")
                 }
 
                 // ─── Load effective address ───
