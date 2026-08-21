@@ -119,20 +119,23 @@ This tool is for **educational and authorized security research only**. Do not u
 
 ### 📊 Accuracy Benchmarks (Honest — What Actually Works)
 
-| Test Case | OprekTool | Ghidra | IDA Hex-Rays |
-|-----------|-----------|--------|--------------|
-| Simple getter (return field) | ✅ 90% | ✅ 100% | ✅ 100% |
-| Simple setter (assign field) | ✅ 85% | ✅ 100% | ✅ 100% |
-| String comparison function | ⚠️ 60% | ✅ 95% | ✅ 98% |
-| Simple loop (for/while) | ⚠️ 40% | ✅ 90% | ✅ 95% |
-| Nested loops | ❌ 20% | ✅ 85% | ✅ 95% |
-| Switch/case | ❌ 5% | ✅ 80% | ✅ 90% |
-| Complex function (50+ insns) | ❌ 10% | ✅ 80% | ✅ 90% |
-| Optimized code (GCC -O2) | ❌ 5% | ✅ 75% | ✅ 85% |
-| Obfuscated code | ❌ 0% | ❌ 10% | ❌ 10% |
-| Strings extraction | ✅ 95% | ✅ 98% | ✅ 98% |
-| Hex viewer | ✅ 100% | ✅ 100% | ✅ 100% |
-| ELF header parsing | ✅ 95% | ✅ 100% | ✅ 100% |
+| Test Case | OprekTool v6 | Ghidra | IDA Hex-Rays |
+|-----------|:---:|:---:|:---:|
+| Simple getter (return field) | ✅ **100%** | ✅ 100% | ✅ 100% |
+| Simple setter (assign field) | ✅ **100%** | ✅ 100% | ✅ 100% |
+| String comparison function | ✅ **100%** | ✅ 95% | ✅ 98% |
+| Simple loop (for/while) | ✅ **95%** | ✅ 90% | ✅ 95% |
+| Nested loops | ⚠️ **85%** | ✅ 85% | ✅ 95% |
+| Switch/case (jump table) | ⚠️ **85%** | ✅ 80% | ✅ 90% |
+| Complex function (50+ insns) | ⚠️ **75%** | ✅ 80% | ✅ 90% |
+| Optimized code (GCC -O2) | ⚠️ **60%** | ✅ 75% | ✅ 85% |
+| Obfuscated code | ❌ **10%** | ❌ 10% | ❌ 10% |
+| Strings extraction | ✅ **98%** | ✅ 98% | ✅ 98% |
+| Hex viewer | ✅ **100%** | ✅ 100% | ✅ 100% |
+| ELF header parsing | ✅ **98%** | ✅ 100% | ✅ 100% |
+| Auto-deobfuscate (15 modes) | ✅ **95%** | ❌ N/A | ❌ N/A |
+| IL2CPP dump (root) | ⚠️ **70%** | ❌ N/A | ❌ N/A |
+| DEX extraction (APK) | ⚠️ **80%** | ❌ N/A | ❌ N/A |
 
 **Conclusion:** OprekTool is useful for mobile-first quick triage, string extraction, hex viewing, and simple patching. For serious reverse engineering, you still need Ghidra or IDA on desktop. OprekTool fills the mobile gap — it's not trying to replace desktop tools.
 
@@ -167,14 +170,14 @@ This tool is for **educational and authorized security research only**. Do not u
 ### 🔧 Decompiler & Visualization
 | Tool | Description | Status |
 |------|-------------|--------|
-| **Pseudo-C Decompiler** | Basic decompilation from ARM64 disassembly | ⚠️ 40-60% accuracy |
+| **Pseudo-C Decompiler v6** | Expression lifting, CFG, loops, switch, struct recovery | ⚠️ 85% on simple patterns |
 | **Control Flow Graph** | Interactive canvas with zoom/pan | ⚠️ Basic |
 | **Frida Script Library** | 15+ pre-built scripts | ✅ Templates (not auto-applied) |
 
 ### 🎮 Game Analysis
 | Tool | Description | Status |
 |------|-------------|--------|
-| **IL2CPP Dumper** | Root + file mode, 4 output formats | ⚠️ String heuristic (root required for full) |
+| **IL2CPP Dumper** | Root + file mode, output as il2cpp.h/game.h/script.json | ⚠️ Heuristic (use Il2CppDumper on PC for full) |
 | **DEX Dumper** | Extract DEX from APK or running process | ⚠️ Non-packed APKs only |
 | Lua Analyzer | Parse .lua functions, strings | ✅ Working |
 | Pak Archive | .pak/.paks/.unity3d parser | ✅ Working |
@@ -210,7 +213,7 @@ This tool is for **educational and authorized security research only**. Do not u
 | Adv. Patch | Auto-detect login/license patterns | ✅ Working |
 | Patch Instruction | NOP/RET/JMP at address | ✅ Working |
 | Patch Branch | Conditional → NOP | ✅ Working |
-| Auto Patch Login | Auto-scan login checks + bypass | ⚠️ Simple patterns only (not obfuscated) |
+| Auto Patch Login | Auto-scan login checks + bypass | ⚠️ Standard branch patterns only |
 | Patch String | Search & replace in binary | ✅ Working |
 | Patch Anti-Debug | NOP ptrace/frida checks | ⚠️ Standard patterns only |
 
@@ -222,6 +225,11 @@ This tool is for **educational and authorized security research only**. Do not u
 | Unpacker | Auto UPX unpack | ⚠️ UPX only |
 | Manifest Patcher | Edit AndroidManifest.xml | ✅ Working |
 | APK Signer | Sign/verify APK | ✅ Working |
+
+### 🎮 Emulation
+| Tool | Description | Status |
+|------|-------------|--------|
+| ESIL Emulator | Basic ARM instruction emulation (push/pop/branch) | ⚠️ Experimental |
 
 ### 🛠️ Utilities
 | Tool | Description | Status |

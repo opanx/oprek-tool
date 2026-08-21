@@ -218,6 +218,101 @@ private fun runDeobfuscate(input: String, mode: String): String {
     if (input.isBlank()) return ""
     return try {
         when (mode) {
+            "auto" -> {
+                // Auto-detect encoding and apply best decode
+                val results = mutableListOf<String>()
+                results.add("=== Auto-Detect Results ===")
+                results.add("")
+
+                // 1. Try Base64
+                try {
+                    val decoded = String(android.util.Base64.decode(input.trim(), android.util.Base64.DEFAULT))
+                    val printable = decoded.count { it.code in 0x20..0x7E || it.code in 9..13 }
+                    if (printable > decoded.length * 0.7f && decoded.length >= 4) {
+                        results.add("[Base64] Confidence: ${(printable * 100 / decoded.length.coerceAtLeast(1))}%")
+                        results.add("  → $decoded")
+                        results.add("")
+                    }
+                } catch (_: Exception) {}
+
+                // 2. Try Hex
+                try {
+                    val hex = input.trim().replace(" ", "").replace("0x", "")
+                    if (hex.length % 2 == 0 && hex.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' } && hex.length >= 8) {
+                        val decoded = hex.chunked(2).mapNotNull { it.toIntOrNull(16)?.toChar() }.joinToString("")
+                        val printable = decoded.count { it.code in 0x20..0x7E }
+                        if (printable > decoded.length * 0.5f) {
+                            results.add("[Hex] Confidence: ${(printable * 100 / decoded.length.coerceAtLeast(1))}%")
+                            results.add("  → $decoded")
+                            results.add("")
+                        }
+                    }
+                } catch (_: Exception) {}
+
+                // 3. Try ROT13
+                val rot13 = input.map { c -> when { c in 'A'..'Z' -> 'A' + (c - 'A' + 13) % 26; c in 'a'..'z' -> 'a' + (c - 'a' + 13) % 26; else -> c }}.joinToString("")
+                val rot13Score = rot13.count { it.isLetter() || it == ' ' }.toFloat() / rot13.length.coerceAtLeast(1)
+                if (rot13Score > 0.6f && rot13 != input) {
+                    results.add("[ROT13] Confidence: ${(rot13Score * 100).toInt()}%")
+                    results.add("  → $rot13")
+                    results.add("")
+                }
+
+                // 4. Try ROT47
+                val rot47 = input.map { c -> if (c in '!'..'~') (((c.code - 33 + 47) % 94) + 33).toChar() else c }.joinToString("")
+                val rot47Score = rot47.count { it.isLetter() || it == ' ' }.toFloat() / rot47.length.coerceAtLeast(1)
+                if (rot47Score > 0.5f && rot47 != input) {
+                    results.add("[ROT47] Confidence: ${(rot47Score * 100).toInt()}%")
+                    results.add("  → $rot47")
+                    results.add("")
+                }
+
+                // 5. Try URL decode
+                try {
+                    val decoded = java.net.URLDecoder.decode(input, "UTF-8")
+                    if (decoded != input && decoded.length >= 4) {
+                        results.add("[URL Decode]")
+                        results.add("  → $decoded")
+                        results.add("")
+                    }
+                } catch (_: Exception) {}
+
+                // 6. Try XOR brute (top 3)
+                val bytes = input.toByteArray()
+                val xorResults = mutableListOf<Pair<Int, String>>()
+                for (k in 0..255) {
+                    val decoded = String(bytes.map { (it.toInt() xor k).toChar() }.toCharArray())
+                    val score = decoded.count { it.code in 0x20..0x7E || it == '\n' }.toFloat() / decoded.length.coerceAtLeast(1)
+                    if (score > 0.7f) xorResults.add(k to decoded)
+                }
+                if (xorResults.isNotEmpty()) {
+                    results.add("[XOR] Top results:")
+                    xorResults.take(3).forEach { (key, decoded) ->
+                        results.add("  Key 0x${"%02X".format(key)}: $decoded")
+                    }
+                    results.add("")
+                }
+
+                // 7. Detect language patterns
+                val lower = input.lowercase()
+                val langHints = mutableListOf<String>()
+                if (lower.contains("function") || lower.contains("var ") || lower.contains("const ") || lower.contains("let ")) langHints.add("JavaScript")
+                if (lower.contains("def ") || lower.contains("import ") || lower.contains("class ")) langHints.add("Python")
+                if (lower.contains("#include") || lower.contains("void ") || lower.contains("int main")) langHints.add("C/C++")
+                if (lower.contains("public class") || lower.contains("private ") || lower.contains("void ")) langHints.add("Java/Kotlin")
+                if (lower.contains("<html") || lower.contains("<div") || lower.contains("<!doctype")) langHints.add("HTML")
+                if (lower.contains("select ") || lower.contains("from ") || lower.contains("where ")) langHints.add("SQL")
+                if (langHints.isNotEmpty()) {
+                    results.add("[Language] Detected: ${langHints.joinToString(", ")}")
+                    results.add("")
+                }
+
+                if (results.size <= 2) {
+                    results.add("No encoding detected. Try specific modes.")
+                }
+
+                results.joinToString("\n")
+            }
             "strings" -> {
                 val sb = StringBuilder()
                 val cur = StringBuilder()
