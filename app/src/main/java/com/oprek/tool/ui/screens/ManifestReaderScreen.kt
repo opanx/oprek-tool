@@ -32,7 +32,7 @@ fun ManifestReaderScreen(navController: NavController) {
     var commonPerms by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         if (!file.name.endsWith(".apk")) return@LaunchedEffect
         scope.launch(Dispatchers.Default) {
             val info = withContext(Dispatchers.IO) { FileAnalyzer.parseApkInfo(file) }

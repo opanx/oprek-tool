@@ -42,7 +42,7 @@ fun BookmarkScreen(navController: NavController) {
 
     // Auto-scan for interesting addresses on load
     LaunchedEffect(Unit) {
-        val file = java.io.File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = java.io.File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         val data = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1_000_000)) }
         // Find ELF magic
         for (i in 0 until data.size - 4) {

@@ -37,7 +37,7 @@ fun HashCalculatorScreen(navController: NavController) {
     var results by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
     LaunchedEffect(Unit) {
-        val file = java.io.File(context.cacheDir, "oprek").listFiles()?.firstOrNull()
+        val file = java.io.File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
         if (file != null) {
             if (file.length() > 100 * 1024 * 1024) {
 

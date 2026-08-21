@@ -31,7 +31,7 @@ fun ELFSymbolScreen(navController: NavController) {
     var dynamic by remember { mutableStateOf<List<String>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         if (!file.name.endsWith(".so") && !file.name.endsWith(".elf")) return@LaunchedEffect
         scope.launch(Dispatchers.Default) {
             if (file.length() > 100 * 1024 * 1024) {

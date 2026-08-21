@@ -40,7 +40,7 @@ fun ShellPatcherScreen(navController: NavController) {
     var patchCount by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         if (!file.name.endsWith(".sh") && !file.name.endsWith(".bash")) return@LaunchedEffect
         original = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readText() }
         patched = original
@@ -52,7 +52,7 @@ fun ShellPatcherScreen(navController: NavController) {
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = {
-                        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@IconButton
+                        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@IconButton
                         val backup = File(context.cacheDir, "oprek/backup_${System.currentTimeMillis()}.sh")
                         backup.writeText(original)
                         file.writeText(patched)

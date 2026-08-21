@@ -39,7 +39,7 @@ fun PackerDetectionScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         try { NativeLib.detectPacker(byteArrayOf()); hasNative = true } catch (_: Exception) {}
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         val data = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 2_000_000)) }
         entropy = withContext(Dispatchers.Default) { NativeLib.entropy(data) }
         val packerId = withContext(Dispatchers.Default) { NativeLib.detectPacker(data) }

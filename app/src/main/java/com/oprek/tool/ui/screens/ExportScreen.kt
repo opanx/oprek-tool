@@ -32,7 +32,7 @@ fun ExportScreen(navController: NavController) {
     var savedPath by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull()
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
         if (file != null) {
             val info = FileAnalyzer.getFileInfo(file)
             val strings = FileAnalyzer.extractStrings(file).take(100)

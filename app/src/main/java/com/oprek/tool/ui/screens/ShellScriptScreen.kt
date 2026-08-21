@@ -44,7 +44,7 @@ fun ShellScriptScreen(navController: NavController) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         if (!file.name.endsWith(".sh") && !file.name.endsWith(".bash") && !file.name.endsWith(".zsh")) return@LaunchedEffect
         rawContent = withContext(Dispatchers.IO) { file.readText() }
         scriptInfo = withContext(Dispatchers.Default) { ShellScriptParser.parse(rawContent) }
@@ -131,7 +131,7 @@ fun ShellScriptScreen(navController: NavController) {
                                             Button(onClick = {
                                                 isExtracting = true
                                                 scope.launch(Dispatchers.Default) {
-                                                    val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull()
+                                                    val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
                                                     if (file != null) {
                                                         val content = withContext(Dispatchers.IO) { file.readText() }
                                                         val extracted = ShellScriptParser.extractBinary(content, bp)

@@ -46,7 +46,7 @@ fun PakArchiveScreen(navController: NavController) {
     var isZip by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         totalSize = file.length()
         val bytes = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 64)) }
 

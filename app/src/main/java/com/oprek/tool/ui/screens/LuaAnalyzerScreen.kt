@@ -48,7 +48,7 @@ fun LuaAnalyzerScreen(navController: NavController) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull() ?: return@LaunchedEffect
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
         if (!file.name.endsWith(".lua") && !file.name.endsWith(".luac") && !file.name.endsWith(".luajit")) return@LaunchedEffect
         rawContent = withContext(Dispatchers.IO) { file.readText() }
         val lines = rawContent.lines()

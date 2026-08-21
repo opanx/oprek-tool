@@ -39,7 +39,7 @@ fun MemoryAnalyzerScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         try { NativeLib.entropy(byteArrayOf(1, 2, 3)); hasNative = true } catch (_: Exception) {}
-        val file = File(context.cacheDir, "oprek").listFiles()?.firstOrNull()
+        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
         hasFile = file != null
         if (file != null && hasNative) {
             val data = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1048576)) }
