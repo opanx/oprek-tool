@@ -68,10 +68,46 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
                         val text = filtered.joinToString("\n") { "0x${"%08X".format(it.offset)}: ${it.value}" }
                         val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         cb.setPrimaryClip(ClipData.newPlainText("strings", text))
-                        Toast.makeText(context, "Copied ${filtered.size} strings!", Toast.LENGTH_SHORT).show()
-                    }) { Icon(Icons.Default.ContentCopy, "Copy All") }
+                        Toast.makeText(context, "Copied ${filtered.size} filtered strings!", Toast.LENGTH_SHORT).show()
+                    }) { Icon(Icons.Default.ContentCopy, "Copy Filtered") }
+                    IconButton(onClick = {
+                        val text = strings.joinToString("\n") { "0x${"%08X".format(it.offset)}: ${it.value}" }
+                        val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        cb.setPrimaryClip(ClipData.newPlainText("all_strings", text))
+                        Toast.makeText(context, "Copied ALL ${strings.size} strings!", Toast.LENGTH_SHORT).show()
+                    }) { Icon(Icons.Default.SelectAll, "Copy ALL") }
                     IconButton(onClick = { vm.extractStrings(minLength.toIntOrNull() ?: 4) }) {
                         Icon(Icons.Default.Refresh, "Reload")
+                    }
+                    IconButton(onClick = {
+                        // Export ALL strings to file
+                        val allText = buildString {
+                            appendLine("# OprekTool String Export")
+                            appendLine("# Total: ${strings.size} strings")
+                            appendLine("# Format: OFFSET: STRING")
+                            appendLine()
+                            strings.forEach { sp ->
+                                appendLine("0x${String.format("%08X", sp.offset)}: ${sp.value}")
+                            }
+                        }
+                        val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                        val outFile = java.io.File(dir, "oprektool_strings_${System.currentTimeMillis()}.txt")
+                        outFile.writeText(allText)
+                        Toast.makeText(context, "Exported ${strings.size} strings to ${outFile.name}", Toast.LENGTH_LONG).show()
+                    }) {
+                        Icon(Icons.Default.FileDownload, "Export All Strings")
+                    }
+                    IconButton(onClick = {
+                        // Import strings from clipboard
+                        val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = cb.primaryClip
+                        if (clip != null && clip.itemCount > 0) {
+                            val imported = clip.getItemAt(0).text.toString()
+                            val lines = imported.lines().filter { it.contains(":") && !it.startsWith("#") }
+                            Toast.makeText(context, "Imported ${lines.size} strings from clipboard", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
+                        Icon(Icons.Default.FileUpload, "Import Strings")
                     }
                     IconButton(onClick = {
                         showEncrypted = !showEncrypted

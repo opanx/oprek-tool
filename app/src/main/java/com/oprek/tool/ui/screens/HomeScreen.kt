@@ -167,6 +167,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("Script Engine", "JavaScript runtime", Icons.Outlined.Code, AccentCyan, "scriptengine"),
                 ToolItem("APK Signer", "Sign/Verify APK", Icons.Outlined.Security, AccentOrange, "apksigner"),
                 ToolItem("Native Lib Analyzer", "Deep .so/ELF analysis", Icons.Outlined.Memory, AccentPurple, "nativelib"),
+                ToolItem("IL2CPP Dumper", "Dump libil2cpp.so metadata", Icons.Outlined.BugReport, AccentCyan, "il2cpp"),
             )
 
             LazyVerticalGrid(
