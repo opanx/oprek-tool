@@ -84,6 +84,7 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("apksigner") { ApkSignerScreen(navController) }
         composable("nativelib") { NativeLibAnalyzerScreen(navController) }
         composable("il2cpp") { Il2CppDumperScreen(navController) }
+        composable("dexdump") { DexDumperScreen(navController) }
         composable("search?query={query}", arguments = listOf(navArgument("query") { type = NavType.StringType; defaultValue = "" })) { backStackEntry ->
             SearchScreen(navController, vm, backStackEntry.arguments?.getString("query") ?: "")
         }
