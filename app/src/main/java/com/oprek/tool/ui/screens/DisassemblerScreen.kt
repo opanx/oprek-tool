@@ -54,7 +54,7 @@ fun DisassemblerScreen(navController: NavController) {
 
     // Auto-detect architecture when file changes
     LaunchedEffect(Unit) {
-        val file = context.cacheDir.listFiles { f -> f.isFile context.cacheDir.listFiles { f -> f.length() > 0 }?.firstOrNull()context.cacheDir.listFiles { f -> f.length() > 0 }?.firstOrNull() f.length() > 0 }?.maxByOrNull { it.lastModified() }
+        val file = context.cacheDir.listFiles { f -> f.isFile && f.length() > 0 }?.maxByOrNull { it.lastModified() }
         if (file != null) {
             try {
                 // Read just the ELF header to detect arch
