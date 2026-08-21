@@ -169,7 +169,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("Native Lib Analyzer", "Deep .so/ELF analysis", Icons.Outlined.Memory, AccentPurple, "nativelib"),
                 ToolItem("IL2CPP Dumper", "Dump libil2cpp.so metadata", Icons.Outlined.BugReport, AccentCyan, "il2cpp"),
                 ToolItem("DEX Dumper", "Extract DEX from APK/process", Icons.Default.Inventory2, AccentOrange, "dexdump"),
-                ToolItem("🚀 Auto Dump", "One-click root game dump", Icons.Default.Rocket, AccentRed, "autodump"),
+                ToolItem("🚀 Auto Dump", "One-click root game dump", Icons.Default.PlayArrow, AccentRed, "autodump"),
             )
 
             LazyVerticalGrid(
