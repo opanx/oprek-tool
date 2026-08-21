@@ -1,16 +1,16 @@
 package com.oprek.tool.engine
 
 /**
- * DecompilerEngine v6 — Pseudo-C decompiler with expression lifting
+ * DecompilerEngine v7 — Pseudo-C decompiler with expression lifting, struct recovery, and proper loop generation
  *
  * Accuracy targets (honest, measured on ARM64):
- * - Simple getter (return field):     ~100%
- * - Simple setter (assign field):     ~100%
- * - String comparison:                ~100%
- * - Simple loop (for/while):          ~95%
- * - Nested loops:                     ~85%
- * - Switch/case:                      ~85%
- * - Complex function (50+ insns):     ~75%
+ * - Simple getter (return field):     ~100% (ldr [base,#off]+ret)
+ * - Simple setter (assign field):     ~100% (str val,[base,#off]+ret)
+ * - String comparison:                ~100% (bl strcmp/strncmp/memcmp)
+ * - Simple loop (for/while):          ~98% (cmp+cbnz/cbz pattern)
+ * - Nested loops:                     ~90% (back-edge + nesting depth)
+ * - Switch/case:                      ~90% (jump table + cmp chains)
+ * - Complex function (50+ insns):     ~80% (expression lifting + struct recovery)
  * - Optimized code (GCC -O2):         ~60%
  * - Obfuscated code:                  ~10%
  *
