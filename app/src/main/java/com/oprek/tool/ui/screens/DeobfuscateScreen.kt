@@ -47,7 +47,12 @@ fun DeobfuscateScreen(navController: NavController) {
         "strings" to "Extract Strings", "unicode" to "Decode Unicode",
         "hex" to "Decode Hex", "base64" to "Decode Base64",
         "url" to "Decode URL", "xor" to "XOR Decrypt",
-        "reverse" to "Reverse", "unescape" to "Unescape Shell"
+        "reverse" to "Reverse", "unescape" to "Unescape Shell",
+        "rot13" to "ROT13", "rot47" to "ROT47",
+        "caesar" to "Caesar Brute",
+        "multibase" to "Multi-Decode",
+        "utf16" to "UTF-16 Decode",
+        "chain" to "Chain Decode"
     )
 
     Scaffold(

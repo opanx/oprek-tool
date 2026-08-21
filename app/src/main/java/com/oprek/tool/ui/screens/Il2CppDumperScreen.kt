@@ -282,6 +282,45 @@ fun Il2CppDumperScreen(navController: NavController) {
     }
 }
 
+/* ─── Robust root check ─── */
+private fun checkRootAccess(): Boolean {
+    // Try multiple su paths and methods
+    val suPaths = listOf("su", "/system/bin/su", "/sbin/su", "/su/bin/su", "/data/adb/magisk/su")
+    
+    for (suPath in suPaths) {
+        try {
+            // Method 1: su -c id
+            val proc = Runtime.getRuntime().exec(arrayOf(suPath, "-c", "id"))
+            val stdout = proc.inputStream.bufferedReader().readText()
+            val stderr = proc.errorStream.bufferedReader().readText()
+            proc.waitFor()
+            if (stdout.contains("uid=0") || stderr.contains("uid=0")) return true
+            
+            // Method 2: su 0 id
+            val proc2 = Runtime.getRuntime().exec(arrayOf(suPath, "0", "id"))
+            val stdout2 = proc2.inputStream.bufferedReader().readText()
+            proc2.waitFor()
+            if (stdout2.contains("uid=0")) return true
+            
+            // Method 3: echo 1 > /proc/sys/kernel/su/enabled style
+            val proc3 = Runtime.getRuntime().exec(arrayOf("sh", "-c", "$suPath -c 'id 2>&1'"))
+            val out3 = proc3.inputStream.bufferedReader().readText()
+            proc3.waitFor()
+            if (out3.contains("uid=0")) return true
+        } catch (_: Exception) { }
+    }
+    
+    // Method 4: check if su binary exists and test with echo
+    try {
+        val proc = Runtime.getRuntime().exec(arrayOf("sh", "-c", "which su 2>/dev/null && su -c 'echo ROOT_OK' 2>/dev/null"))
+        val output = proc.inputStream.bufferedReader().readText()
+        proc.waitFor()
+        if (output.contains("ROOT_OK")) return true
+    } catch (_: Exception) { }
+    
+    return false
+}
+
 /* ─── File-based dump ─── */
 private fun dumpIl2CppFiles(ctx: Context, libPath: String, metaPath: String, format: Int, publicOnly: Boolean, onProgress: (String, Float) -> Unit): List<String> {
     val libFile = File(libPath)
@@ -300,10 +339,15 @@ private fun dumpIl2CppFiles(ctx: Context, libPath: String, metaPath: String, for
 /* ─── Root-based dump ─── */
 private fun dumpIl2CppRoot(ctx: Context, target: String, format: Int, publicOnly: Boolean, onProgress: (String, Float) -> Unit): List<String> {
     onProgress("Checking root access...", 0.05f)
-    val suCheck = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
-    val suOutput = suCheck.inputStream.bufferedReader().readText()
-    suCheck.waitFor()
-    if (!suOutput.contains("uid=0")) return listOf("// ERROR: No root access", "// Install Magisk/KernelSU/SuperSU")
+    val hasRoot = checkRootAccess()
+    if (!hasRoot) return listOf(
+        "// ERROR: No root access found",
+        "// Solutions:",
+        "// 1. Install Magisk (https://topjohnwu.github.io/Magisk/)",
+        "// 2. Install KernelSU (https://kernelsu.org/)",
+        "// 3. Make sure to GRANT root permission when prompted",
+        "// 4. Try: su -c id in Termux to verify"
+    )
 
     onProgress("Finding process...", 0.1f)
     // Find PID

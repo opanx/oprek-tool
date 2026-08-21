@@ -76,7 +76,7 @@ fun AutoPatchLoginScreen(navController: NavController) {
                             sb.clear()
                         }
                     }
-                    findings = found
+                    findings = found.filter { it.first >= 0 }
                 }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentRed)) { Text("🔍 Scan Login Checks") }
                 Spacer(Modifier.height(8.dp))
 
@@ -108,15 +108,24 @@ fun AutoPatchLoginScreen(navController: NavController) {
 }
 
 private fun findNearestBranch(data: ByteArray, start: Int, strLen: Int): Int {
-    val range = 300
+    val range = 500  // Search wider range
     val searchStart = maxOf(0, start - range)
     val searchEnd = minOf(data.size - 3, start + strLen + range)
     for (i in searchStart until searchEnd step 4) {
-        if (i + 4 > data.size) return -1
+        if (i + 4 > data.size) break
         val insn = data[i].toInt() and 0xFF or ((data[i+1].toInt() and 0xFF) shl 8) or
             ((data[i+2].toInt() and 0xFF) shl 16) or ((data[i+3].toInt() and 0xFF) shl 24)
         val opc8 = (insn shr 24) and 0xFF
-        if (opc8 == 0x54 || ((insn shr 26) and 0x3F) == 0x05) return i
+        // ARM64 conditional branch (B.cond): 0x54xxxxxx
+        if (opc8 == 0x54) return i
+        // ARM64 B/BL: imm26
+        if (((insn shr 26) and 0x3F) == 0x05) return i
+        // ARM64 CBZ/CBNZ: 0xB4/0xB5/0x34/0x35
+        if (opc8 == 0xB4.toByte().toInt() || opc8 == 0xB5 || opc8 == 0x34 || opc8 == 0x35) return i
+        // ARM32 conditional branch: 0xDA-0xDF prefix (BL), 0xBA-0xBF (B)
+        if (opc8 and 0x0E == 0x0A && (opc8 and 0xF0) == 0xB0) return i
+        // ARM32 Bcond: xxxx101x
+        if ((insn and 0x0F000000.toInt()) == 0x0A000000 || (insn and 0x0F000000.toInt()) == 0x0B000000.toInt()) return i
     }
     return -1
 }

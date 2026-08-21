@@ -212,6 +212,31 @@ fun DexDumperScreen(navController: NavController) {
     }
 }
 
+/* ─── Robust root check ─── */
+private fun checkDexRootAccess(): Boolean {
+    val suPaths = listOf("su", "/system/bin/su", "/sbin/su", "/su/bin/su", "/data/adb/magisk/su")
+    for (suPath in suPaths) {
+        try {
+            val proc = Runtime.getRuntime().exec(arrayOf(suPath, "-c", "id"))
+            val stdout = proc.inputStream.bufferedReader().readText()
+            val stderr = proc.errorStream.bufferedReader().readText()
+            proc.waitFor()
+            if (stdout.contains("uid=0") || stderr.contains("uid=0")) return true
+            val proc2 = Runtime.getRuntime().exec(arrayOf("sh", "-c", "$suPath -c 'id 2>&1'"))
+            val out2 = proc2.inputStream.bufferedReader().readText()
+            proc2.waitFor()
+            if (out2.contains("uid=0")) return true
+        } catch (_: Exception) { }
+    }
+    try {
+        val proc = Runtime.getRuntime().exec(arrayOf("sh", "-c", "which su 2>/dev/null && su -c 'echo ROOT_OK' 2>/dev/null"))
+        val output = proc.inputStream.bufferedReader().readText()
+        proc.waitFor()
+        if (output.contains("ROOT_OK")) return true
+    } catch (_: Exception) { }
+    return false
+}
+
 /* ─── DEX from APK ─── */
 private fun dumpFromApk(ctx: Context, apkPath: String, onProgress: (String) -> Unit): List<String> {
     val results = mutableListOf<String>()
@@ -312,12 +337,13 @@ private fun dumpFromProcess(ctx: Context, target: String, onProgress: (String) -
     val results = mutableListOf<String>()
 
     onProgress("Checking root access...")
-    val suCheck = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
-    val suOutput = suCheck.inputStream.bufferedReader().readText()
-    suCheck.waitFor()
-    if (!suOutput.contains("uid=0")) {
-        results.add("[-] No root access")
-        results.add("[!] Install Magisk/KernelSU/SuperSU")
+    val hasRoot = checkDexRootAccess()
+    if (!hasRoot) {
+        results.add("[-] No root access found")
+        results.add("[!] Solutions:")
+        results.add("[!] 1. Install Magisk/KernelSU/SuperSU")
+        results.add("[!] 2. GRANT root permission when prompted")
+        results.add("[!] 3. Try: su -c id in Termux to verify")
         return results
     }
 

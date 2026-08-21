@@ -92,6 +92,29 @@ fun HashCalculatorScreen(navController: NavController) {
             }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentGreen), shape = RoundedCornerShape(12.dp)) {
                 Text("Calculate", fontWeight = FontWeight.Bold)
             }
+            Spacer(Modifier.height(8.dp))
+            // Network lookup button
+            if (results.containsKey("MD5")) {
+                val md5Hash = results["MD5"] ?: ""
+                val sha256Hash = results["SHA-256"] ?: ""
+                Button(onClick = {
+                    // Open hash lookup in browser
+                    val url = "https://www.virustotal.com/gui/search/$sha256Hash"
+                    try {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        context.startActivity(intent)
+                    } catch (_: Exception) {
+                        // Fallback: try Google search
+                        val fallback = "https://www.google.com/search?q=$md5Hash+malware+hash+lookup"
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(fallback))
+                        context.startActivity(intent)
+                    }
+                }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentPurple), shape = RoundedCornerShape(12.dp)) {
+                    Text("🔍 Look Up Hash Online (VirusTotal)", fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(4.dp))
+                Text("Opens VirusTotal or Google to check if this hash is known malware", fontSize = 10.sp, color = TextMuted)
+            }
             Spacer(Modifier.height(12.dp))
             results.forEach { (name, value) ->
                 Card(Modifier.fillMaxWidth().padding(vertical = 3.dp), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(8.dp)) {

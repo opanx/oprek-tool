@@ -85,7 +85,7 @@ Aplikasi Android gratis & open-source untuk analisis binary, disassembly, patchi
 
 5. **Streaming I/O** — Handle file sampai 200MB tanpa crash
 
-6. **80+ Tools** — Lebih banyak tools dalam satu app dari tool RE manapun
+6. **82+ Tools** — Lebih banyak tools dalam satu app dari tool RE manapun
 
 ### ⚠️ Kekurangan OprekTool (Jujur)
 
@@ -128,7 +128,16 @@ Aplikasi Android gratis & open-source untuk analisis binary, disassembly, patchi
 
 ---
 
-## Fitur (80+ Tools)
+## ⚠️ Disclaimer Jujur
+
+**OprekTool masih dalam pengembangan aktif (v0.1.0).** Beberapa fitur masih eksperimental, belum lengkap, atau hanya bekerja dalam kondisi tertentu.
+
+- **Auto Patch Login** → Hanya mendeteksi pola branch sederhana. Tidak bekerja untuk binary obfuscated atau validasi server-side.
+- **IL2CPP Dumper** → Heuristik string. Untuk dump lengkap gunakan [Il2CppDumper di PC](https://github.com/Perfare/Il2CppDumper).
+- **DEX Dumper** → Hanya untuk APK non-packed. Tidak bekerja untuk DEX terenkripsi (DexProtector, iJiami, dll).
+- **Decompiler** → Akurasi 40-60%. Bukan pengganti Ghidra/IDA.
+
+## Fitur (82+ Tools)
 
 *(Lihat versi English untuk daftar lengkap)*
 
