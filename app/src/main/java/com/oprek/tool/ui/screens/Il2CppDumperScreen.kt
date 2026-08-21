@@ -453,7 +453,7 @@ private fun dumpIl2Cpp(context: Context, libPath: String, metaPath: String, onPr
 
     // Strings from metadata (potential string literals)
     onProgress("Extracting string literals...")
-    valstringLiteralStrings = stringsInMeta.filter { 
+    val stringLiteralStrings = stringsInMeta.filter { 
         !it.second.startsWith("//") && !it.second.contains("\u0000") && it.second.length >= 4
     }
     if (stringLiteralStrings.isNotEmpty()) {
