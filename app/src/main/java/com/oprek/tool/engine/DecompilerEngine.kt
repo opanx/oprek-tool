@@ -19,14 +19,19 @@ package com.oprek.tool.engine
 object DecompilerEngine {
 
     // ─── Public API ───
-    fun generatePseudoC(disassembly: List<String>, funcName: String = "func", showAddresses: Boolean = false): String {
-        if (disassembly.isEmpty()) return "// No disassembly provided\n"
+    fun generatePseudoC(disassembly: Any, funcName: String = "func", showAddresses: Boolean = false): String {
+        val lines = when (disassembly) {
+    is String -> disassembly.lines()
+    is List<*> -> disassembly.filterIsInstance<String>()
+    else -> emptyList()
+}
+if (lines.isEmpty()) return "// No disassembly provided\n"
         val sb = StringBuilder()
         sb.appendLine("// Decompiled by OprekTool DecompilerEngine v6")
         sb.appendLine("// Function: $funcName")
         sb.appendLine()
 
-        val instructions = parseInstructions(disassembly)
+        val instructions = parseInstructions(lines)
         if (instructions.isEmpty()) {
             sb.appendLine("// Could not parse instructions")
             return sb.toString()
@@ -312,7 +317,7 @@ object DecompilerEngine {
                 }
                 "b", "br" -> {
                     if (insn.mnemonic == "b") {
-                        lines.add("$indent$addrgoto ${insn.operands};")
+                        lines.add("$indent${addr}goto ${insn.operands};")
                     } else {
                         lines.add("$indent$addr// br ${insn.operands}")
                     }
@@ -321,14 +326,14 @@ object DecompilerEngine {
                     val parts = insn.operands.split(",").map { it.trim() }
                     if (parts.size >= 2) {
                         val op = if (insn.mnemonic == "cbz") "==" : "!="
-                        lines.add("$indent$addrif (${parts[0]} $op 0) goto ${parts[1]};")
+                        lines.add("$indent${addr}if (${parts[0]} $op 0) goto ${parts[1]};")
                     }
                 }
                 "tbz", "tbnz" -> {
                     val parts = insn.operands.split(",").map { it.trim() }
                     if (parts.size >= 3) {
                         val op = if (insn.mnemonic == "tbz") "==" : "!="
-                        lines.add("$indent$addrif ((${parts[0]} >> ${parts[1]}) $op 0) goto ${parts[2]};")
+                        lines.add("$indent${addr}if ((${parts[0]} >> ${parts[1]}) $op 0) goto ${parts[2]};")
                     }
                 }
 
@@ -358,7 +363,7 @@ object DecompilerEngine {
 
                 // ─── Return ───
                 "ret" -> {
-                    lines.add("$indent$addrreturn;")
+                    lines.add("$indent${addr}return;")
                 }
 
                 // ─── Load effective address ───
