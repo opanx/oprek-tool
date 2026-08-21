@@ -47,7 +47,7 @@ fun AndroidToolsScreen(navController: NavController) {
 
         }
 
-        val data = withContext(Dispatchers.IO) { file.readBytes() }
+        val data = withContext(Dispatchers.IO) { if (file.isFile) file.readBytes() else byteArrayOf() }
 
         when {
             NativeLib.dexValidate(data) -> {

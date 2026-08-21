@@ -42,7 +42,7 @@ fun MemoryAnalyzerScreen(navController: NavController) {
         val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
         hasFile = file != null
         if (file != null && hasNative) {
-            val data = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1048576)) }
+            val data = withContext(Dispatchers.IO) { if (file.isFile) file.readBytes() else byteArrayOf().copyOf(minOf(file.length().toInt(), 1048576)) }
             entropyVal = withContext(Dispatchers.Default) { NativeLib.entropy(data) }
             val packerId = withContext(Dispatchers.Default) { NativeLib.detectPacker(data) }
             packerName = if (packerId > 0) withContext(Dispatchers.Default) { NativeLib.packerName(packerId) } else "None detected"

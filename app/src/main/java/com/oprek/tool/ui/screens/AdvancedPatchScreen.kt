@@ -119,7 +119,7 @@ fun AdvancedPatchScreen(navController: NavController) {
 
                                     }
 
-                                    val data = withContext(Dispatchers.IO) { file.readBytes() }
+                                    val data = withContext(Dispatchers.IO) { if (file.isFile) file.readBytes() else byteArrayOf() }
                                     var count = 0
                                     for (rec in recommendations) {
                                         try {

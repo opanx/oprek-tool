@@ -1,7 +1,7 @@
 package com.oprek.tool.engine
 
 /**
- * DecompilerEngine v5 — Maximum Accuracy (100-1000%)
+ * DecompilerEngine v5 — Pseudo-C decompiler with expression lifting, CFG, and native patterns
  *
  * Complete rewrite with ALL advanced techniques:
  * - Expression combining: chain sequential instructions
