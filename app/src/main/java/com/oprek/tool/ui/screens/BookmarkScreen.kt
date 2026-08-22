@@ -45,7 +45,8 @@ fun BookmarkScreen(navController: NavController) {
     // Auto-scan for interesting addresses on load
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         val data = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1_000_000)) }
         // Find ELF magic
         for (i in 0 until data.size - 4) {

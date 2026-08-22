@@ -42,7 +42,8 @@ fun ElfHeaderScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         if (file.length() > 100 * 1024 * 1024) {
 
             // File too large for in-memory processing

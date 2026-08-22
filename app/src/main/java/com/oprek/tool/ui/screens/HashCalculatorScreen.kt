@@ -40,7 +40,8 @@ fun HashCalculatorScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context)
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context)
         if (file != null) {
             if (file.length() > 100 * 1024 * 1024) {
 

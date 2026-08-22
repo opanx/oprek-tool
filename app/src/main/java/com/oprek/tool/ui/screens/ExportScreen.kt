@@ -35,7 +35,8 @@ fun ExportScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context)
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context)
         if (file != null) {
             val info = FileAnalyzer.getFileInfo(file)
             val strings = FileAnalyzer.extractStrings(file).take(100)

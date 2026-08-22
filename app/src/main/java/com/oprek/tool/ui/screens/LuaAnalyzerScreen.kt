@@ -51,7 +51,8 @@ fun LuaAnalyzerScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".lua") && !file.name.endsWith(".luac") && !file.name.endsWith(".luajit")) return@LaunchedEffect
         rawContent = withContext(Dispatchers.IO) { file.readText() }
         val lines = rawContent.lines()

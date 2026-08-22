@@ -42,7 +42,8 @@ fun MemoryDumpScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         val data = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 10_000_000)) }
 
         // Search for ELF header in dump

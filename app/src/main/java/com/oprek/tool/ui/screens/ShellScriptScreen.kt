@@ -47,7 +47,8 @@ fun ShellScriptScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".sh") && !file.name.endsWith(".bash") && !file.name.endsWith(".zsh")) return@LaunchedEffect
         rawContent = withContext(Dispatchers.IO) { file.readText() }
         scriptInfo = withContext(Dispatchers.Default) { ShellScriptParser.parse(rawContent) }

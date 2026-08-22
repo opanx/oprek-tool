@@ -35,7 +35,8 @@ fun ManifestReaderScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".apk")) return@LaunchedEffect
         scope.launch(Dispatchers.Default) {
             val info = withContext(Dispatchers.IO) { FileAnalyzer.parseApkInfo(file) }

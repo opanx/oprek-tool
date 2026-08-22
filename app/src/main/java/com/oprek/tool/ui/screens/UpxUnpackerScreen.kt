@@ -349,8 +349,10 @@ private fun parseElfSections(data: ByteArray): List<ElfSectionEntry> {
 
             val nameIdx = read32(base)
             val name = if (nameIdx.toInt() < strTable.size) {
-                val end = strTable.indexOf(0, nameIdx.toInt())
-                String(strTable, nameIdx.toInt(), if (end >= 0) end - nameIdx.toInt() else strTable.size - nameIdx.toInt())
+                val startIdx = nameIdx.toInt()
+                var end = startIdx
+                while (end < strTable.size && strTable[end] != 0.toByte()) end++
+                String(strTable, startIdx, end - startIdx)
             } else "?"
 
             val secOffset: Long

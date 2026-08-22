@@ -43,9 +43,10 @@ fun ShellPatcherScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".sh") && !file.name.endsWith(".bash")) return@LaunchedEffect
-        original = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readText() }
+        original = withContext(Dispatchers.IO) { file.readText() }
         patched = original
     }
 

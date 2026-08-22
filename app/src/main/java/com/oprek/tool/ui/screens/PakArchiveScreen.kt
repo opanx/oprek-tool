@@ -49,7 +49,8 @@ fun PakArchiveScreen(navController: NavController) {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         totalSize = file.length()
         val bytes = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 64)) }
 
@@ -101,7 +102,7 @@ fun PakArchiveScreen(navController: NavController) {
             }
             // Scan for embedded file signatures
             val scanEntries = mutableListOf<PakEntry>()
-            val fullData = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 10_000_000)) }
+            val fullData: ByteArray = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 10_000_000)) }
 
             // Search for common signatures
             val signatures = listOf(
