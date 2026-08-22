@@ -597,7 +597,9 @@ fun AutoLeakSourceScreen(navController: NavController) {
                 // Enum values
                 val enums = Regex("""enum\s+(?:class\s+)?([a-zA-Z0-9_]+)\s*\{([^}]+)\}""").findAll(rawText)
                 for (m in enums) {
-                    extractedSrcFiles.add("enum_${m.groupValues[1]}" to "enum ${m.groupValues[1]} {${m.groupValues[2)}}")
+                    val enumName = m.groupValues[1]
+                    val enumBody = m.groupValues[2]
+                    extractedSrcFiles.add("enum_$enumName" to "enum $enumName {$enumBody}")
                     addResult("Source", "MEDIUM", "Enum: ${m.groupValues[1]}", "Enum declaration")
                     reconCount++
                 }
@@ -605,7 +607,9 @@ fun AutoLeakSourceScreen(navController: NavController) {
                 // Struct definitions with fields
                 val structs = Regex("""struct\s+([a-zA-Z0-9_]+)\s*\{([^}]+)\}""").findAll(rawText)
                 for (m in structs) {
-                    extractedSrcFiles.add("struct_${m.groupValues[1]}" to "struct ${m.groupValues[1]} {${m.groupValues[2)}}")
+                    val structName = m.groupValues[1]
+                    val structBody = m.groupValues[2]
+                    extractedSrcFiles.add("struct_$structName" to "struct $structName {$structBody}")
                     addResult("Source", "HIGH", "Struct: ${m.groupValues[1]}", "Struct definition")
                     reconCount++
                 }
