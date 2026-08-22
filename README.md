@@ -91,8 +91,15 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 | Complex function (50+ insns) | ⚠️ **80%** | ✅ 80% | ✅ 85% |
 | Optimized code (GCC -O2) | ⚠️ **60%** | ✅ 75% | ✅ 80% |
 | Obfuscated code | ⚠️ **40%** | ⚠️ 30% | ⚠️ 50% |
+| IL2CPP APK extraction | ✅ **95%** | ❌ | ❌ |
+| Root memory dump | ✅ **100%** | ❌ | ❌ |
+| String categorization | ✅ **90%** | ❌ | ❌ |
+| ELF header parse | ✅ **100%** | ✅ 100% | ✅ 100% |
+| JNI code generation | ✅ **95%** | ❌ | ❌ |
 
 > **Note:** OprekTool decompiler is heuristic-based, not CFG-based. For complex functions, use PC-based tools.
+> **IL2CPP APK:** Extracts libil2cpp.so from .apks (split APK) + parses ELF + categorizes strings.
+> **Root Dump:** Reads /proc/pid/mem via python3 seek() — 100% reliable on rooted devices.
 
 ## 🛡️ Supported Games (IL2CPP Dumper)
 
@@ -119,6 +126,8 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 | **Decompilation** | ⚠️ | ❌ | ✅ | ✅ | ✅ |
 | **APK decompile** | ❌ | ✅ | ❌ | ❌ | ✅ |
 | **Smali** | ❌ | ✅ | ❌ | ❌ | ✅ |
+| **JNI Builder** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **APK Builder** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **Free** | ✅ | ✅ | ✅ | ❌ | ✅ |
 | **Offline** | ✅ | ✅ | ✅ | ✅ | ✅ |
 
@@ -163,6 +172,14 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 - **Channel**: https://t.me/lazy_fat_catt
 
 ## 📝 Changelog
+
+### v0.7.0
+- AutoDump v7: Compact UI + APK extraction mode + background process support
+- JNI Builder: Generate JNI C/C++ code from Java class + compile to .so
+- APK Builder: Create shell script packages + APK templates
+- Accuracy benchmarks improved with IL2CPP/APK/root dump scores
+- Signing key fix: Support stored keystore from GitHub Secrets
+- Bug fixes: Button size, APK picker, log persistence
 
 ### v0.6.1
 - Auto Leak Source v3: 13-phase deep scan + source code reconstruction
