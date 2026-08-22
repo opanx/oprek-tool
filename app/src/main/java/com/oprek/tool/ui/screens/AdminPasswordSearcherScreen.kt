@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -41,9 +42,9 @@ fun AdminPasswordSearcherScreen(navController: androidx.navigation.NavController
     var targetUrl by remember { mutableStateOf("") }
     var isScanning by remember { mutableStateOf(false) }
     var scanResults by remember { mutableStateOf(listOf<ScanResult>()) }
-    var selectedMode by remember { mutableIntStateOf(0) }
+    var selectedMode by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
-    val scrollState = rememberLazyListState()
+    val lazyListState = rememberLazyListState()
 
     val modes = listOf("🔍 Panel Detect", "🔑 Brute Force", "💉 SQLi Test", "🌐 API Enum", "📜 JWT Analyze", "🎯 Full Scan")
 
@@ -77,7 +78,7 @@ fun AdminPasswordSearcherScreen(navController: androidx.navigation.NavController
             // URL Input
             Card(
                 Modifier.fillMaxWidth().padding(12.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(Modifier.padding(16.dp)) {
@@ -166,7 +167,7 @@ fun AdminPasswordSearcherScreen(navController: androidx.navigation.NavController
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(12.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(Modifier.padding(12.dp)) {
@@ -185,7 +186,7 @@ fun AdminPasswordSearcherScreen(navController: androidx.navigation.NavController
                             }
                         }
                     } else {
-                        LazyColumn(state = scrollState) {
+                        LazyColumn(state = lazyListState) {
                             items(scanResults) { result ->
                                 ScanResultItem(result)
                                 Spacer(Modifier.height(4.dp))
