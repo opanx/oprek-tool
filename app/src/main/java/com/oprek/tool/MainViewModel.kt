@@ -96,6 +96,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun gotoOffset(offset: Long) {
+        loadHex(offset)
+        _statusMessage.value = "Jumped to 0x${String.format("%08X", offset)}"
+    }
+
     fun extractStrings(minLength: Int = 4) {
         viewModelScope.launch(Dispatchers.IO) {
             _currentRawFile.value?.let { file ->
