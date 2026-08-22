@@ -57,7 +57,7 @@ fun SectionHeaderScreen(navController: NavController) {
         TopAppBar(
             title = { Text("Section Headers", fontWeight = FontWeight.Bold) },
             navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
-            actions = { IconButton(onClick = { sections = emptyList(); loadFile() }) { Icon(Icons.Default.Refresh, "Refresh") } },
+            actions = { IconButton(onClick = { sections = emptyList(); loadFile() }) { Icon(Icons.Filled.Refresh, "Refresh") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
         )
     }, containerColor = DarkBg) { padding ->

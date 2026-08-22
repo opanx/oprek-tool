@@ -57,7 +57,7 @@ fun RelocationScreen(navController: NavController) {
         TopAppBar(
             title = { Text("Relocations", fontWeight = FontWeight.Bold) },
             navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
-            actions = { IconButton(onClick = { relocs = emptyList(); loadFile() }) { Icon(Icons.Default.Refresh, "Refresh") } },
+            actions = { IconButton(onClick = { relocs = emptyList(); loadFile() }) { Icon(Icons.Filled.Refresh, "Refresh") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
         )
     }, containerColor = DarkBg) { padding ->

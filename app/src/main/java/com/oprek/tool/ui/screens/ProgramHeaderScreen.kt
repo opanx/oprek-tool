@@ -56,7 +56,7 @@ fun ProgramHeaderScreen(navController: NavController) {
         TopAppBar(
             title = { Text("Program Headers", fontWeight = FontWeight.Bold) },
             navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
-            actions = { IconButton(onClick = { headers = emptyList(); loadFile() }) { Icon(Icons.Default.Refresh, "Refresh") } },
+            actions = { IconButton(onClick = { headers = emptyList(); loadFile() }) { Icon(Icons.Filled.Refresh, "Refresh") } },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
         )
     }, containerColor = DarkBg) { padding ->
