@@ -41,7 +41,7 @@ fun Base64Screen(navController: NavController) {
     val rev = SharedFileState.revision
 
     LaunchedEffect(rev) {
-        val file = SharedFileState.findFile(ctx) ?: return@LaunchedEffect
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         val bytes = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1000)) }
         input = bytes.joinToString(" ") { "%02X".format(it) }
         mode = "hexdec"
