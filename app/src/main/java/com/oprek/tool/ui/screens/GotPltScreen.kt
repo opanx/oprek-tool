@@ -24,162 +24,147 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 
-data class GotPltEntry(val index: Int, val type: String, val address: Long, val value: Long, val name: String)
+data class GotEntry(val index: Int, val type: String, val address: Long, val value: Long, val name: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GotPltScreen(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var entries by remember { mutableStateOf(listOf<GotPltEntry>()) }
+    var entries by remember { mutableStateOf(listOf<GotEntry>()) }
     var status by remember { mutableStateOf("") }
     var fileName by remember { mutableStateOf("") }
 
-    fun loadFromCache() {
-        val f = context.cacheDir.listFiles()?.filter { it.isFile && it.length() > 0 }?.maxByOrNull { it.lastModified() }
-        if (f != null) {
-            fileName = f.name
-            scope.launch(Dispatchers.IO) {
-                try {
-                    val data = f.readBytes()
-                    if (data.size < 40) { withContext(Dispatchers.Main) { status = "File too small" }; return@launch }
-                    if (data[0] != 0x7F.toByte() || data[1] != 'E'.code.toByte()) {
-                        withContext(Dispatchers.Main) { status = "Not an ELF file" }; return@launch
-                    }
-                    val is64 = data[4] == 2.toByte()
-                    val le = data[5] == 1.toByte()
-                    val result = mutableListOf<GotPltEntry>()
-                    var idx = 0
-
-                    if (is64) {
-                        // ELF64: find .got and .plt sections
-                        val shoff = readU64(data, 0x28, le)
-                        val shnum = readU16(data, 0x3C, le).toInt()
-                        val shstrndx = readU16(data, 0x3E, le).toInt()
-                        val shentsize = readU16(data, 0x3A, le).toInt()
-
-                        // Get string table
-                        val strSecOff = (shoff + shstrndx.toLong() * shentsize).toInt()
-                        val strTabOffset = readU64(data, strSecOff + 0x18, le).toInt()
-                        val strTabSize = readU64(data, strSecOff + 0x20, le).toInt()
-                        val strTab = if (strTabOffset + strTabSize <= data.size) data.sliceArray(strTabOffset until (strTabOffset + strTabSize)) else byteArrayOf()
-
-                        for (i in 0 until shnum) {
-                            val secOff = shoff + i.toLong() * shentsize
-                            val shName = readU32(data, secOff.toInt(), le).toInt()
-                            val shType = readU32(data, (secOff + 4).toInt(), le).toInt()
-                            val shAddr = readU64(data, (secOff + 0x10, le)
-                            val shOffset = readU64(data, (secOff + 0x18, le)
-                            val shSize = readU64(data, (secOff + 0x20, le)
-
-                            val secName = if (shName < strTab.size) {
-                                val end = strTab.indexOf(0.toByte(), shName).let { if (it < 0) strTab.size else it }
-                                String(strTab.sliceArray(shName until end))
-                            } else ""
-
-                            if (secName == ".got" || secName == ".got.plt") {
-                                val entrySize = 8
-                                val count = (shSize / entrySize).toInt()
-                                for (j in 0 until count.coerceAtMost(500)) {
-                                    val off = (shOffset + j.toLong() * entrySize).toInt()
-                                    if (off + 8 <= data.size) {
-                                        val addr = shAddr + j.toLong() * entrySize
-                                        val val_ = readU64(data, off, le)
-                                        result.add(GotPltEntry(idx++, "GOT", addr, val_, secName))
-                                    }
-                                }
-                            }
-                            if (secName == ".plt" || secName == ".plt.got") {
-                                val stubSize = if (is64) 16 else 12
-                                val count = (shSize / stubSize).toInt()
-                                for (j in 0 until count.coerceAtMost(200)) {
-                                    val addr = shAddr + j.toLong() * stubSize
-                                    result.add(GotPltEntry(idx++, "PLT", addr, 0, "plt_stub_$j"))
-                                }
-                            }
-                        }
-                    } else {
-                        // ELF32: similar but 32-bit offsets
-                        val shoff = readU32(data, 0x20, le).toLong()
-                        val shnum = readU16(data, 0x30, le).toInt()
-                        val shstrndx = readU16(data, 0x32, le).toInt()
-                        val shentsize = readU16(data, 0x2E, le).toInt()
-
-                        val strSecOff = (shoff + shstrndx.toLong() * shentsize).toInt()
-                        val strTabOffset = readU32(data, strSecOff + 0x10, le).toLong()
-                        val strTabSize = readU32(data, strSecOff + 0x14, le).toLong()
-                        val strTab = if (strTabOffset + strTabSize <= data.size) data.sliceArray(strTabOffset until (strTabOffset + strTabSize)) else byteArrayOf()
-
-                        for (i in 0 until shnum) {
-                            val secOff = shoff + i.toLong() * shentsize
-                            val shName = readU32(data, secOff.toInt(), le).toInt()
-                            val shType = readU32(data, (secOff + 4).toInt(), le).toInt()
-                            val shAddr = readU32(data, (secOff + 0xC).toInt(), le).toLong()
-                            val shOffset = readU32(data, (secOff + 0x10).toInt(), le).toLong()
-                            val shSize = readU32(data, (secOff + 0x14).toInt(), le).toLong()
-
-                            val secName = if (shName < strTab.size) {
-                                val end = strTab.indexOf(0.toByte(), shName).let { if (it < 0) strTab.size else it }
-                                String(strTab.sliceArray(shName until end))
-                            } else ""
-
-                            if (secName == ".got" || secName == ".got.plt") {
-                                for (j in 0 until (shSize / 4).toInt().coerceAtMost(500)) {
-                                    val off = (shOffset + j.toLong() * 4).toInt()
-                                    if (off + 4 <= data.size) {
-                                        val addr = shAddr + j.toLong() * 4
-                                        val val_ = readU32(data, off, le).toLong()
-                                        result.add(GotPltEntry(idx++, "GOT", addr, val_, secName))
-                                    }
-                                }
-                            }
-                            if (secName == ".plt") {
-                                for (j in 0 until (shSize / 12).toInt().coerceAtMost(200)) {
-                                    val addr = shAddr + j.toLong() * 12
-                                    result.add(GotPltEntry(idx++, "PLT", addr, 0, "plt_stub_$j"))
-                                }
-                            }
-                        }
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        entries = result
-                        status = "Found ${result.size} GOT/PLT entries (${result.count { it.type == "GOT" }} GOT, ${result.count { it.type == "PLT" }} PLT)"
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) { status = "Error: ${e.message}" }
+    fun loadAndParse() {
+        val f = context.cacheDir.listFiles()?.filter { it.isFile && it.length() > 40 }
+            ?.maxByOrNull { it.lastModified() }
+        if (f == null) { status = "No file. Open from Home first."; return }
+        fileName = f.name
+        scope.launch(Dispatchers.IO) {
+            try {
+                val data = f.readBytes()
+                if (data[0] != 0x7F.toByte() || data[1] != 0x45.toByte()) {
+                    withContext(Dispatchers.Main) { status = "Not ELF"; return@withContext }
                 }
+                val is64 = data[4] == 2.toByte()
+                val le = data[5] == 1.toByte()
+                val res = mutableListOf<GotEntry>()
+                var idx = 0
+
+                if (is64) {
+                    // ELF64
+                    val shOff = readU64(data, 0x28, le).toInt()
+                    val shNum = readU16(data, 0x3C, le)
+                    val shStrNdx = readU16(data, 0x3E, le)
+                    val shEntSz = readU16(data, 0x3A, le)
+
+                    // String table section header
+                    val strSec = shOff + shStrNdx * shEntSz
+                    val strOff = readU64(data, strSec + 0x18, le).toInt()
+                    val strSz = readU64(data, strSec + 0x20, le).toInt()
+
+                    for (i in 0 until shNum) {
+                        val s = shOff + i * shEntSz
+                        if (s + 0x28 > data.size) break
+                        val nameIdx = readU32(data, s, le).toInt()
+                        val shType = readU32(data, s + 4, le).toInt()
+                        val shAddr = readU64(data, s + 0x10, le)
+                        val shOffset = readU64(data, s + 0x18, le).toInt()
+                        val shSize = readU64(data, s + 0x20, le).toInt()
+
+                        val name = if (nameIdx in 0 until strOff + strSz) {
+                            readString(data, strOff + nameIdx)
+                        } else ""
+
+                        if (name == ".got" || name == ".got.plt") {
+                            val count = (shSize / 8).coerceAtMost(500)
+                            for (j in 0 until count) {
+                                val off = shOffset + j * 8
+                                if (off + 8 <= data.size) {
+                                    res.add(GotEntry(idx++, "GOT", shAddr + j * 8L, readU64(data, off, le), name))
+                                }
+                            }
+                        }
+                        if (name == ".plt" || name == ".plt.got") {
+                            val stubSz = 16
+                            val count = (shSize / stubSz).coerceAtMost(200)
+                            for (j in 0 until count) {
+                                res.add(GotEntry(idx++, "PLT", shAddr + j * stubSz.toLong(), 0, name))
+                            }
+                        }
+                    }
+                } else {
+                    // ELF32
+                    val shOff = readU32(data, 0x20, le).toInt()
+                    val shNum = readU16(data, 0x30, le)
+                    val shStrNdx = readU16(data, 0x32, le)
+                    val shEntSz = readU16(data, 0x2E, le)
+
+                    val strSec = shOff + shStrNdx * shEntSz
+                    val strOff = readU32(data, strSec + 0x10, le).toInt()
+                    val strSz = readU32(data, strSec + 0x14, le).toInt()
+
+                    for (i in 0 until shNum) {
+                        val s = shOff + i * shEntSz
+                        if (s + 0x28 > data.size) break
+                        val nameIdx = readU32(data, s, le).toInt()
+                        val shAddr = readU32(data, s + 0xC, le).toLong()
+                        val shOffset = readU32(data, s + 0x10, le).toInt()
+                        val shSize = readU32(data, s + 0x14, le).toInt()
+
+                        val name = if (nameIdx in 0 until strOff + strSz) {
+                            readString(data, strOff + nameIdx)
+                        } else ""
+
+                        if (name == ".got" || name == ".got.plt") {
+                            val count = (shSize / 4).coerceAtMost(500)
+                            for (j in 0 until count) {
+                                val off = shOffset + j * 4
+                                if (off + 4 <= data.size) {
+                                    res.add(GotEntry(idx++, "GOT", shAddr + j * 4L, readU32(data, off, le).toLong(), name))
+                                }
+                            }
+                        }
+                        if (name == ".plt") {
+                            val count = (shSize / 12).coerceAtMost(200)
+                            for (j in 0 until count) {
+                                res.add(GotEntry(idx++, "PLT", shAddr + j * 12L, 0, name))
+                            }
+                        }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    entries = res
+                    status = "Found ${res.size} entries (${res.count { it.type == "GOT" }} GOT, ${res.count { it.type == "PLT" }} PLT)"
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { status = "Error: ${e.message}" }
             }
-        } else {
-            status = "No file loaded. Open a file first from Home."
         }
     }
 
-    LaunchedEffect(Unit) { loadFromCache() }
+    LaunchedEffect(Unit) { loadAndParse() }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("📊 GOT / PLT", fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Default.ArrowBack, "Back") } },
-                actions = {
-                    IconButton(onClick = { loadFromCache() }) { Icon(Icons.Default.Refresh, "Reload") }
-                },
+                actions = { IconButton(onClick = { entries = emptyList(); loadAndParse() }) { Icon(Icons.Default.Refresh, "Reload") } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
         },
         containerColor = DarkBg
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            // Header info
             Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("📊 GOT/PLT Parser", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         Spacer(Modifier.weight(1f))
-                        if (fileName.isNotEmpty()) Text(fileName, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                        Text(fileName, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(status, color = AccentOrange, fontSize = 11.sp)
@@ -192,21 +177,18 @@ fun GotPltScreen(navController: NavController) {
                     }
                 }
             }
-
-            // Entries list
             if (entries.isEmpty() && status.isNotEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("📊", fontSize = 48.sp)
-                        Spacer(Modifier.height(8.dp))
+                        Text("📊", fontSize = 48.sp); Spacer(Modifier.height(8.dp))
                         Text(status, color = TextSecondary, fontSize = 13.sp)
                     }
                 }
             } else {
                 LazyColumn(Modifier.padding(horizontal = 12.dp)) {
                     itemsIndexed(entries) { _, e ->
-                        val bgColor = if (e.type == "GOT") AccentGreen.copy(alpha = 0.08f) else AccentPurple.copy(alpha = 0.08f)
-                        Card(Modifier.fillMaxWidth().padding(vertical = 2.dp), colors = CardDefaults.cardColors(containerColor = bgColor), shape = RoundedCornerShape(6.dp)) {
+                        val bg = if (e.type == "GOT") AccentGreen.copy(alpha = 0.08f) else AccentPurple.copy(alpha = 0.08f)
+                        Card(Modifier.fillMaxWidth().padding(vertical = 2.dp), colors = CardDefaults.cardColors(containerColor = bg), shape = RoundedCornerShape(6.dp)) {
                             Row(Modifier.padding(6.dp).horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
                                 Text("[${e.index}] ", color = TextMuted, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                                 Text("${e.type} ", color = if (e.type == "GOT") AccentGreen else AccentPurple, fontWeight = FontWeight.Bold, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
@@ -223,6 +205,7 @@ fun GotPltScreen(navController: NavController) {
 }
 
 private fun readU32(b: ByteArray, off: Int, le: Boolean): UInt {
+    if (off + 4 > b.size) return 0u
     return if (le) {
         (b[off].toInt() and 0xFF).toUInt() or ((b[off + 1].toInt() and 0xFF).toUInt() shl 8) or
                 ((b[off + 2].toInt() and 0xFF).toUInt() shl 16) or ((b[off + 3].toInt() and 0xFF).toUInt() shl 24)
@@ -233,18 +216,26 @@ private fun readU32(b: ByteArray, off: Int, le: Boolean): UInt {
 }
 
 private fun readU16(b: ByteArray, off: Int, le: Boolean): Int {
+    if (off + 2 > b.size) return 0
     return if (le) (b[off].toInt() and 0xFF) or ((b[off + 1].toInt() and 0xFF) shl 8)
     else ((b[off].toInt() and 0xFF) shl 8) or (b[off + 1].toInt() and 0xFF)
 }
 
 private fun readU64(b: ByteArray, off: Int, le: Boolean): Long {
+    if (off + 8 > b.size) return 0L
     return if (le) {
-        var v = 0L
-        for (i in 0..7) v = v or ((b[off + i].toLong() and 0xFF) shl (i * 8))
-        v
+        var v = 0L; for (i in 0..7) v = v or ((b[off + i].toLong() and 0xFF) shl (i * 8)); v
     } else {
-        var v = 0L
-        for (i in 0..7) v = v or ((b[off + i].toLong() and 0xFF) shl ((7 - i) * 8))
-        v
+        var v = 0L; for (i in 0..7) v = v or ((b[off + i].toLong() and 0xFF) shl ((7 - i) * 8)); v
     }
+}
+
+private fun readString(b: ByteArray, off: Int): String {
+    val sb = StringBuilder()
+    var i = off
+    while (i < b.size && b[i] != 0.toByte()) {
+        sb.append(b[i].toInt().toChar())
+        i++
+    }
+    return sb.toString()
 }
