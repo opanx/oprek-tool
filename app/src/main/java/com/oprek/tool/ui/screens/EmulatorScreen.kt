@@ -35,15 +35,15 @@ fun EmulatorScreen() {
     var maxSteps by remember { mutableIntStateOf(1000) }
 
     // Disasm
-    var disasmLines = remember { mutableStateOf(listOf<String>()) }
+    var disasmLines = remember { mutableStateOf(emptyList<String>()) }
     var disasmStart by remember { mutableStateOf("0x0") }
     var disasmCount by remember { mutableIntStateOf(20) }
 
     // Memory maps
-    var memMaps = remember { mutableStateOf(listOf<String>()) }
+    var memMaps = remember { mutableStateOf(emptyList<String>()) }
 
     // Syscalls
-    var syscallLog = remember { mutableStateOf(listOf<String>()) }
+    var syscallLog = remember { mutableStateOf(emptyList<String>()) }
     var hookSyscalls by remember { mutableStateOf(true) }
 
     // Hooks
@@ -89,11 +89,11 @@ fun EmulatorScreen() {
         val op0 = (insn shr 25) and 0x07
 
         return when {
-            insn == 0xD4200000 -> "SVC #0"
-            insn == 0xD503201F -> "NOP"
-            insn == 0xD65F03C0 -> "RET"
-            insn == 0xD63F0000 -> "BLR X${(insn shr 5) and 0x1F}"
-            insn == 0xD61F0000 -> "BR X${(insn shr 5) and 0x1F}"
+            insn.toLong() == 0xD4200000L -> "SVC #0"
+            insn.toLong() == 0xD503201FL -> "NOP"
+            insn.toLong() == 0xD65F03C0L -> "RET"
+            insn.toLong() == 0xD63F0000L -> "BLR X${(insn shr 5) and 0x1F}"
+            insn.toLong() == 0xD61F0000L -> "BR X${(insn shr 5) and 0x1F}"
             insn and 0xFFE003E0 == 0xA90003E0 -> "STP X${(insn shr 16) and 0x1F}, X${(insn shr 10) and 0x1F}, [X${insn and 0x1F}]"
             insn and 0xFFE003E0 == 0xA94003E0 -> "LDP X${(insn shr 16) and 0x1F}, X${(insn shr 10) and 0x1F}, [X${insn and 0x1F}]"
             insn and 0xFFC003FF == 0xD10003FF -> "SUB SP, SP, #${(insn shr 10) and 0xFFF}"
@@ -112,7 +112,7 @@ fun EmulatorScreen() {
             insn and 0xFFE00000.toInt() == 0xB9000000 -> "STR W${insn and 0x1F}, [X${(insn shr 5) and 0x1F}]"
             insn and 0xFFC003E0.toInt() == 0xF81F0000 -> "STR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}, #-${(insn shr 10) and 0xFFF}]!"
             insn and 0xFFC003E0.toInt() == 0xF84003E0 -> "LDR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}], #${(insn shr 10) and 0xFFF}"
-            insn == 0xD69F03E0 -> "ERET"
+            insn.toLong() == 0xD69F03E0L -> "ERET"
             insn and 0xFF000000.toInt() == 0xD4000000 -> "BRK #${(insn shr 5) and 0xFFF}"
             insn and 0xFFC00000.toInt() == 0xF8400000 -> "LDR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}, #${(insn shr 10) and 0xFFF}]"
             else -> "UND ${String.format("0x%08X", insn)}"
@@ -298,7 +298,7 @@ fun EmulatorScreen() {
                 }
             }
             withContext(Dispatchers.Main) {
-                disasmLines = steps
+                disasmLines.value = steps.toList()
                 addLog("[+] Emulation done: $count steps, PC=0x${pc.toString(16)}")
                 isRunning = false
             }
@@ -308,7 +308,7 @@ fun EmulatorScreen() {
     // Load file on start
     LaunchedEffect(Unit) { loadFile() }
 
-    Column(modifier = Modifier.fillMaxSize().background(AccentDark)) {
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A1A))) {
         Surface(color = Color(0xFF1A1A2E), modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text("ARM64 Emulator", color = AccentPurple, fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -333,7 +333,7 @@ fun EmulatorScreen() {
                 }
                 if (loadedFile != null) {
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("${loadedFile!!.name} | PC: 0x${pc.toString(16)} | Steps: ${disasmLines.size}",
+                    Text("${loadedFile!!.name} | PC: 0x${pc.toString(16)} | Steps: ${disasmLines.value.size}",
                         color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 }
             }
@@ -364,7 +364,7 @@ fun EmulatorScreen() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Text("X0: 0x${regs.value[0].toString(16)}", color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.width(12.dp))
-                Text("Steps: ${disasmLines.size}", color = Color.Gray, fontSize = 10.sp)
+                Text("Steps: ${disasmLines.value.size}", color = Color.Gray, fontSize = 10.sp)
             }
         }
     }

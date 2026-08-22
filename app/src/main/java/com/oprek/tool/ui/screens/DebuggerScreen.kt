@@ -101,7 +101,7 @@ fun DebuggerScreen() {
     // Load file on start
     LaunchedEffect(Unit) { loadFile() }
 
-    Column(modifier = Modifier.fillMaxSize().background(AccentDark)) {
+    Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A1A))) {
         // Top bar
         Surface(color = Color(0xFF1A1A2E), modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(12.dp)) {
