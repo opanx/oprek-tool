@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdint>
+#include <inttypes.h>
 #include <capstone/capstone.h>
 
 // C functions
@@ -102,16 +103,16 @@ Java_com_oprek_tool_core_NativeLib_elfGetInfo(JNIEnv *env, jclass, jbyteArray da
     snprintf(buf, sizeof(buf),
         "Arch: %s %s\n"
         "Machine: %s (0x%04X)\n"
-        "Entry: 0x%016llX\n"
-        "Program Headers: %u @ 0x%llX\n"
-        "Section Headers: %u @ 0x%llX\n"
+        "Entry: 0x%016" PRIX64 "\n"
+        "Program Headers: %u @ 0x" PRIX64 "\n"
+        "Section Headers: %u @ 0x" PRIX64 "\n"
         "Section StrTab idx: %u\n"
-        "File size: %llu bytes",
+        "File size: " PRIu64 " bytes",
         info.is_64 ? "ELF64" : "ELF32",
         info.is_le ? "Little Endian" : "Big Endian",
         arch_str, (unsigned)machine,
-        (unsigned long long)info.entry, (unsigned)info.phnum, (unsigned long long)info.phoff,
-        (unsigned)info.shnum, (unsigned long long)info.shoff, (unsigned)info.shstrndx, (unsigned long long)info.file_size);
+        (uint64_t)info.entry, (unsigned)info.phnum, (uint64_t)info.phoff,
+        (unsigned)info.shnum, (uint64_t)info.shoff, (unsigned)info.shstrndx, (uint64_t)info.file_size);
     return env->NewStringUTF(buf);
 }
 
@@ -129,13 +130,13 @@ Java_com_oprek_tool_core_NativeLib_elfGetSections(JNIEnv *env, jclass, jbyteArra
 
     for (int i = 0; i < count; i++) {
         char buf[512];
-        snprintf(buf, sizeof(buf), "%s|%s|0x%llX|%llu|0x%llX|%u",
+        snprintf(buf, sizeof(buf), "%s|%s|0x" PRIX64 "|" PRIu64 "|0x" PRIX64 "|%u",
             sections[i].name,
             elf_section_type_str(sections[i].type),
-            sections[i].offset,
-            sections[i].size,
-            sections[i].addr,
-            sections[i].flags);
+            (uint64_t)sections[i].offset,
+            (uint64_t)sections[i].size,
+            (uint64_t)sections[i].addr,
+            (unsigned)sections[i].flags);
         env->SetObjectArrayElement(result, i, env->NewStringUTF(buf));
     }
 
@@ -206,13 +207,13 @@ Java_com_oprek_tool_core_NativeLib_disassemble(JNIEnv *env, jclass,
             // Pad hex bytes to consistent width
             while (hex_bytes.length() < 24) hex_bytes += " ";
 
-            snprintf(line, sizeof(line), "0x%016llX:  %s  %s %s\n",
+            snprintf(line, sizeof(line), "0x%016" PRIX64 ":  %s  %s %s\n",
                 insn->address, hex_bytes.c_str(), insn->mnemonic, insn->op_str);
             result += line;
             printed++;
         } else {
             // Unknown instruction - show raw bytes
-            snprintf(line, sizeof(line), "0x%016llX:  %02X %02X %02X %02X    .byte 0x%02X,0x%02X,0x%02X,0x%02X\n",
+            snprintf(line, sizeof(line), "0x%016" PRIX64 ":  %02X %02X %02X %02X    .byte 0x%02X,0x%02X,0x%02X,0x%02X\n",
                 addr,
                 code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3],
                 code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3]);
@@ -283,13 +284,13 @@ Java_com_oprek_tool_core_NativeLib_disassembleFunction(JNIEnv *env, jclass,
                           (strcmp(insn->mnemonic, "bx") == 0) ||
                           (strcmp(insn->mnemonic, "pop") == 0);
 
-            snprintf(line, sizeof(line), "%s0x%016llX:  %s  %s %s%s\n",
+            snprintf(line, sizeof(line), "%s0x%016" PRIX64 ":  %s  %s %s%s\n",
                 is_ret ? "*" : " ",
                 insn->address, hex_bytes.c_str(), insn->mnemonic, insn->op_str,
                 is_ret ? "  ; <- return" : "");
             result += line;
         } else {
-            snprintf(line, sizeof(line), "  0x%016llX:  %02X %02X %02X %02X    .byte\n",
+            snprintf(line, sizeof(line), "  0x%016" PRIX64 ":  %02X %02X %02X %02X    .byte\n",
                 addr, code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3]);
             result += line;
             code_ptr += 4;
