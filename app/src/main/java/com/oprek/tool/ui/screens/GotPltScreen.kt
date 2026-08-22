@@ -61,21 +61,21 @@ fun GotPltScreen(navController: NavController) {
                         val shentsize = readU16(data, 0x3A, le).toInt()
 
                         // Get string table
-                        val strSecOff = shoff + shstrndx.toLong() * shentsize
-                        val strTabOffset = readU64(data, strSecOff + 0x18, le)
-                        val strTabSize = readU64(data, strSecOff + 0x20, le)
-                        val strTab = if (strTabOffset + strTabSize <= data.size) data.sliceArray(strTabOffset.toInt() until (strTabOffset + strTabSize).toInt()) else byteArrayOf()
+                        val strSecOff = (shoff + shstrndx.toLong() * shentsize).toInt()
+                        val strTabOffset = readU64(data, strSecOff + 0x18, le).toInt()
+                        val strTabSize = readU64(data, strSecOff + 0x20, le).toInt()
+                        val strTab = if (strTabOffset + strTabSize <= data.size) data.sliceArray(strTabOffset until (strTabOffset + strTabSize)) else byteArrayOf()
 
                         for (i in 0 until shnum) {
                             val secOff = shoff + i.toLong() * shentsize
-                            val shName = readU32(data, secOff, le).toInt()
-                            val shType = readU32(data, secOff + 4, le).toInt()
-                            val shAddr = readU64(data, secOff + 0x10, le)
-                            val shOffset = readU64(data, secOff + 0x18, le)
-                            val shSize = readU64(data, secOff + 0x20, le)
+                            val shName = readU32(data, secOff.toInt(), le).toInt()
+                            val shType = readU32(data, (secOff + 4).toInt(), le).toInt()
+                            val shAddr = readU64(data, (secOff + 0x10, le)
+                            val shOffset = readU64(data, (secOff + 0x18, le)
+                            val shSize = readU64(data, (secOff + 0x20, le)
 
                             val secName = if (shName < strTab.size) {
-                                val end = strTab.indexOf(0, shName).let { if (it < 0) strTab.size else it }
+                                val end = strTab.indexOf(0.toByte(), shName).let { if (it < 0) strTab.size else it }
                                 String(strTab.sliceArray(shName until end))
                             } else ""
 
@@ -107,21 +107,21 @@ fun GotPltScreen(navController: NavController) {
                         val shstrndx = readU16(data, 0x32, le).toInt()
                         val shentsize = readU16(data, 0x2E, le).toInt()
 
-                        val strSecOff = shoff + shstrndx.toLong() * shentsize
+                        val strSecOff = (shoff + shstrndx.toLong() * shentsize).toInt()
                         val strTabOffset = readU32(data, strSecOff + 0x10, le).toLong()
                         val strTabSize = readU32(data, strSecOff + 0x14, le).toLong()
-                        val strTab = if (strTabOffset + strTabSize <= data.size) data.sliceArray(strTabOffset.toInt() until (strTabOffset + strTabSize).toInt()) else byteArrayOf()
+                        val strTab = if (strTabOffset + strTabSize <= data.size) data.sliceArray(strTabOffset until (strTabOffset + strTabSize)) else byteArrayOf()
 
                         for (i in 0 until shnum) {
                             val secOff = shoff + i.toLong() * shentsize
-                            val shName = readU32(data, secOff, le).toInt()
-                            val shType = readU32(data, secOff + 4, le).toInt()
-                            val shAddr = readU32(data, secOff + 0xC, le).toLong()
-                            val shOffset = readU32(data, secOff + 0x10, le).toLong()
-                            val shSize = readU32(data, secOff + 0x14, le).toLong()
+                            val shName = readU32(data, secOff.toInt(), le).toInt()
+                            val shType = readU32(data, (secOff + 4).toInt(), le).toInt()
+                            val shAddr = readU32(data, (secOff + 0xC).toInt(), le).toLong()
+                            val shOffset = readU32(data, (secOff + 0x10).toInt(), le).toLong()
+                            val shSize = readU32(data, (secOff + 0x14).toInt(), le).toLong()
 
                             val secName = if (shName < strTab.size) {
-                                val end = strTab.indexOf(0, shName).let { if (it < 0) strTab.size else it }
+                                val end = strTab.indexOf(0.toByte(), shName).let { if (it < 0) strTab.size else it }
                                 String(strTab.sliceArray(shName until end))
                             } else ""
 
