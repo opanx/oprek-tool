@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -22,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oprek.tool.core.NativeLib
-import com.oprek.tool.core.LoadedFileHelper
+// import com.oprek.tool.core.SharedFileState // replaced by SharedFileState
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,7 +63,7 @@ fun DebuggerScreen() {
     }
 
     fun loadFile() {
-        val f = LoadedFileHelper.findLoadedFile(context)
+        val f = SharedFileState.findFile(context)
         if (f != null) {
             loadedFile = f
             fileData = f.readBytes()
@@ -103,7 +105,9 @@ fun DebuggerScreen() {
         }
     }
 
-    LaunchedEffect(Unit) { loadFile() }
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {() }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A1A))) {
         // Header

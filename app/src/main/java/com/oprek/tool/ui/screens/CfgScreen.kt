@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
@@ -41,7 +43,7 @@ fun CfgScreen(navController: NavController) {
     var offset by remember { mutableStateOf(Offset.Zero) }
     var hasNative by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(SharedFileState.revision) {
         try { NativeLib.elfValidate(byteArrayOf(0x7F, 0x45, 0x4C, 0x46)); hasNative = true } catch (_: Exception) {}
     }
 
@@ -52,7 +54,7 @@ fun CfgScreen(navController: NavController) {
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { scope.launch(Dispatchers.Default) {
-                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@launch
+                        val file = SharedFileState.findFile(context) ?: return@launch
                         val data = withContext(Dispatchers.IO) { StreamingIO.readRange(file, 0, minOf(file.length(), 50000L).toInt()) }
                         val disasm = withContext(Dispatchers.IO) { NativeLib.disassemble(data, 0, 1, 2, 300) }
                         blocks = buildCfg(disasm)

@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -38,8 +40,9 @@ fun ElfHeaderScreen(navController: NavController) {
     var sections by remember { mutableStateOf<List<String>>(emptyList()) }
     var is64 by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         if (file.length() > 100 * 1024 * 1024) {
 
             // File too large for in-memory processing

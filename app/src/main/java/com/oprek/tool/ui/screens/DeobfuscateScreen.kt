@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -78,7 +80,7 @@ fun DeobfuscateScreen(navController: NavController) {
                         isScanning = true
                         scope.launch(Dispatchers.Default) {
                             try {
-                                val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+                                val file = SharedFileState.findFile(context)
                                 if (file != null) {
                                     val data = withContext(Dispatchers.IO) {
                                         val raf = java.io.RandomAccessFile(file, "r")

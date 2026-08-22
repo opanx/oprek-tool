@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,9 +39,9 @@ fun MemoryAnalyzerScreen(navController: NavController) {
     var hasNative by remember { mutableStateOf(false) }
     var hasFile by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(SharedFileState.revision) {
         try { NativeLib.entropy(byteArrayOf(1, 2, 3)); hasNative = true } catch (_: Exception) {}
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+        val file = SharedFileState.findFile(context)
         hasFile = file != null
         if (file != null && hasNative) {
             val data = withContext(Dispatchers.IO) { if (file.isFile) file.readBytes() else byteArrayOf().copyOf(minOf(file.length().toInt(), 1048576)) }

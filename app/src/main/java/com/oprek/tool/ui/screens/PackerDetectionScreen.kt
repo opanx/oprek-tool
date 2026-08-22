@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,9 +39,9 @@ fun PackerDetectionScreen(navController: NavController) {
     var sections by remember { mutableStateOf<List<String>>(emptyList()) }
     var hasNative by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(SharedFileState.revision) {
         try { NativeLib.detectPacker(byteArrayOf()); hasNative = true } catch (_: Exception) {}
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         val data = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 2_000_000)) }
         entropy = withContext(Dispatchers.Default) { NativeLib.entropy(data) }
         val packerId = withContext(Dispatchers.Default) { NativeLib.detectPacker(data) }

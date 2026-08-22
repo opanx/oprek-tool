@@ -1,4 +1,6 @@
 package com.oprek.tool.ui.screens
+
+import com.oprek.tool.core.SharedFileState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -38,8 +40,9 @@ fun MemoryDumpScreen(navController: NavController) {
     var pointers by remember { mutableStateOf<List<Long>>(emptyList()) }
     var regions by remember { mutableStateOf<List<String>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         val data = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 10_000_000)) }
 
         // Search for ELF header in dump

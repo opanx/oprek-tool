@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -63,7 +65,7 @@ fun SmaliScreen(navController: NavController) {
                 isLoading = true
                 scope.launch(Dispatchers.Default) {
                     try {
-                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+                        val file = SharedFileState.findFile(context)
                         if (file == null) { result = "No file loaded"; isLoading = false; return@launch }
                         val data = StreamingIO.readRange(file, 0, minOf(file.length(), 500000L).toInt())
                         // Parse DEX classes

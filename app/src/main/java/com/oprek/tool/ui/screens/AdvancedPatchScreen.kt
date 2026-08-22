@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -44,7 +46,7 @@ fun AdvancedPatchScreen(navController: NavController) {
     var isScanning by remember { mutableStateOf(false) }
     var patchedCount by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(SharedFileState.revision) {
         try { NativeLib.patchNop(byteArrayOf(0, 0, 0, 0), 0); hasNative = true } catch (_: Exception) {}
     }
 
@@ -77,7 +79,7 @@ fun AdvancedPatchScreen(navController: NavController) {
                         isScanning = true
                         scope.launch(Dispatchers.Default) {
                             try {
-                                val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+                                val file = SharedFileState.findFile(context)
                                 if (file != null) {
                                     val data = withContext(Dispatchers.IO) {
                                         val raf = java.io.RandomAccessFile(file, "r")
@@ -112,7 +114,7 @@ fun AdvancedPatchScreen(navController: NavController) {
                             Text("Found ${recommendations.size} patches", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentOrange, modifier = Modifier.weight(1f))
                             Button(onClick = {
                                 scope.launch(Dispatchers.Default) {
-                                    val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@launch
+                                    val file = SharedFileState.findFile(context) ?: return@launch
                                     if (file.length() > 100 * 1024 * 1024) {
 
                                         // File too large for in-memory processing
@@ -151,7 +153,7 @@ fun AdvancedPatchScreen(navController: NavController) {
                                 }
                                 IconButton(onClick = {
                                     scope.launch(Dispatchers.Default) {
-                                        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@launch
+                                        val file = SharedFileState.findFile(context) ?: return@launch
                                         if (file.length() > 100 * 1024 * 1024) {
 
                                             // File too large for in-memory processing
@@ -210,7 +212,7 @@ fun AdvancedPatchScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = {
                         scope.launch(Dispatchers.Default) {
-                            val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@launch
+                            val file = SharedFileState.findFile(context) ?: return@launch
                             if (file.length() > 100 * 1024 * 1024) {
 
                                 // File too large for in-memory processing
@@ -258,7 +260,7 @@ fun QuickPatchBtn(label: String, color: Color, onClick: () -> Unit) {
 }
 
 private fun applyQuickPatch(context: android.content.Context, offsetHex: String, type: String, onResult: (String) -> Unit) {
-    val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+    val file = SharedFileState.findFile(context)
     if (file == null) { onResult("No file loaded"); return }
     try {
         val offset = offsetHex.removePrefix("0x").removePrefix("0X").toLong(16)

@@ -1,4 +1,6 @@
 package com.oprek.tool.ui.screens
+
+import com.oprek.tool.core.SharedFileState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -39,8 +41,9 @@ fun ShellPatcherScreen(navController: NavController) {
     var replaceStr by remember { mutableStateOf("") }
     var patchCount by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".sh") && !file.name.endsWith(".bash")) return@LaunchedEffect
         original = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readText() }
         patched = original
@@ -52,7 +55,7 @@ fun ShellPatcherScreen(navController: NavController) {
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = {
-                        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@IconButton
+                        val file = SharedFileState.findFile(context) ?: return@IconButton
                         val backup = File(context.cacheDir, "oprek/backup_${System.currentTimeMillis()}.sh")
                         backup.writeText(original)
                         file.writeText(patched)

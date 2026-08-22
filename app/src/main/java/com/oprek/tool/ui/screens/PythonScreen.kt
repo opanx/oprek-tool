@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -135,7 +137,7 @@ fun PythonScreen(navController: NavController) {
 private fun executePython(script: String, context: Context): String {
     val sb = StringBuilder()
     val vars = mutableMapOf<String, String>()
-    val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+    val file = SharedFileState.findFile(context)
 
     sb.appendLine("═══ Python Output ═══")
     sb.appendLine()

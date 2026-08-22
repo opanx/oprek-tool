@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,8 +32,9 @@ fun ELFSymbolScreen(navController: NavController) {
     var symbols by remember { mutableStateOf<List<String>>(emptyList()) }
     var dynamic by remember { mutableStateOf<List<String>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".so") && !file.name.endsWith(".elf")) return@LaunchedEffect
         scope.launch(Dispatchers.Default) {
             if (file.length() > 100 * 1024 * 1024) {

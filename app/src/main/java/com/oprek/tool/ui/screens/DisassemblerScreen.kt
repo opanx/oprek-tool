@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -45,7 +47,7 @@ fun DisassemblerScreen(navController: NavController) {
     val arches = listOf("ARM (32)", "ARM64", "x86")
     val modes = listOf("ARM", "Thumb", "ARM64", "x86-64", "x86-32")
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(SharedFileState.revision) {
         try {
             NativeLib.elfValidate(byteArrayOf(0x7F, 0x45, 0x4C, 0x46))
             hasNative = true
@@ -53,7 +55,7 @@ fun DisassemblerScreen(navController: NavController) {
     }
 
     // Auto-detect architecture when file changes
-    LaunchedEffect(Unit) {
+    LaunchedEffect(SharedFileState.revision) {
         val file = context.cacheDir.listFiles { f -> f.isFile && f.length() > 0 }?.maxByOrNull { it.lastModified() }
         if (file != null) {
             try {
@@ -151,7 +153,7 @@ fun DisassemblerScreen(navController: NavController) {
                 isLoading = true
                 scope.launch(Dispatchers.Default) {
                     try {
-                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+                        val file = SharedFileState.findFile(context)
                         if (file == null || !file.exists() || file.isDirectory) {
                             result = "No file loaded. Open a file first."
                             isLoading = false

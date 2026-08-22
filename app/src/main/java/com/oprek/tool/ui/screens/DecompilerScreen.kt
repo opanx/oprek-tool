@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.oprek.tool.core.SharedFileState
 import com.oprek.tool.engine.AnalysisEngine
 import com.oprek.tool.core.NativeLib
 import com.oprek.tool.core.StreamingIO
@@ -54,10 +55,12 @@ fun DecompilerScreen(navController: NavController) {
     var symbols by remember { mutableStateOf(listOf<String>()) }
     var selectedSymbol by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
+    // Auto-refresh when file changes
+    val rev = SharedFileState.revision
+    LaunchedEffect(rev) {
         try { NativeLib.elfValidate(byteArrayOf(0x7F, 0x45, 0x4C, 0x46)); hasNative = true } catch (_: Exception) {}
         // Load symbols
-        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+        val file = SharedFileState.findFile(context)
         if (file != null) {
             try {
                 val analysis = withContext(Dispatchers.IO) { AnalysisEngine.analyzeElf(file) }
@@ -175,8 +178,8 @@ fun DecompilerScreen(navController: NavController) {
                 isLoading = true
                 scope.launch(Dispatchers.Default) {
                     try {
-                        val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
-                        if (file == null) { result = "No file loaded"; isLoading = false; return@launch }
+                        val file = SharedFileState.findFile(context)
+                        if (file == null) { result = "No file loaded. Open from Home first."; isLoading = false; return@launch }
 
                         withContext(Dispatchers.Main) { progress = "Reading file..." }
                         val readSize = minOf(file.length(), 500000L).toInt()

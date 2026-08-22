@@ -61,8 +61,6 @@ fun AutoPatchLoginScreen(navController: NavController) {
     var showSaveDialog by remember { mutableStateOf(false) }
     var archMode by remember { mutableStateOf("") }
 
-
-
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { scope.launch(Dispatchers.IO) {
             try {

@@ -64,6 +64,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val info = FileAnalyzer.getFileInfo(tempFile)
                 _currentFile.value = info
                 _currentRawFile.value = tempFile
+                SharedFileState.notifyFileLoaded(tempFile)
                 _statusMessage.value = "Loaded: ${info.name} (${formatSize(info.size)})"
 
                 // Auto-analyze based on type - NO LIMITS

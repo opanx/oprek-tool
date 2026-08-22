@@ -1,4 +1,6 @@
 package com.oprek.tool.ui.screens
+
+import com.oprek.tool.core.SharedFileState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -36,9 +38,9 @@ fun Base64Screen(navController: NavController) {
     var mode by remember { mutableStateOf("b64enc") }
 
     // Auto-detect and convert when file loaded
-    LaunchedEffect(Unit) {
-        val ctx = context
-        val file = java.io.File(ctx.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(ctx) ?: return@LaunchedEffect
         val bytes = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1000)) }
         input = bytes.joinToString(" ") { "%02X".format(it) }
         mode = "hexdec"

@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oprek.tool.core.NativeLib
-import com.oprek.tool.core.LoadedFileHelper
+// import com.oprek.tool.core.SharedFileState // replaced by SharedFileState
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -66,7 +68,7 @@ fun EmulatorScreen() {
     }
 
     fun loadFile() {
-        val f = LoadedFileHelper.findLoadedFile(context)
+        val f = SharedFileState.findFile(context)
         if (f != null) {
             val data = f.readBytes()
             fileData = data
@@ -108,7 +110,9 @@ fun EmulatorScreen() {
         }
     }
 
-    LaunchedEffect(Unit) { loadFile() }
+    // Auto-refresh when file changes
+    val rev = SharedFileState.revision
+    LaunchedEffect(rev) { loadFile() }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A1A))) {
         // Header

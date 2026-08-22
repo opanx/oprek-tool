@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -31,8 +33,9 @@ fun ExportScreen(navController: NavController) {
     var exportContent by remember { mutableStateOf("") }
     var savedPath by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context)
         if (file != null) {
             val info = FileAnalyzer.getFileInfo(file)
             val strings = FileAnalyzer.extractStrings(file).take(100)

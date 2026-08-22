@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -133,7 +135,7 @@ fun ScriptingScreen(navController: NavController) {
 private fun executeScript(script: String, context: Context): String {
     val sb = StringBuilder()
     val vars = mutableMapOf<String, Any>()
-    val file = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+    val file = SharedFileState.findFile(context)
 
     sb.appendLine("═══ Script Output ═══")
     sb.appendLine()

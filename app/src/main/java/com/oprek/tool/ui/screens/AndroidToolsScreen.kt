@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,9 +40,9 @@ fun AndroidToolsScreen(navController: NavController) {
     var hasNative by remember { mutableStateOf(false) }
     var fileType by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(SharedFileState.revision) {
         try { NativeLib.dexValidate(byteArrayOf()); hasNative = true } catch (_: Exception) {}
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+        val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         if (file.length() > 100 * 1024 * 1024) {
 
             // File too large for in-memory processing

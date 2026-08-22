@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -45,8 +47,9 @@ fun PakArchiveScreen(navController: NavController) {
     var totalSize by remember { mutableLongStateOf(0L) }
     var isZip by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         totalSize = file.length()
         val bytes = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 64)) }
 

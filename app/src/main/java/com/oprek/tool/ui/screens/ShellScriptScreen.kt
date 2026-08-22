@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -43,8 +45,9 @@ fun ShellScriptScreen(navController: NavController) {
     var isExtracting by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".sh") && !file.name.endsWith(".bash") && !file.name.endsWith(".zsh")) return@LaunchedEffect
         rawContent = withContext(Dispatchers.IO) { file.readText() }
         scriptInfo = withContext(Dispatchers.Default) { ShellScriptParser.parse(rawContent) }
@@ -103,7 +106,6 @@ fun ShellScriptScreen(navController: NavController) {
 
                 Spacer(Modifier.height(8.dp))
 
-
                 // Content
                 when (selectedTab) {
                     0 -> SimpleList(info.commands, "command", AccentGreen, clipboard)
@@ -131,7 +133,7 @@ fun ShellScriptScreen(navController: NavController) {
                                             Button(onClick = {
                                                 isExtracting = true
                                                 scope.launch(Dispatchers.Default) {
-                                                    val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+                                                    val file = SharedFileState.findFile(context)
                                                     if (file != null) {
                                                         val content = withContext(Dispatchers.IO) { file.readText() }
                                                         val extracted = ShellScriptParser.extractBinary(content, bp)

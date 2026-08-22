@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -47,8 +49,9 @@ fun LuaAnalyzerScreen(navController: NavController) {
     var globals by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".lua") && !file.name.endsWith(".luac") && !file.name.endsWith(".luajit")) return@LaunchedEffect
         rawContent = withContext(Dispatchers.IO) { file.readText() }
         val lines = rawContent.lines()

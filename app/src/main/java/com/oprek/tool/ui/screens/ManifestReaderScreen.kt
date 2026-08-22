@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,8 +33,9 @@ fun ManifestReaderScreen(navController: NavController) {
     var manifestInfo by remember { mutableStateOf("") }
     var commonPerms by remember { mutableStateOf<List<String>>(emptyList()) }
 
-    LaunchedEffect(Unit) {
-        val file = File(context.cacheDir, "oprek").listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() } ?: return@LaunchedEffect
+    val rev = SharedFileState.revision
+
+    LaunchedEffect(rev) {(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".apk")) return@LaunchedEffect
         scope.launch(Dispatchers.Default) {
             val info = withContext(Dispatchers.IO) { FileAnalyzer.parseApkInfo(file) }

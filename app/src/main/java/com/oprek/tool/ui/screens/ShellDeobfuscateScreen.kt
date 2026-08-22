@@ -1,5 +1,7 @@
 package com.oprek.tool.ui.screens
 
+import com.oprek.tool.core.SharedFileState
+
 import android.util.Base64
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
-import com.oprek.tool.core.LoadedFileHelper
+// import com.oprek.tool.core.SharedFileState // replaced by SharedFileState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -43,7 +45,7 @@ fun ShellDeobfuscateScreen(navController: NavController) {
     val modes = listOf("🔍 Auto Detect", "📋 Base64", "🔢 Hex", "🔄 ROT13/47", "🌐 URL Decode", "⚡ XOR Brute")
 
     fun loadFromCache() {
-        val f = LoadedFileHelper.findLoadedFile(context)
+        val f = SharedFileState.findFile(context)
         if (f != null && f.length() < 1_000_000) { // Only load text files < 1MB
             try {
                 val text = f.readText(Charsets.UTF_8)
@@ -161,7 +163,7 @@ fun ShellDeobfuscateScreen(navController: NavController) {
         results = res
     }
 
-    LaunchedEffect(Unit) { loadFromCache() }
+    LaunchedEffect(SharedFileState.revision) { loadFromCache() }
 
     Scaffold(
         topBar = {
