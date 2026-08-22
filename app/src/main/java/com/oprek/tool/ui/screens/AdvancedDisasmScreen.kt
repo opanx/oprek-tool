@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.oprek.tool.core.SharedFileState
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,12 +40,26 @@ fun AdvancedDisasmScreen(navController: NavController) {
     var error by remember { mutableStateOf("") }
     var loaded by remember { mutableStateOf(false) }
 
+    // Auto-load from SharedFileState
+    val rev = SharedFileState.revision
+    LaunchedEffect(rev) {
+        val f = SharedFileState.findFile(context)
+        if (f != null) {
+            try {
+                val bytes = withContext(Dispatchers.IO) { f.readBytes() }
+                fileBytes = bytes
+                loaded = true
+                offset = "0"
+            } catch (_: Exception) {}
+        }
+    }
+
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
             scope.launch(Dispatchers.IO) {
                 try {
                     val bytes = context.contentResolver.openInputStream(it)?.readBytes() ?: byteArrayOf()
-                    withContext(Dispatchers.Main) { fileBytes = bytes; loaded = true }
+                    withContext(Dispatchers.Main) { fileBytes = bytes; loaded = true; offset = "0" }
                 } catch (_: Exception) {}
             }
         }

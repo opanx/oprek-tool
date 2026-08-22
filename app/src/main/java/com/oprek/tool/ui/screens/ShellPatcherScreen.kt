@@ -46,8 +46,13 @@ fun ShellPatcherScreen(navController: NavController) {
     LaunchedEffect(rev) {
         val file = SharedFileState.findFile(context) ?: return@LaunchedEffect
         if (!file.name.endsWith(".sh") && !file.name.endsWith(".bash")) return@LaunchedEffect
-        original = withContext(Dispatchers.IO) { file.readText() }
-        patched = original
+        try {
+            original = withContext(Dispatchers.IO) { file.readText() }
+            patched = original
+        } catch (e: Exception) {
+            original = "Error reading file: ${e.message}"
+            patched = original
+        }
     }
 
     Scaffold(

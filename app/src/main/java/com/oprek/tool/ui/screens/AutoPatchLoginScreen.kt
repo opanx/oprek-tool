@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.oprek.tool.core.SharedFileState
 import com.oprek.tool.ui.theme.*
 import androidx.compose.ui.graphics.Color
 import java.io.File
@@ -61,6 +62,26 @@ fun AutoPatchLoginScreen(navController: NavController) {
     var showSaveDialog by remember { mutableStateOf(false) }
     var archMode by remember { mutableStateOf("") }
 
+    // Auto-load from SharedFileState
+    val rev = SharedFileState.revision
+    LaunchedEffect(rev) {
+        val f = SharedFileState.findFile(context)
+        if (f != null) {
+            scope.launch(Dispatchers.IO) {
+                try {
+                    val b = withContext(Dispatchers.IO) { f.readBytes() }
+                    withContext(Dispatchers.Main) {
+                        fileBytes = b; fileName = f.name; loaded = true; findings = emptyList(); patchedCount = 0
+                        archMode = if (b.size >= 18) {
+                            val machine = (b[18].toInt() and 0xFF) or ((b[19].toInt() and 0xFF) shl 8)
+                            when (machine) { 0xB7 -> "ARM64 (AArch64)"; 0x28 -> "ARM32"; 0x03 -> "x86"; 0x3E -> "x86_64"; else -> "Unknown (0x${String.format("%04X", machine)})" }
+                        } else "Unknown"
+                    }
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { scope.launch(Dispatchers.IO) {
             try {
@@ -69,7 +90,6 @@ fun AutoPatchLoginScreen(navController: NavController) {
                 val name = uri.lastPathSegment ?: "unknown"
                 withContext(Dispatchers.Main) {
                     fileBytes = b; fileName = name; loaded = true; findings = emptyList(); patchedCount = 0
-                    // Auto-detect arch
                     archMode = if (b.size >= 18) {
                         val machine = (b[18].toInt() and 0xFF) or ((b[19].toInt() and 0xFF) shl 8)
                         when (machine) { 0xB7 -> "ARM64 (AArch64)"; 0x28 -> "ARM32"; 0x03 -> "x86"; 0x3E -> "x86_64"; else -> "Unknown (0x${String.format("%04X", machine)})" }

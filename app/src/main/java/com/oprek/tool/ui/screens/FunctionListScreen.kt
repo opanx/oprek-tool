@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.oprek.tool.core.SharedFileState
 import com.oprek.tool.engine.ElfFullEngine
 import com.oprek.tool.engine.SymbolEntry
 import com.oprek.tool.ui.theme.*
@@ -36,6 +37,21 @@ fun FunctionListScreen(navController: NavController) {
     var symbols by remember { mutableStateOf(listOf<SymbolEntry>()) }
     var search by remember { mutableStateOf("") }
     var typeFilter by remember { mutableStateOf("FUNC") }
+
+    // Auto-load from SharedFileState
+    val rev = SharedFileState.revision
+    LaunchedEffect(rev) {
+        val f = SharedFileState.findFile(context)
+        if (f != null) {
+            scope.launch(Dispatchers.IO) {
+                try {
+                    ElfFullEngine.load(f)
+                    val syms = withContext(Dispatchers.Default) { ElfFullEngine.parseSymbolTable().filter { it.stType == "STT_FUNC" } }
+                    withContext(Dispatchers.Main) { symbols = syms }
+                } catch (_: Exception) {}
+            }
+        }
+    }
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { scope.launch(Dispatchers.IO) {

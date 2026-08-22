@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.oprek.tool.core.SharedFileState
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,9 +36,23 @@ fun PatchInstructionScreen(navController: NavController) {
     var loaded by remember { mutableStateOf(false) }
     var saved by remember { mutableStateOf(false) }
 
+    // Auto-load from SharedFileState
+    val rev = SharedFileState.revision
+    LaunchedEffect(rev) {
+        val f = SharedFileState.findFile(context)
+        if (f != null) {
+            scope.launch(Dispatchers.IO) {
+                try {
+                    val b = withContext(Dispatchers.IO) { f.readBytes() }
+                    withContext(Dispatchers.Main) { fileBytes = b; loaded = true; offset = "" }
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { scope.launch(Dispatchers.IO) {
-            try { val b = context.contentResolver.openInputStream(it)?.readBytes() ?: byteArrayOf(); withContext(Dispatchers.Main) { fileBytes = b; loaded = true } } catch (_: Exception) {}
+            try { val b = context.contentResolver.openInputStream(it)?.readBytes() ?: byteArrayOf(); withContext(Dispatchers.Main) { fileBytes = b; loaded = true; offset = "" } } catch (_: Exception) {}
         }}
     }
 
