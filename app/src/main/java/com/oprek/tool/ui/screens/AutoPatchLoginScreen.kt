@@ -267,7 +267,7 @@ private fun scanForCracks(data: ByteArray, strategy: Int): List<CrackFinding> {
     // === 2. ARM64 specific patterns ===
     if (is64) {
         for (i in 0 until data.size - 7) {
-            val insn = readU32LE(data, i)
+            val insn = readU32LE(data, i).toInt()
 
             // CBZ/CBNZ Xn (return check): 0xB4/0xB5/0x34/0x35
             val opc = (insn shr 24) and 0xFF
@@ -324,7 +324,7 @@ private fun scanForCracks(data: ByteArray, strategy: Int): List<CrackFinding> {
     // === 3. ARM32 specific patterns ===
     if (!is64) {
         for (i in 0 until data.size - 3 step 2) {
-            val insn = readU32LE(data, i)
+            val insn = readU32LE(data, i).toInt()
             val opc = (insn shr 24) and 0xFF
 
             // Bcond: xxxx101x
@@ -409,7 +409,7 @@ private fun findNearestBranch(data: ByteArray, stringOffset: Int, is64: Boolean)
     val searchEnd = minOf(if (is64) data.size - 3 else data.size - 7, stringOffset + range)
 
     for (i in searchStart until searchEnd step if (is64) 4 else 2) {
-        val insn = readU32LE(data, i)
+        val insn = readU32LE(data, i).toInt()
         val opc = (insn shr 24) and 0xFF
         if (is64) {
             if (opc == 0x54 || opc == 0xB4 || opc == 0xB5 || opc == 0x34 || opc == 0x35) return i
