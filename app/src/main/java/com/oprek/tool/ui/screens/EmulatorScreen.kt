@@ -84,47 +84,44 @@ fun EmulatorScreen() {
     }
 
     // ARM64 instruction decoder
-    fun decodeArm64(insn: Int): String {
-        val opc = (insn shr 24) and 0xFF
-        val op0 = (insn shr 25) and 0x07
-
+    fun decodeArm64(insn: Long): String {
         return when {
-            insn.toLong() == 0xD4200000L -> "SVC #0"
-            insn.toLong() == 0xD503201FL -> "NOP"
-            insn.toLong() == 0xD65F03C0L -> "RET"
-            insn.toLong() == 0xD63F0000L -> "BLR X${(insn shr 5) and 0x1F}"
-            insn.toLong() == 0xD61F0000L -> "BR X${(insn shr 5) and 0x1F}"
-            insn and 0xFFE003E0 == 0xA90003E0 -> "STP X${(insn shr 16) and 0x1F}, X${(insn shr 10) and 0x1F}, [X${insn and 0x1F}]"
-            insn and 0xFFE003E0 == 0xA94003E0 -> "LDP X${(insn shr 16) and 0x1F}, X${(insn shr 10) and 0x1F}, [X${insn and 0x1F}]"
-            insn and 0xFFC003FF == 0xD10003FF -> "SUB SP, SP, #${(insn shr 10) and 0xFFF}"
-            insn and 0xFFC003FF == 0x910003FF -> "ADD SP, SP, #${(insn shr 10) and 0xFFF}"
-            insn and 0xFF000000.toInt() == 0x14000000 -> "B ${String.format("0x%X", (insn and 0x3FFFFFF) * 4)}"
-            insn and 0xFF000000.toInt() == 0x94000000 -> "BL ${String.format("0x%X", (insn and 0x3FFFFFF) * 4)}"
-            insn and 0xFF000000.toInt() == 0xB4000000 -> "CBZ X${insn and 0x1F}, ..."
-            insn and 0xFF000000.toInt() == 0xB5000000 -> "CBNZ X${insn and 0x1F}, ..."
-            insn and 0xFF000000.toInt() == 0x34000000 -> "CBZ W${insn and 0x1F}, ..."
-            insn and 0xFF000000.toInt() == 0x35000000 -> "CBNZ W${insn and 0x1F}, ..."
-            insn and 0xFFE0001F == 0xAA0003E0 -> "MOV X${(insn shr 0) and 0x1F}, X${(insn shr 16) and 0x1F}"
-            insn and 0xFF800000.toInt() == 0xD2800000 -> "MOVZ X${insn and 0x1F}, #${((insn shr 5) and 0xFFFF) shl ((insn shr 21) and 3) * 16}"
-            insn and 0xFFE00000.toInt() == 0xF9400000 -> "LDR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}]"
-            insn and 0xFFE00000.toInt() == 0xF9000000 -> "STR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}]"
-            insn and 0xFFE00000.toInt() == 0xB9400000 -> "LDR W${insn and 0x1F}, [X${(insn shr 5) and 0x1F}]"
-            insn and 0xFFE00000.toInt() == 0xB9000000 -> "STR W${insn and 0x1F}, [X${(insn shr 5) and 0x1F}]"
-            insn and 0xFFC003E0.toInt() == 0xF81F0000 -> "STR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}, #-${(insn shr 10) and 0xFFF}]!"
-            insn and 0xFFC003E0.toInt() == 0xF84003E0 -> "LDR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}], #${(insn shr 10) and 0xFFF}"
-            insn.toLong() == 0xD69F03E0L -> "ERET"
-            insn and 0xFF000000.toInt() == 0xD4000000 -> "BRK #${(insn shr 5) and 0xFFF}"
-            insn and 0xFFC00000.toInt() == 0xF8400000 -> "LDR X${insn and 0x1F}, [X${(insn shr 5) and 0x1F}, #${(insn shr 10) and 0xFFF}]"
+            insn == 0xD4200000L -> "SVC #0"
+            insn == 0xD503201FL -> "NOP"
+            insn == 0xD65F03C0L -> "RET"
+            insn == 0xD63F0000L -> "BLR X${(insn shr 5) and 0x1FL}"
+            insn == 0xD61F0000L -> "BR X${(insn shr 5) and 0x1FL}"
+            insn and 0xFFE003E0L == 0xA90003E0LL -> "STP X${(insn shr 16) and 0x1FL}, X${(insn shr 10) and 0x1FL}, [X${insn and 0x1FL}]"
+            insn and 0xFFE003E0L == 0xA94003E0LL -> "LDP X${(insn shr 16) and 0x1FL}, X${(insn shr 10) and 0x1FL}, [X${insn and 0x1FL}]"
+            insn and 0xFFC003FFL == 0xD10003FFLL -> "SUB SP, SP, #${(insn shr 10) and 0xFFFL}"
+            insn and 0xFFC003FFL == 0x910003FFLL -> "ADD SP, SP, #${(insn shr 10) and 0xFFFL}"
+            insn and 0xFF000000L == 0x14000000L -> "B ${String.format("0x%X", (insn and 0x3FFFFFFL) * 4)}"
+            insn and 0xFF000000L == 0x94000000L -> "BL ${String.format("0x%X", (insn and 0x3FFFFFFL) * 4)}"
+            insn and 0xFF000000L == 0xB4000000L -> "CBZ X${insn and 0x1FL}, ..."
+            insn and 0xFF000000L == 0xB5000000L -> "CBNZ X${insn and 0x1FL}, ..."
+            insn and 0xFF000000L == 0x34000000L -> "CBZ W${insn and 0x1FL}, ..."
+            insn and 0xFF000000L == 0x35000000L -> "CBNZ W${insn and 0x1FL}, ..."
+            insn and 0xFFE0001FL == 0xAA0003E0LL -> "MOV X${(insn shr 0) and 0x1FL}, X${(insn shr 16) and 0x1FL}"
+            insn and 0xFF800000L == 0xD2800000L -> "MOVZ X${insn and 0x1FL}, #${((insn shr 5) and 0xFFFLF) shl ((insn shr 21) and 3L) * 16}"
+            insn and 0xFFE00000L == 0xF9400000L -> "LDR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
+            insn and 0xFFE00000L == 0xF9000000L -> "STR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
+            insn and 0xFFE00000L == 0xB9400000L -> "LDR W${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
+            insn and 0xFFE00000L == 0xB9000000L -> "STR W${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
+            insn and 0xFFC003E0L == 0xF81F0000L -> "STR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}, #-${(insn shr 10) and 0xFFFL}]!"
+            insn and 0xFFC003E0L == 0xF84003E0L -> "LDR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}], #${(insn shr 10) and 0xFFFL}"
+            insn == 0xD69F03E0L -> "ERET"
+            insn and 0xFF000000L == 0xD4000000L -> "BRK #${(insn shr 5) and 0xFFFL}"
+            insn and 0xFFC00000L == 0xF8400000L -> "LDR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}, #${(insn shr 10) and 0xFFFL}]"
             else -> "UND ${String.format("0x%08X", insn)}"
         }
     }
 
-    fun readInsn(data: ByteArray, addr: Long): Int {
+    fun readInsn(data: ByteArray, addr: Long): Long {
         if (addr < 0 || addr + 4 > data.size) return 0
-        return (data[addr.toInt()].toInt() and 0xFF) or
-                ((data[addr.toInt()+1].toInt() and 0xFF) shl 8) or
-                ((data[addr.toInt()+2].toInt() and 0xFF) shl 16) or
-                ((data[addr.toInt()+3].toInt() and 0xFF) shl 24)
+        return (data[addr.toInt()].toLong() and 0xFF) or
+                ((data[(addr+1).toInt()].toLong() and 0xFF) shl 8) or
+                ((data[(addr+2).toInt()].toLong() and 0xFF) shl 16) or
+                ((data[(addr+3).toInt()].toLong() and 0xFF) shl 24)
     }
 
     fun stepEmulation() {
