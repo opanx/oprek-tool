@@ -107,7 +107,7 @@ fun DebuggerScreen() {
 
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {() }
+    LaunchedEffect(rev) { loadFile() }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A1A))) {
         // Header

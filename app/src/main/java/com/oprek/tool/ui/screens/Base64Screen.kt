@@ -40,8 +40,9 @@ fun Base64Screen(navController: NavController) {
     // Auto-detect and convert when file loaded
     val rev = SharedFileState.revision
 
-    LaunchedEffect(rev) {(ctx) ?: return@LaunchedEffect
-        val bytes = withContext(kotlinx.coroutines.Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1000)) }
+    LaunchedEffect(rev) {
+        val file = SharedFileState.findFile(ctx) ?: return@LaunchedEffect
+        val bytes = withContext(Dispatchers.IO) { file.readBytes().copyOf(minOf(file.length().toInt(), 1000)) }
         input = bytes.joinToString(" ") { "%02X".format(it) }
         mode = "hexdec"
         output = String(bytes, Charsets.UTF_8).filter { it.code in 0x20..0x7E || it == '\n' }
