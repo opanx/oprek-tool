@@ -173,6 +173,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("🔧 Debugger", "Breakpoints, memory, registers", Icons.Outlined.BugReport, AccentPurple, "debugger"),
                 ToolItem("⚙️ Emulator", "ARM64 ESIL emulation", Icons.Outlined.Memory, AccentCyan, "emulator"),
                 ToolItem("🔑 Admin Password Searcher", "Brute force, SQLi, panel detect", Icons.Default.Key, AccentRed, "adminsearch"),
+                ToolItem("🛡️ Malware Detector", "Reboot/wipe/spyware detect + NOP", Icons.Default.Shield, AccentRed, "malwaredetect"),
             )
 
             LazyVerticalGrid(
