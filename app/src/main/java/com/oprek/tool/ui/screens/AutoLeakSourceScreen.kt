@@ -389,17 +389,53 @@ fun AutoLeakSourceScreen(navController: NavController) {
                     srcCount++
                 }
 
-                // Look for function definitions
-                val funcDefs = Regex("""(?:void|int|bool|float|long|unsigned|static|const|auto)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\)\s*\{""")
-                for (m in funcDefs.findAll(rawText)) {
-                    addResult("Function", "MEDIUM", m.value.take(100), "Function definition")
+                // Look for function definitions - COMPREHENSIVE
+                val funcReturnTypes = listOf("void", "int", "bool", "float", "double", "long", "unsigned", "static", "const", "auto", "std::string", "std::vector", "char", "uint8_t", "uint16_t", "uint32_t", "uint64_t", "int8_t", "int16_t", "int32_t", "int64_t", "size_t", "uintptr_t", "intptr_t", "jstring", "jint", "jboolean", "jbyteArray", "jobjectArray", "JNIEXPORT", "extern")
+                for (retType in funcReturnTypes) {
+                    val funcPat = Regex("$retType\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\([^)]*\\)")
+                    for (m in funcPat.findAll(rawText)) {
+                        addResult("Function", "HIGH", m.value.take(150), "Function definition ($retType)")
+                        srcCount++
+                    }
+                }
+                // Also match JNIEXPORT functions
+                val jniExportPat = Regex("""JNIEXPORT\s+\w+\s+JNICALL\s+\w+\s*\([^)]*\)""")
+                for (m in jniExportPat.findAll(rawText)) {
+                    addResult("JNI Function", "HIGH", m.value.take(150), "JNI exported function")
+                    srcCount++
+                }
+                // Match void main and entry points
+                val mainPat = Regex("""(?:int|void)\s+main\s*\([^)]*\)""")
+                for (m in mainPat.findAll(rawText)) {
+                    addResult("Entry Point", "CRITICAL", m.value, "Main entry point")
                     srcCount++
                 }
 
-                // Look for struct/class definitions
-                val structDefs = Regex("""(?:struct|class|enum|interface|typedef)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*[:{]""")
-                for (m in structDefs.findAll(rawText)) {
-                    addResult("Type Def", "MEDIUM", m.value, "Type definition")
+                // Look for struct/class/enum definitions - COMPREHENSIVE
+                val typeKeywords = listOf("struct", "class", "enum", "interface", "typedef", "union", "namespace")
+                for (kw in typeKeywords) {
+                    val typePat = Regex("$kw\\s+([a-zA-Z_][a-zA-Z0-9_]*)")
+                    for (m in typePat.findAll(rawText)) {
+                        addResult("Type Def", "HIGH", "${m.value} (${kw})", "Type definition ($kw)")
+                        srcCount++
+                    }
+                }
+                // Look for #define macros
+                val definePat = Regex("""#define\s+([A-Z_][A-Z0-9_]*)\s+(.+?)$""", RegexOption.MULTILINE)
+                for (m in definePat.findAll(rawText)) {
+                    addResult("Macro", "MEDIUM", "#define ${m.groupValues[1]} ${m.groupValues[2].trim().take(100)}", "Preprocessor macro")
+                    srcCount++
+                }
+                // Look for global variables
+                val globalPat = Regex("""(?:static\s+|extern\s+|const\s+)*(?:int|float|double|long|char|bool|unsigned|void)\s+\*?\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*[=;]""")
+                for (m in globalPat.findAll(rawText)) {
+                    addResult("Global", "MEDIUM", m.value.take(100), "Global variable")
+                    srcCount++
+                }
+                // Look for #include dependencies
+                val includePat = Regex("""#include\s*[<"]([^>"]+)[>"]""")
+                for (m in includePat.findAll(rawText)) {
+                    addResult("Include", "LOW", m.value, "Include dependency: ${m.groupValues[1]}")
                     srcCount++
                 }
 
@@ -570,11 +606,23 @@ fun AutoLeakSourceScreen(navController: NavController) {
                     reconCount++
                 }
 
-                // Function definitions
-                val functions = Regex("""(?:void|int|bool|float|long|unsigned|static|const|auto|std::string)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)""").findAll(rawText).map { it.groupValues[1] }.distinct().toList()
-                if (functions.isNotEmpty()) {
-                    extractedSrcFiles.add("functions" to functions.joinToString("\n"))
-                    addResult("Source", "MEDIUM", "Functions: ${functions.size}", "Function declarations")
+                // Function definitions - COMPREHENSIVE (extract ALL with full signatures)
+                val funcReturnTypes = listOf("void", "int", "bool", "float", "double", "long", "unsigned", "static", "const", "auto", "std::string", "std::vector", "char", "uint8_t", "uint16_t", "uint32_t", "uint64_t", "int8_t", "int16_t", "int32_t", "int64_t", "size_t", "uintptr_t", "intptr_t", "jstring", "jint", "jboolean", "jbyteArray", "jobjectArray")
+                val allFunctions = mutableSetOf<String>()
+                for (retType in funcReturnTypes) {
+                    val funcPat = Regex("$retType\\s+([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\([^)]*\\)")
+                    for (m in funcPat.findAll(rawText)) {
+                        allFunctions.add(m.value.take(200))
+                    }
+                }
+                // Also match JNIEXPORT functions
+                val jniExportPat = Regex("""JNIEXPORT\s+\w+\s+JNICALL\s+\w+\s*\([^)]*\)""")
+                for (m in jniExportPat.findAll(rawText)) {
+                    allFunctions.add(m.value.take(200))
+                }
+                if (allFunctions.isNotEmpty()) {
+                    extractedSrcFiles.add("functions_all" to allFunctions.sorted().joinToString("\n"))
+                    addResult("Source", "HIGH", "Functions: ${allFunctions.size} (ALL)", "All function definitions")
                     reconCount++
                 }
 

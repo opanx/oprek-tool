@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.oprek.tool.core.*
+import com.oprek.tool.ui.screens.addRecentFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +66,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _currentFile.value = info
                 _currentRawFile.value = tempFile
                 SharedFileState.notifyFileLoaded(tempFile)
+                addRecentFile(context, info.name, tempFile.absolutePath)
                 _statusMessage.value = "Loaded: ${info.name} (${formatSize(info.size)})"
 
                 // Auto-analyze based on type - NO LIMITS
