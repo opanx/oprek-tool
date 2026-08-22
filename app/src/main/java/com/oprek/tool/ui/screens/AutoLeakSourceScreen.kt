@@ -755,7 +755,8 @@ fun AutoLeakSourceScreen(navController: NavController) {
                         }
                     } else {
                         LazyColumn(Modifier.padding(horizontal = 12.dp)) {
-                            items(extractedFiles) { (name, content) ->
+                            items(extractedFiles.size) { idx ->
+                                val (name, content) = extractedFiles[idx]
                                 Card(
                                     Modifier.fillMaxWidth().padding(vertical = 2.dp),
                                     colors = CardDefaults.cardColors(containerColor = DarkSurface),
