@@ -255,13 +255,11 @@ fun EmulatorScreen() {
                         val start = pc.toInt().coerceIn(0, (data.size - 4).coerceAtLeast(0))
                         val end = (start + 2048).coerceAtMost(data.size)
                         val code = data.sliceArray(start until end)
-                        try {
-                            val result = NativeLib.disassemble(code, pc, 1, archMode, 100)
-                            Text(result, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
-                                    modifier = Modifier.fillMaxWidth().background(Color(0xFF0D1117), RoundedCornerShape(8.dp)).padding(8.dp))
-                        } catch (e: Exception) {
-                            Text("Disasm error: ${e.message}", color = AccentRed, fontSize = 11.sp)
-                        }
+                        val disasmResult = try {
+                            NativeLib.disassemble(code, pc, 1, archMode, 100)
+                        } catch (e: Exception) { "[-] Error: ${e.message}" }
+                        Text(disasmResult, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.fillMaxWidth().background(Color(0xFF0D1117), RoundedCornerShape(8.dp)).padding(8.dp))
                     } else {
                         Text("No file loaded", color = Color.Gray, fontSize = 12.sp)
                     }
