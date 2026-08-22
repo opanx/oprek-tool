@@ -195,7 +195,7 @@ private fun buildShellScript(context: Context, name: String, script: String): Li
     val shFile = File(dir, "$name.sh")
     shFile.writeText(script)
     shFile.setExecutable(true)
-    result.add("✅ Created: ${shFile.absolutePath}")
+    result.add("✅ Created: \${shFile.absolutePath}")
     result.add("   Size: ${shFile.length()} bytes")
 
     // Create a simple Android package (ZIP with shell script)
@@ -214,9 +214,9 @@ private fun buildShellScript(context: Context, name: String, script: String): Li
 
     result.add("")
     result.add("💡 Usage:")
-    result.add("   sh ${shFile.absolutePath}")
+    result.add("   sh \${shFile.absolutePath}")
     result.add("   # Or push to device:")
-    result.add("   adb push ${shFile.absolutePath} /data/local/tmp/")
+    result.add("   adb push \${shFile.absolutePath} /data/local/tmp/")
     result.add("   adb shell sh /data/local/tmp/$name.sh")
 
     return result
@@ -302,15 +302,15 @@ private fun getApkTemplate(index: Int): String {
 # Auto Install Script
 # Usage: sh auto_install.sh <apk_path>
 
-APK="$1"
-if [ -z "$APK" ]; then
-    echo "Usage: $0 <apk_path>"
+APK="\$1"
+if [ -z "\$APK" ]; then
+    echo "Usage: \$0 <apk_path>"
     exit 1
 fi
 
-echo "Installing $APK..."
-pm install -r "$APK"
-if [ $? -eq 0 ]; then
+echo "Installing \$APK..."
+pm install -r "\$APK"
+if [ \$? -eq 0 ]; then
     echo "✅ Installed successfully!"
 else
     echo "❌ Installation failed"
@@ -320,15 +320,15 @@ fi"""
 # Root Check Script
 echo "=== Root Check ==="
 
-if [ "$(id -u)" = "0" ]; then
+if [ "\$(id -u)" = "0" ]; then
     echo "✅ Running as ROOT"
 else
-    echo "❌ Not root (uid=$(id -u))"
+    echo "❌ Not root (uid=\$(id -u))"
 fi
 
 # Check su binary
 if which su >/dev/null 2>&1; then
-    echo "✅ su binary found: $(which su)"
+    echo "✅ su binary found: \$(which su)"
 else
     echo "❌ su binary not found"
 fi
@@ -351,32 +351,33 @@ fi"""
 # Backup Script
 # Usage: sh backup.sh <package_name>
 
-PKG="$1"
-if [ -z "$PKG" ]; then
-    echo "Usage: $0 <package_name>"
+PKG="\$1"
+if [ -z "\$PKG" ]; then
+    echo "Usage: \$0 <package_name>"
     exit 1
 fi
 
-BACKUP_DIR="/sdcard/Download/OprekTool/backup/$PKG"
-mkdir -p "$BACKUP_DIR"
+BACKUP_DIR="/sdcard/Download/OprekTool/backup/\$PKG"
+mkdir -p "\$BACKUP_DIR"
 
-echo "Backing up $PKG..."
+echo "Backing up \$PKG..."
 
 # APK
-APK_PATH=$(pm path "$PKG" | head -1 | sed 's/package://')
-if [ -n "$APK_PATH" ]; then
-    cp "$APK_PATH" "$BACKUP_DIR/base.apk"
-    echo "✅ APK: $BACKUP_DIR/base.apk"
+APK_PATH=\$(pm path "\$PKG" | head -1 | sed 's/package://')
+if [ -n "\\$APK_PATH" ]; then
+    cp "\\$APK_PATH" "\$BACKUP_DIR/base.apk"
+    echo "✅ APK: \$BACKUP_DIR/base.apk"
 fi
 
 # Data
-if [ -d "/data/data/$PKG" ]; then
-    tar -czf "$BACKUP_DIR/data.tar.gz" -C /data/data "$PKG" 2>/dev/null
-    echo "✅ Data: $BACKUP_DIR/data.tar.gz"
+if [ -d "/data/data/\$PKG" ]; then
+    tar -czf "\$BACKUP_DIR/data.tar.gz" -C /data/data "\$PKG" 2>/dev/null
+    echo "✅ Data: \$BACKUP_DIR/data.tar.gz"
 fi
 
-echo "Backup complete: $BACKUP_DIR"
-ls -la "$BACKUP_DIR" """
+echo "Backup complete: \$BACKUP_DIR"
+ls -la "\$BACKUP_DIR"
+"""
 
         3 -> """#!/system/bin/sh
 # Debloat Script
@@ -395,10 +396,10 @@ echo "=== Debloat Script ==="
 echo "WARNING: This will disable system apps!"
 echo ""
 
-for pkg in $BLOAT_LIST; do
+for pkg in \$BLOAT_LIST; do
     echo "Disabling: $pkg"
     pm disable-user --user 0 "$pkg" 2>/dev/null
-    if [ $? -eq 0 ]; then
+    if [ \$? -eq 0 ]; then
         echo "  ✅ Disabled"
     else
         echo "  ❌ Not found or already disabled"
