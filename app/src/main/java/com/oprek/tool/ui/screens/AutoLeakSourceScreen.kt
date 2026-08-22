@@ -45,7 +45,6 @@ fun AutoLeakSourceScreen(navController: NavController) {
 
     fun addLog(msg: String) { logLines = logLines + msg }
 
-    // Auto-refresh when file changes
     val rev = SharedFileState.revision
     LaunchedEffect(rev) {
         val f = SharedFileState.findFile(context)
@@ -68,97 +67,188 @@ fun AutoLeakSourceScreen(navController: NavController) {
         scope.launch(Dispatchers.IO) {
             addLog("[+] Starting leak scan on: ${f.name}")
             addLog("[+] File size: ${f.length()} bytes")
-            val data = f.readBytes()
-            val text = String(data, Charsets.US_ASCII)
+            val rawData = withContext(Dispatchers.IO) { f.readBytes() }
+
+            // CRITICAL FIX: Extract only printable ASCII text from binary
+            // This prevents regex hangs on binary/JNI data
+            val MAX_TEXT_SCAN = 5_000_000 // 5MB max for regex scanning
+            val printable = StringBuilder(minOf(rawData.size, MAX_TEXT_SCAN))
+            for (i in 0 until minOf(rawData.size, MAX_TEXT_SCAN)) {
+                val b = rawData[i].toInt() and 0xFF
+                if (b in 0x20..0x7E || b == 0x0A || b == 0x09) {
+                    printable.append(b.toChar())
+                } else {
+                    printable.append(' ') // Replace non-printable with space
+                }
+            }
+            val text = printable.toString()
+            addLog("[+] Extracted ${text.length} printable chars (binary-safe)")
+
             val results = mutableListOf<LeakItem>()
 
-            // Phase 1: URLs (10%)
-            progress = 0.1f
-            addLog("[*] Phase 1/8: Scanning URLs...")
-            val urls = Regex("""https?://[^\s\x00"'<>\\]{5,200}""").findAll(text)
-            var urlCount = 0
-            for (m in urls) { results.add(LeakItem("URL", "HIGH", m.value, "Network endpoint")); urlCount++ }
-            addLog("    → Found $urlCount URLs")
+            // Phase 1: URLs (5%)
+            progress = 0.05f
+            addLog("[*] Phase 1/9: Scanning URLs...")
+            try {
+                val urls = Regex("""https?://[\x20-\x7E]{5,200}""").findAll(text)
+                var urlCount = 0
+                for (m in urls) { results.add(LeakItem("URL", "HIGH", m.value.trim(), "Network endpoint")); urlCount++ }
+                addLog("    → Found $urlCount URLs")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
 
-            // Phase 2: IPs (20%)
-            progress = 0.2f
-            addLog("[*] Phase 2/8: Scanning IP addresses...")
-            val ips = Regex("""\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?\b""").findAll(text)
-            var ipCount = 0
-            for (m in ips) {
-                if (!m.value.startsWith("0.") && !m.value.startsWith("127.") && !m.value.startsWith("255.")) {
-                    results.add(LeakItem("IP Address", "HIGH", m.value, "Hardcoded IP address")); ipCount++
-                }
-            }
-            addLog("    → Found $ipCount IPs")
-
-            // Phase 3: Emails (30%)
-            progress = 0.3f
-            addLog("[*] Phase 3/8: Scanning emails...")
-            val emails = Regex("""[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}""").findAll(text)
-            var emailCount = 0
-            for (m in emails) { results.add(LeakItem("Email", "MEDIUM", m.value, "Email address")); emailCount++ }
-            addLog("    → Found $emailCount emails")
-
-            // Phase 4: Secrets & tokens (40%)
-            progress = 0.4f
-            addLog("[*] Phase 4/8: Scanning secrets & tokens...")
-            val tokens = Regex("""(?:api[_-]?key|token|secret|password|passwd|pwd|auth|credential|private[_-]?key|access[_-]?key)\s*[:=]\s*['"]?([^\s'"]{5,})""", RegexOption.IGNORE_CASE).findAll(text)
-            var secretCount = 0
-            for (m in tokens) { results.add(LeakItem("Secret", "CRITICAL", m.groupValues[1], "Hardcoded secret/key")); secretCount++ }
-            addLog("    → Found $secretCount secrets")
-
-            // Phase 5: JWT & License keys (50%)
-            progress = 0.5f
-            addLog("[*] Phase 5/8: Scanning JWT & license keys...")
-            val jwts = Regex("""eyJ[a-zA-Z0-9_-]{50,500}""").findAll(text)
-            for (m in jwts) { results.add(LeakItem("JWT Token", "CRITICAL", m.value.take(80) + "...", "JWT token")) }
-            val licenses = Regex("""(?:LIC|KEY|LICENSE|LICENCE)[-_]?[A-Z0-9]{4,}[-_]?[A-Z0-9]{4,}[-_]?[A-Z0-9]{4,}""", RegexOption.IGNORE_CASE).findAll(text)
-            var licCount = 0
-            for (m in licenses) { results.add(LeakItem("License Key", "CRITICAL", m.value, "License key pattern")); licCount++ }
-            addLog("    → Found $licCount license keys + ${jwts.count()} JWTs")
-
-            // Phase 6: SQL & database (60%)
-            progress = 0.6f
-            addLog("[*] Phase 6/8: Scanning SQL queries...")
-            val sql = Regex("""(?:SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER)\s+\w+""", RegexOption.IGNORE_CASE).findAll(text)
-            var sqlCount = 0
-            for (m in sql) { results.add(LeakItem("SQL Query", "HIGH", m.value.take(100), "SQL statement")); sqlCount++ }
-            addLog("    → Found $sqlCount SQL queries")
-
-            // Phase 7: Base64 & crypto (70%)
-            progress = 0.7f
-            addLog("[*] Phase 7/8: Decoding Base64 strings...")
-            val b64 = Regex("""[A-Za-z0-9+/]{40,}={0,2}""").findAll(text)
-            var b64Count = 0
-            for (m in b64) {
-                try {
-                    val decoded = android.util.Base64.decode(m.value, android.util.Base64.DEFAULT)
-                    val decodedStr = String(decoded)
-                    if (decodedStr.any { it.isLetter() } && decodedStr.length > 5) {
-                        results.add(LeakItem("Base64", "MEDIUM", "→ ${decodedStr.take(100)}", "Encoded string"))
-                        b64Count++
+            // Phase 2: IPs (10%)
+            progress = 0.10f
+            addLog("[*] Phase 2/9: Scanning IP addresses...")
+            try {
+                val ips = Regex("""\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]+)?\b""").findAll(text)
+                var ipCount = 0
+                for (m in ips) {
+                    if (!m.value.startsWith("0.") && !m.value.startsWith("127.") && !m.value.startsWith("255.")) {
+                        results.add(LeakItem("IP Address", "HIGH", m.value, "Hardcoded IP address")); ipCount++
                     }
-                } catch (_: Exception) {}
-            }
-            addLog("    → Decoded $b64Count Base64 strings")
-
-            // Phase 8: Telegram, paths, crypto (90%)
-            progress = 0.9f
-            addLog("[*] Phase 8/8: Scanning misc patterns...")
-            val tg = Regex("""@[a-zA-Z0-9_]{3,30}""").findAll(text)
-            for (m in tg) {
-                val word = m.value.substring(1)
-                if (word.length > 3 && !word.all { it.isDigit() }) {
-                    results.add(LeakItem("Telegram", "MEDIUM", m.value, "Telegram handle"))
                 }
-            }
-            val paths = Regex("""/[a-zA-Z0-9._/-]{5,100}""").findAll(text)
-            for (m in paths) {
-                if (m.value.contains("/")) results.add(LeakItem("File Path", "LOW", m.value, "File system path"))
-            }
-            val crypto = Regex("""(?:AES|RSA|DES|SHA256|MD5|HMAC|bcrypt)\s*[(\s]""", RegexOption.IGNORE_CASE).findAll(text)
-            for (m in crypto) { results.add(LeakItem("Crypto", "MEDIUM", m.value.trim(), "Cryptographic operation")) }
+                addLog("    → Found $ipCount IPs")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Phase 3: Emails (15%)
+            progress = 0.15f
+            addLog("[*] Phase 3/9: Scanning emails...")
+            try {
+                val emails = Regex("""[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}""").findAll(text)
+                var emailCount = 0
+                for (m in emails) { results.add(LeakItem("Email", "MEDIUM", m.value, "Email address")); emailCount++ }
+                addLog("    → Found $emailCount emails")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Phase 4: Secrets & tokens (25%)
+            progress = 0.25f
+            addLog("[*] Phase 4/9: Scanning secrets & tokens...")
+            try {
+                val tokenPat = Regex("""(?:api[_-]?key|token|secret|password|passwd|pwd|auth|credential|private[_-]?key|access[_-]?key|license[_-]?key|activation[_-]?key|serial[_-]?key)\s*[:=]\s*['"]?([^\s'"]{5,80})""", RegexOption.IGNORE_CASE)
+                var secretCount = 0
+                for (m in tokenPat.findAll(text)) { results.add(LeakItem("Secret", "CRITICAL", m.groupValues[1].trim(), "Hardcoded secret/key")); secretCount++ }
+                addLog("    → Found $secretCount secrets")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Phase 5: JWT & License keys (35%)
+            progress = 0.35f
+            addLog("[*] Phase 5/9: Scanning JWT & license keys...")
+            try {
+                val jwts = Regex("""eyJ[a-zA-Z0-9_-]{40,500}""").findAll(text)
+                for (m in jwts) { results.add(LeakItem("JWT Token", "CRITICAL", m.value.take(80) + "...", "JWT token")) }
+                val licenses = Regex("""(?:LIC|KEY|LICENSE|LICENCE|REGKEY|ACTKEY)[-_]?[A-Z0-9]{4,}[-_]?[A-Z0-9]{4,}[-_]?[A-Z0-9]{4,}""", RegexOption.IGNORE_CASE).findAll(text)
+                var licCount = 0
+                for (m in licenses) { results.add(LeakItem("License Key", "CRITICAL", m.value, "License key pattern")); licCount++ }
+                addLog("    → Found $licCount license keys + ${jwts.count()} JWTs")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Phase 6: SQL (45%)
+            progress = 0.45f
+            addLog("[*] Phase 6/9: Scanning SQL queries...")
+            try {
+                val sql = Regex("""(?:SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER)\s+\w+""", RegexOption.IGNORE_CASE).findAll(text)
+                var sqlCount = 0
+                for (m in sql) { results.add(LeakItem("SQL Query", "HIGH", m.value.take(100), "SQL statement")); sqlCount++ }
+                addLog("    → Found $sqlCount SQL queries")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Phase 7: Base64 (55%) - only scan printable chunks, max 200 matches
+            progress = 0.55f
+            addLog("[*] Phase 7/9: Decoding Base64 strings (max 200)...")
+            try {
+                val b64Pat = Regex("""[A-Za-z0-9+/]{40,200}={0,2}""")
+                var b64Count = 0
+                for (m in b64Pat.findAll(text)) {
+                    if (b64Count >= 200) break // Limit to prevent hang
+                    try {
+                        val decoded = android.util.Base64.decode(m.value, android.util.Base64.DEFAULT)
+                        val decodedStr = String(decoded)
+                        if (decodedStr.any { it.isLetter() } && decodedStr.length > 5) {
+                            results.add(LeakItem("Base64", "MEDIUM", "→ ${decodedStr.take(100)}", "Encoded string"))
+                            b64Count++
+                        }
+                    } catch (_: Exception) {}
+                }
+                addLog("    → Decoded $b64Count Base64 strings")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Phase 8: JNI / Java class signatures (70%) - DETECT JNI注册 + class refs
+            progress = 0.70f
+            addLog("[*] Phase 8/9: Scanning JNI + Java signatures...")
+            try {
+                // JNI RegisterNatives patterns
+                val jniPat = Regex("""RegisterNatives|FindClass|GetMethodID|GetFieldID|CallVoidMethod|CallIntMethod|NewStringUTF|GetStringUTFChars|GetByteArrayElements""")
+                var jniCount = 0
+                for (m in jniPat.findAll(text)) { results.add(LeakItem("JNI", "MEDIUM", m.value, "JNI function reference")); jniCount++ }
+                addLog("    → Found $jniCount JNI references")
+
+                // Java class/package references
+                val javaPat = Regex("""L[a-z]+(?:/[a-z]+){2,};""")
+                var javaCount = 0
+                for (m in javaPat.findAll(text)) {
+                    if (javaCount < 100) { // Limit
+                        results.add(LeakItem("Java Class", "MEDIUM", m.value, "JNI class descriptor")); javaCount++
+                    }
+                }
+                addLog("    → Found $javaCount Java class descriptors")
+
+                // DobbyHook / inline hook patterns
+                val hookPat = Regex("""DobbyHook|dobbyHook|InlineHook|hook_function|PLTHook|GOTHook|xHook|whale""")
+                var hookCount = 0
+                for (m in hookPat.findAll(text)) { results.add(LeakItem("Hook", "HIGH", m.value, "Hooking framework reference")); hookCount++ }
+                addLog("    → Found $hookCount hook references")
+
+                // Anti-tamper / anti-debug
+                val antiPat = Regex("""frida|xposed|ptrace|TracerPid|/proc/self/status|isDebugger|Debug\.isDebugger|android.os.Debug""")
+                var antiCount = 0
+                for (m in antiPat.findAll(text)) { results.add(LeakItem("Anti-Debug", "HIGH", m.value, "Anti-analysis mechanism")); antiCount++ }
+                addLog("    → Found $antiCount anti-debug patterns")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Phase 9: Misc - Telegram, paths, crypto (90%)
+            progress = 0.90f
+            addLog("[*] Phase 9/9: Scanning misc patterns...")
+            try {
+                // Telegram handles
+                val tg = Regex("""@[a-zA-Z0-9_]{3,30}""").findAll(text)
+                var tgCount = 0
+                for (m in tg) {
+                    val word = m.value.substring(1)
+                    if (word.length > 3 && !word.all { it.isDigit() } && tgCount < 50) {
+                        results.add(LeakItem("Telegram", "MEDIUM", m.value, "Telegram handle")); tgCount++
+                    }
+                }
+                // File paths (limit)
+                val pathPat = Regex("""/[a-zA-Z0-9._/-]{5,80}""").findAll(text)
+                var pathCount = 0
+                for (m in pathPat) {
+                    if (pathCount < 100 && m.value.contains("/")) {
+                        results.add(LeakItem("File Path", "LOW", m.value, "File system path")); pathCount++
+                    }
+                }
+                // Crypto
+                val crypto = Regex("""(?:AES|RSA|DES|SHA256|MD5|HMAC|bcrypt)\s*[(\s]""", RegexOption.IGNORE_CASE).findAll(text)
+                for (m in crypto) { results.add(LeakItem("Crypto", "MEDIUM", m.value.trim(), "Cryptographic operation")) }
+                addLog("    → Found ${tgCount} Telegram, ${pathCount} paths")
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
+
+            // Also scan raw bytes for interesting patterns (not just text)
+            addLog("[*] Bonus: Scanning raw bytes...")
+            try {
+                // Check for ELF-specific auth patterns in raw bytes
+                val data = rawData
+                val dataStr = String(data, Charsets.US_ASCII).filter { it.code in 0x20..0x7E }
+
+                // Supabase / auth URLs
+                val authUrls = Regex("""(?:supabase|firebase|auth0|keycloak|accounts\.google|login|signin|signup|verify|authenticate|authorize)\.?[a-zA-Z]*\.(?:com|io|dev|app|net)""", RegexOption.IGNORE_CASE).findAll(dataStr)
+                var authCount = 0
+                for (m in authUrls) { results.add(LeakItem("Auth URL", "CRITICAL", m.value, "Authentication endpoint")); authCount++ }
+                addLog("    → Found $authCount auth endpoints")
+
+                // Obfuscated domains (common cheat panel hosting)
+                val obfDomains = Regex("""(?:my\.id|workers\.dev|vercel\.app|netlify\.app|render\.com|railway\.app)""", RegexOption.IGNORE_CASE).findAll(dataStr)
+                for (m in obfDomains) { results.add(LeakItem("Domain", "HIGH", m.value, "Cloud-hosted domain")) }
+            } catch (e: Exception) { addLog("    → Error: ${e.message}") }
 
             // Deduplicate and sort
             val unique = results.distinctBy { it.value }.sortedByDescending {
@@ -209,19 +299,16 @@ fun AutoLeakSourceScreen(navController: NavController) {
                 Column(Modifier.padding(12.dp)) {
                     Text("🔓 Auto Leak Source Analyzer", fontWeight = FontWeight.Bold, color = AccentRed, fontSize = 14.sp)
                     Spacer(Modifier.height(4.dp))
-                    Text("URLs, IPs, emails, tokens, secrets, SQL, crypto, licenses, Base64", color = TextSecondary, fontSize = 11.sp)
+                    Text("URLs, IPs, secrets, JWT, SQL, Base64, JNI, hooks, anti-debug", color = TextSecondary, fontSize = 11.sp)
                     Spacer(Modifier.height(4.dp))
                     Text(fileName.ifEmpty { "No file loaded" }, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                     Spacer(Modifier.height(8.dp))
-
-                    // Progress bar
                     if (isRunning) {
                         LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(4.dp), color = AccentRed)
                         Spacer(Modifier.height(4.dp))
                         Text("Scanning... ${"%.0f".format(progress * 100)}%", color = AccentOrange, fontSize = 10.sp)
                         Spacer(Modifier.height(4.dp))
                     }
-
                     Button(onClick = { scan() }, enabled = !isRunning, modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = AccentRed)) {
                         if (isRunning) {
@@ -235,7 +322,6 @@ fun AutoLeakSourceScreen(navController: NavController) {
                 }
             }
 
-            // Severity badges
             if (leaks.isNotEmpty()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("CRITICAL" to AccentRed, "HIGH" to AccentOrange, "MEDIUM" to Color(0xFFFFD740), "LOW" to TextSecondary).forEach { (sev, color) ->
@@ -245,7 +331,6 @@ fun AutoLeakSourceScreen(navController: NavController) {
                 }
             }
 
-            // Two tabs: Results + Log
             var selectedTab by remember { mutableStateOf(0) }
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
                 listOf("📋 Results (${leaks.size})", "📝 Log (${logLines.size})").forEachIndexed { idx, label ->
@@ -256,9 +341,8 @@ fun AutoLeakSourceScreen(navController: NavController) {
                 }
             }
 
-            // Content
             when (selectedTab) {
-                0 -> { // Results
+                0 -> {
                     if (leaks.isEmpty() && status.isNotEmpty()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -290,7 +374,7 @@ fun AutoLeakSourceScreen(navController: NavController) {
                         }
                     }
                 }
-                1 -> { // Log
+                1 -> {
                     LazyColumn(Modifier.padding(horizontal = 12.dp)) {
                         itemsIndexed(logLines) { _, line ->
                             val color = when {
