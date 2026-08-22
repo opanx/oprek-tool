@@ -28,8 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
-import java.io.DataOutputStream
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -100,7 +98,6 @@ fun AutoDumpScreen(navController: NavController) {
         containerColor = DarkBg
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            // Game selector
             Card(
                 Modifier.fillMaxWidth().padding(12.dp),
                 colors = CardDefaults.cardColors(containerColor = DarkSurface),
@@ -154,52 +151,42 @@ fun AutoDumpScreen(navController: NavController) {
                     )
 
                     Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = {
-                                if (selectedPkg.isBlank()) { addLine("[-] Enter package name!"); return@Button }
-                                isRunning = true; output = emptyList(); dumpCsContent = ""; progress = 0f
-                                scope.launch(Dispatchers.IO) {
-                                    runAutoDumpV5(selectedPkg, context, ::addLine,
-                                        { p -> progress = p },
-                                        { cs -> dumpCsContent = cs },
-                                        { s -> status = s })
-                                    isRunning = false
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            enabled = !isRunning,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isRunning) AccentRed else AccentGreen
-                            )
-                        ) {
-                            if (isRunning) {
-                                CircularProgressIndicator(
-                                    Modifier.size(14.dp), strokeWidth = 2.dp, color = Color.White
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text("Dumping... ${"%.0f".format(progress * 100)}%", fontSize = 11.sp)
-                            } else {
-                                Icon(Icons.Default.PlayArrow, null, Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("🚀 Dump + dump.cs", fontSize = 11.sp)
+                    Button(
+                        onClick = {
+                            if (selectedPkg.isBlank()) { addLine("[-] Enter package name!"); return@Button }
+                            isRunning = true; output = emptyList(); dumpCsContent = ""; progress = 0f
+                            scope.launch(Dispatchers.IO) {
+                                runAutoDumpV5(selectedPkg, context, ::addLine,
+                                    { p -> progress = p },
+                                    { cs -> dumpCsContent = cs },
+                                    { s -> status = s })
+                                isRunning = false
                             }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isRunning,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isRunning) AccentRed else AccentGreen
+                        )
+                    ) {
+                        if (isRunning) {
+                            CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = Color.White)
+                            Spacer(Modifier.width(4.dp))
+                            Text("Dumping... ${"%.0f".format(progress * 100)}%", fontSize = 11.sp)
+                        } else {
+                            Icon(Icons.Default.PlayArrow, null, Modifier.size(16.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("🚀 Dump + dump.cs", fontSize = 11.sp)
                         }
                     }
 
                     if (isRunning) {
                         Spacer(Modifier.height(8.dp))
-                        LinearProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier.fillMaxWidth().height(4.dp),
-                            color = AccentCyan,
-                            trackColor = DarkBg
-                        )
+                        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(4.dp), color = AccentCyan, trackColor = DarkBg)
                     }
                 }
             }
 
-            // Output log
             Card(
                 Modifier.fillMaxWidth().weight(1f).padding(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF0D1117)),
@@ -232,21 +219,14 @@ fun AutoDumpScreen(navController: NavController) {
                                     line.startsWith("  →") -> Color(0xFF888888)
                                     else -> TextPrimary
                                 }
-                                Text(
-                                    line, color = color, fontSize = 10.sp,
-                                    fontFamily = FontFamily.Monospace, lineHeight = 14.sp
-                                )
+                                Text(line, color = color, fontSize = 10.sp, fontFamily = FontFamily.Monospace, lineHeight = 14.sp)
                             }
                         }
                     }
                 }
             }
-            Text(
-                "© Panxcz & Freebuff | AutoDump v5.0",
-                color = TextSecondary, fontSize = 9.sp,
-                modifier = Modifier.fillMaxWidth().padding(4.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
+            Text("© Panxcz & Freebuff | AutoDump v5.0", color = TextSecondary, fontSize = 9.sp,
+                modifier = Modifier.fillMaxWidth().padding(4.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
     }
 }
@@ -303,12 +283,8 @@ private suspend fun runAutoDumpV5(
         val perms = line.substringAfter(" ").substringBefore(" ")
         perms.contains("x") && (line.contains(".so") || line.contains(".oat"))
     }
-    val dataRegions = maps.filter { line ->
-        val perms = line.substringAfter(" ").substringBefore(" ")
-        perms[0] == 'r' && perms[1] == 'w' && !line.contains("[")
-    }
 
-    addLine("   Total: ${maps.size} | Readable: ${allReadable.size} | Code: ${codeRegions.size} | RW: ${dataRegions.size}")
+    addLine("   Total: ${maps.size} | Readable: ${allReadable.size} | Code: ${codeRegions.size}")
     setProgress(0.15f)
 
     // 4. Find libil2cpp.so
@@ -330,7 +306,7 @@ private suspend fun runAutoDumpV5(
     addLine("✅ Found libil2cpp.so @ 0x${"%X".format(il2cppStart)} (${il2cppSize / 1024}KB)")
     setProgress(0.2f)
 
-    // Also find libcsharp.so (Unity IL2CPP runtime)
+    // Also find libcsharp.so
     val csharpLine = maps.find { it.contains("libcsharp.so") && it.contains("r-xp") }
     var csharpStart = 0L
     var csharpEnd = 0L
@@ -396,11 +372,26 @@ private suspend fun runAutoDumpV5(
     }
 
     if (!metaFound) {
-        addLine("⚠️ global-metadata.dat not found (may be encrypted)")
+        addLine("⚠️ global-metadata.dat NOT found in memory")
+        addLine("")
+        addLine("   🔒 Metadata is likely ENCRYPTED at runtime")
+        addLine("   This is common in games like MLBB, Free Fire, PUBG")
+        addLine("")
+        addLine("   📋 What this means:")
+        addLine("   → The game encrypts metadata before loading")
+        addLine("   → Metadata is decrypted only in IL2CPP runtime")
+        addLine("   → You need to dump AFTER game loads (enter lobby/match)")
+        addLine("   → Or use external tools like GameGuardian to dump")
+        addLine("")
+        addLine("   💡 Suggestions:")
+        addLine("   → Enter a match/lobby first, then dump")
+        addLine("   → Try 'Memory Dump' mode instead")
+        addLine("   → Use Il2CppDumper on PC with dumped libil2cpp.so")
+        addLine("   → Extract from APK file directly (not memory)")
     }
     setProgress(0.4f)
 
-    // 6. Parse IL2CPP metadata header
+    // 6. Parse IL2CPP metadata header (only if found AND valid)
     val dumpCs = StringBuilder()
     dumpCs.append("// dump.cs - Generated by OprekTool AutoDump v5\n")
     dumpCs.append("// Package: $pkg\n")
@@ -409,7 +400,7 @@ private suspend fun runAutoDumpV5(
     if (csharpStart > 0) {
         dumpCs.append("// libcsharp: 0x${"%X".format(csharpStart)} - 0x${"%X".format(csharpEnd)} (${(csharpEnd - csharpStart) / 1024}KB)\n")
     }
-    dumpCs.append("// Metadata: ${if (metaFound) "0x${"%X".format(metaOffset)}" else "NOT FOUND"}\n")
+    dumpCs.append("// Metadata: ${if (metaFound) "0x${"%X".format(metaOffset)}" else "ENCRYPTED (not in memory)"}\n")
     dumpCs.append("// Date: $ts\n\n")
 
     // Read ELF header
@@ -426,160 +417,161 @@ private suspend fun runAutoDumpV5(
         addLine("   libil2cpp.so: ${if (is64bit) "ELF64" else "ELF32"}, Entry: 0x${"%X".format(entryPoint)}")
     }
 
-    // 7. Parse metadata if found - extract TypeDef/MethodDef/FieldDef
+    // 7. Parse metadata ONLY if found AND header looks valid
     if (metaFound) {
-        addLine("\n📖 Parsing IL2CPP metadata structure...")
-        val metaData = readMemChunked(pid, metaOffset, 65536) // 64KB header
+        addLine("\n📖 Validating metadata header...")
+        val metaData = readMemChunked(pid, metaOffset, 256) // Read first 256 bytes for validation
         if (metaData != null && metaData.size >= 24) {
             val bb = ByteBuffer.wrap(metaData).order(ByteOrder.LITTLE_ENDIAN)
+            val magicFound = bb.getInt(0)
             val version = bb.getInt(4)
 
-            // IL2CPP metadata header offsets (version 24-29)
-            val stringLiteralOffset = bb.getInt(8)
-            val stringLiteralCount = bb.getInt(12)
-            val stringLiteralDataOffset = if (version >= 29) bb.getInt(28).toLong() and 0xFFFFFFFF else 0L
+            // Validate: magic should be 0xFAB11BAF and version should be 24-29
+            if (magicFound == 0xFAB11BAF.toInt() && version in 24..29) {
+                addLine("   ✅ Header valid: magic=0x${"%X".format(magicFound)}, version=$version")
 
-            // Additional metadata tables
-            val genericParamOffset = bb.getInt(16)
-            val genericParamCount = bb.getInt(20)
-            val typeDefOffset = bb.getInt(24) // TypeDef table offset
-            val typeDefCount = bb.getInt(28) // TypeDef count (varies by version)
+                // Now read full header
+                addLine("\n📖 Parsing IL2CPP metadata structure...")
+                val fullHeader = readMemChunked(pid, metaOffset, 4096) // 4KB header
+                if (fullHeader != null && fullHeader.size >= 120) {
+                    val fb = ByteBuffer.wrap(fullHeader).order(ByteOrder.LITTLE_ENDIAN)
 
-            // Extended metadata info
-            val methodDefOffset = bb.getInt(32)
-            val methodDefCount = bb.getInt(36)
-            val fieldDefOffset = bb.getInt(40)
-            val fieldDefCount = bb.getInt(44)
-            val parameterOffset = bb.getInt(48)
-            val parameterCount = bb.getInt(52)
+                    // Parse metadata tables
+                    val stringLiteralOffset = fb.getInt(8)
+                    val stringLiteralCount = fb.getInt(12)
+                    val stringLiteralDataOffset = if (version >= 29) fb.getInt(28).toLong() and 0xFFFFFFFF else 0L
+                    val typeDefOffset = fb.getInt(24)
+                    val typeDefCount = fb.getInt(28)
+                    val methodDefOffset = fb.getInt(32)
+                    val methodDefCount = fb.getInt(36)
+                    val fieldDefOffset = fb.getInt(40)
+                    val fieldDefCount = fb.getInt(44)
+                    val parameterOffset = fb.getInt(48)
+                    val parameterCount = fb.getInt(52)
+                    val stringOffset = fb.getInt(56)
+                    val stringCount = fb.getInt(60)
+                    val assemblyRefOffset = fb.getInt(64)
+                    val assemblyRefCount = fb.getInt(68)
+                    val interfaceOffset = fb.getInt(72)
+                    val interfaceCount = fb.getInt(76)
+                    val eventOffset = fb.getInt(80)
+                    val eventCount = fb.getInt(84)
+                    val propertyOffset = fb.getInt(88)
+                    val propertyCount = fb.getInt(92)
+                    val nestedTypeOffset = fb.getInt(96)
+                    val nestedTypeCount = fb.getInt(100)
+                    val genericContainerOffset = fb.getInt(104)
+                    val genericContainerCount = fb.getInt(108)
 
-            // String offset table
-            val stringOffset = bb.getInt(56)
-            val stringCount = bb.getInt(60)
+                    dumpCs.append("// Metadata version: $version\n")
+                    dumpCs.append("// StringLiteral: offset=0x${"%X".format(stringLiteralOffset.toLong() and 0xFFFFFFFF)}, count=$stringLiteralCount\n")
+                    dumpCs.append("// TypeDef: offset=0x${"%X".format(typeDefOffset.toLong() and 0xFFFFFFFF)}, count=$typeDefCount\n")
+                    dumpCs.append("// MethodDef: offset=0x${"%X".format(methodDefOffset.toLong() and 0xFFFFFFFF)}, count=$methodDefCount\n")
+                    dumpCs.append("// FieldDef: offset=0x${"%X".format(fieldDefOffset.toLong() and 0xFFFFFFFF)}, count=$fieldDefCount\n")
+                    dumpCs.append("// Parameter: offset=0x${"%X".format(parameterOffset.toLong() and 0xFFFFFFFF)}, count=$parameterCount\n")
+                    dumpCs.append("// String: offset=0x${"%X".format(stringOffset.toLong() and 0xFFFFFFFF)}, count=$stringCount\n")
+                    dumpCs.append("// AssemblyRef: offset=0x${"%X".format(assemblyRefOffset.toLong() and 0xFFFFFFFF)}, count=$assemblyRefCount\n")
+                    dumpCs.append("// Interface: offset=0x${"%X".format(interfaceOffset.toLong() and 0xFFFFFFFF)}, count=$interfaceCount\n")
+                    dumpCs.append("// Event: offset=0x${"%X".format(eventOffset.toLong() and 0xFFFFFFFF)}, count=$eventCount\n")
+                    dumpCs.append("// Property: offset=0x${"%X".format(propertyOffset.toLong() and 0xFFFFFFFF)}, count=$propertyCount\n")
+                    dumpCs.append("// NestedType: offset=0x${"%X".format(nestedTypeOffset.toLong() and 0xFFFFFFFF)}, count=$nestedTypeCount\n")
+                    dumpCs.append("// GenericContainer: offset=0x${"%X".format(genericContainerOffset.toLong() and 0xFFFFFFFF)}, count=$genericContainerCount\n\n")
 
-            // Assembly references
-            val assemblyRefOffset = bb.getInt(64)
-            val assemblyRefCount = bb.getInt(68)
+                    addLine("   Version: $version")
+                    addLine("   TypeDef: $typeDefCount | MethodDef: $methodDefCount | FieldDef: $fieldDefCount")
+                    addLine("   String: $stringCount | Parameter: $parameterCount | Event: $eventCount")
+                    addLine("   Property: $propertyCount | NestedType: $nestedTypeCount | Interface: $interfaceCount")
 
-            // Interface offsets
-            val interfaceOffset = bb.getInt(72)
-            val interfaceCount = bb.getInt(76)
+                    // Extract string table (with bounds checking)
+                    addLine("\n📝 Extracting string table...")
+                    if (stringOffset > 0 && stringCount > 0 && stringCount < 1000000) {
+                        val strTableSize = (stringCount * 4).coerceAtMost(4194304)
+                        val strTable = readMemChunked(pid, metaOffset + stringOffset.toLong(), strTableSize)
+                        if (strTable != null) {
+                            addLine("   String table: ${strTable.size} bytes")
+                        }
+                    }
 
-            // Event/Property
-            val eventOffset = bb.getInt(80)
-            val eventCount = bb.getInt(84)
-            val propertyOffset = bb.getInt(88)
-            val propertyCount = bb.getInt(92)
+                    // Extract TypeDef entries (with bounds checking)
+                    addLine("\n📝 Extracting TypeDef entries...")
+                    if (typeDefOffset > 0 && typeDefCount > 0 && typeDefCount < 100000) {
+                        val typeDefSize = (typeDefCount * 16).coerceAtMost(2097152)
+                        val typeDefData = readMemChunked(pid, metaOffset + typeDefOffset.toLong(), typeDefSize)
+                        if (typeDefData != null) {
+                            addLine("   TypeDef table: ${typeDefData.size} bytes ($typeDefCount entries)")
+                            dumpCs.append("// === TypeDef Table (${typeDefCount} entries) ===\n\n")
+                        }
+                    }
 
-            // Nested types
-            val nestedTypeOffset = bb.getInt(96)
-            val nestedTypeCount = bb.getInt(100)
+                    // Extract MethodDef entries (with bounds checking)
+                    addLine("\n📝 Extracting MethodDef entries...")
+                    if (methodDefOffset > 0 && methodDefCount > 0 && methodDefCount < 500000) {
+                        val methodDefSize = (methodDefCount * 12).coerceAtMost(6291456)
+                        val methodDefData = readMemChunked(pid, metaOffset + methodDefOffset.toLong(), methodDefSize)
+                        if (methodDefData != null) {
+                            addLine("   MethodDef table: ${methodDefData.size} bytes ($methodDefCount entries)")
+                            dumpCs.append("// === MethodDef Table (${methodDefCount} entries) ===\n")
+                        }
+                    }
 
-            // Generic containers
-            val genericContainerOffset = bb.getInt(104)
-            val genericContainerCount = bb.getInt(108)
+                    // Extract FieldDef entries (with bounds checking)
+                    addLine("\n📝 Extracting FieldDef entries...")
+                    if (fieldDefOffset > 0 && fieldDefCount > 0 && fieldDefCount < 1000000) {
+                        val fieldDefSize = (fieldDefCount * 8).coerceAtMost(8388608)
+                        val fieldDefData = readMemChunked(pid, metaOffset + fieldDefOffset.toLong(), fieldDefSize)
+                        if (fieldDefData != null) {
+                            addLine("   FieldDef table: ${fieldDefData.size} bytes ($fieldDefCount entries)")
+                            dumpCs.append("// === FieldDef Table (${fieldDefCount} entries) ===\n")
+                        }
+                    }
 
-            dumpCs.append("// Metadata version: $version\n")
-            dumpCs.append("// StringLiteral: offset=0x${"%X".format(stringLiteralOffset.toLong() and 0xFFFFFFFF)}, count=$stringLiteralCount\n")
-            dumpCs.append("// TypeDef: offset=0x${"%X".format(typeDefOffset.toLong() and 0xFFFFFFFF)}, count=$typeDefCount\n")
-            dumpCs.append("// MethodDef: offset=0x${"%X".format(methodDefOffset.toLong() and 0xFFFFFFFF)}, count=$methodDefCount\n")
-            dumpCs.append("// FieldDef: offset=0x${"%X".format(fieldDefOffset.toLong() and 0xFFFFFFFF)}, count=$fieldDefCount\n")
-            dumpCs.append("// Parameter: offset=0x${"%X".format(parameterOffset.toLong() and 0xFFFFFFFF)}, count=$parameterCount\n")
-            dumpCs.append("// String: offset=0x${"%X".format(stringOffset.toLong() and 0xFFFFFFFF)}, count=$stringCount\n")
-            dumpCs.append("// AssemblyRef: offset=0x${"%X".format(assemblyRefOffset.toLong() and 0xFFFFFFFF)}, count=$assemblyRefCount\n")
-            dumpCs.append("// Interface: offset=0x${"%X".format(interfaceOffset.toLong() and 0xFFFFFFFF)}, count=$interfaceCount\n")
-            dumpCs.append("// Event: offset=0x${"%X".format(eventOffset.toLong() and 0xFFFFFFFF)}, count=$eventCount\n")
-            dumpCs.append("// Property: offset=0x${"%X".format(propertyOffset.toLong() and 0xFFFFFFFF)}, count=$propertyCount\n")
-            dumpCs.append("// NestedType: offset=0x${"%X".format(nestedTypeOffset.toLong() and 0xFFFFFFFF)}, count=$nestedTypeCount\n")
-            dumpCs.append("// GenericContainer: offset=0x${"%X".format(genericContainerOffset.toLong() and 0xFFFFFFFF)}, count=$genericContainerCount\n\n")
+                    // Extract string literals (with bounds checking)
+                    addLine("\n📝 Extracting string literals...")
+                    if (stringLiteralOffset > 0 && stringLiteralCount > 0 && stringLiteralCount < 500000 && stringLiteralDataOffset > 0) {
+                        val strTableOffset = metaOffset + stringLiteralOffset.toLong()
+                        val strTableSize = (stringLiteralCount * 8).coerceAtMost(262144)
+                        val strTable = readMemChunked(pid, strTableOffset, strTableSize)
 
-            addLine("   Version: $version")
-            addLine("   TypeDef: $typeDefCount | MethodDef: $methodDefCount | FieldDef: $fieldDefCount")
-            addLine("   String: $stringCount | Parameter: $parameterCount | Event: $eventCount")
-            addLine("   Property: $propertyCount | NestedType: $nestedTypeCount | Interface: $interfaceCount")
+                        if (strTable != null) {
+                            val strings = mutableListOf<Pair<Int, String>>()
+                            for (i in 0 until stringLiteralCount.coerceAtMost(strTable.size / 8)) {
+                                val off = i * 8
+                                if (off + 8 > strTable.size) break
+                                val strIdx = ByteBuffer.wrap(strTable, off, 4).order(ByteOrder.LITTLE_ENDIAN).int
+                                val strLen = ByteBuffer.wrap(strTable, off + 4, 4).order(ByteOrder.LITTLE_ENDIAN).int
 
-            // Extract string table
-            addLine("\n📝 Extracting string table...")
-            if (stringOffset > 0 && stringCount > 0 && stringCount < 1000000) {
-                val strTableSize = (stringCount * 4).coerceAtMost(4194304) // 4MB max
-                val strTable = readMemChunked(pid, metaOffset + stringOffset.toLong(), strTableSize)
-                if (strTable != null) {
-                    addLine("   String table: ${strTable.size} bytes")
-                }
-            }
-
-            // Extract TypeDef entries
-            addLine("\n📝 Extracting TypeDef entries...")
-            if (typeDefOffset > 0 && typeDefCount > 0 && typeDefCount < 100000) {
-                val typeDefSize = (typeDefCount * 16).coerceAtMost(2097152) // TypeDef entry = 16 bytes
-                val typeDefData = readMemChunked(pid, metaOffset + typeDefOffset.toLong(), typeDefSize)
-                if (typeDefData != null) {
-                    addLine("   TypeDef table: ${typeDefData.size} bytes ($typeDefCount entries)")
-                    dumpCs.append("// === TypeDef Table (${typeDefCount} entries) ===\n")
-                    dumpCs.append("// Each entry: namespaceIndex(4) + nameIndex(4) + flags(4) + firstField(2) + firstMethod(2) + nestedTypeList(2) + interfacesList(2) + methodList(2) + bitfield(2) + packingSize(1) + classSize(4) + nativeSize(4)\n\n")
-                }
-            }
-
-            // Extract MethodDef entries
-            addLine("\n📝 Extracting MethodDef entries...")
-            if (methodDefOffset > 0 && methodDefCount > 0 && methodDefCount < 500000) {
-                val methodDefSize = (methodDefCount * 12).coerceAtMost(6291456) // MethodDef entry = 12 bytes
-                val methodDefData = readMemChunked(pid, metaOffset + methodDefOffset.toLong(), methodDefSize)
-                if (methodDefData != null) {
-                    addLine("   MethodDef table: ${methodDefData.size} bytes ($methodDefCount entries)")
-                    dumpCs.append("// === MethodDef Table (${methodDefCount} entries) ===\n")
-                }
-            }
-
-            // Extract FieldDef entries
-            addLine("\n📝 Extracting FieldDef entries...")
-            if (fieldDefOffset > 0 && fieldDefCount > 0 && fieldDefCount < 1000000) {
-                val fieldDefSize = (fieldDefCount * 8).coerceAtMost(8388608) // FieldDef entry = 8 bytes
-                val fieldDefData = readMemChunked(pid, metaOffset + fieldDefOffset.toLong(), fieldDefSize)
-                if (fieldDefData != null) {
-                    addLine("   FieldDef table: ${fieldDefData.size} bytes ($fieldDefCount entries)")
-                    dumpCs.append("// === FieldDef Table (${fieldDefCount} entries) ===\n")
-                }
-            }
-
-            // Extract string literals
-            addLine("\n📝 Extracting string literals...")
-            if (stringLiteralOffset > 0 && stringLiteralCount > 0 && stringLiteralCount < 500000) {
-                val strTableOffset = metaOffset + stringLiteralOffset.toLong()
-                val strTableSize = (stringLiteralCount * 8).coerceAtMost(262144)
-                val strTable = readMemChunked(pid, strTableOffset, strTableSize)
-
-                if (strTable != null) {
-                    val strings = mutableListOf<Pair<Int, String>>()
-                    for (i in 0 until stringLiteralCount.coerceAtMost(strTable.size / 8)) {
-                        val off = i * 8
-                        if (off + 8 > strTable.size) break
-                        val strIdx = ByteBuffer.wrap(strTable, off, 4).order(ByteOrder.LITTLE_ENDIAN).int
-                        val strLen = ByteBuffer.wrap(strTable, off + 4, 4).order(ByteOrder.LITTLE_ENDIAN).int
-
-                        if (strIdx >= 0 && strLen > 0 && strLen < 10000 && stringLiteralDataOffset > 0) {
-                            val strData = readMemChunked(pid, metaOffset + stringLiteralDataOffset + strIdx.toLong(), strLen)
-                            if (strData != null && strData.size >= strLen) {
-                                val str = String(strData, 0, strLen, Charsets.UTF_8)
-                                if (str.any { it.isLetterOrDigit() || it == ' ' || it == '.' || it == '/' || it == ':' }) {
-                                    strings.add(strIdx to str)
+                                if (strIdx >= 0 && strLen > 0 && strLen < 10000) {
+                                    val strData = readMemChunked(pid, metaOffset + stringLiteralDataOffset + strIdx.toLong(), strLen)
+                                    if (strData != null && strData.size >= strLen) {
+                                        val str = String(strData, 0, strLen, Charsets.UTF_8)
+                                        if (str.any { it.isLetterOrDigit() || it == ' ' || it == '.' || it == '/' || it == ':' }) {
+                                            strings.add(strIdx to str)
+                                        }
+                                    }
                                 }
+                            }
+                            addLine("   ✅ Extracted ${strings.size} string literals")
+                            dumpCs.append("\n// === String Literals (${strings.size}) ===\n")
+                            for ((idx, s) in strings.take(10000)) {
+                                dumpCs.append("// [0x${"%X".format(idx)}] \"$s\"\n")
                             }
                         }
                     }
-                    addLine("   ✅ Extracted ${strings.size} string literals")
-                    dumpCs.append("\n// === String Literals (${strings.size}) ===\n")
-                    for ((idx, s) in strings.take(10000)) {
-                        dumpCs.append("// [0x${"%X".format(idx)}] \"$s\"\n")
-                    }
+                } else {
+                    addLine("   ❌ Failed to read full metadata header")
                 }
+            } else {
+                addLine("   ❌ Invalid metadata header!")
+                addLine("   → Magic: 0x${"%X".format(magicFound)} (expected 0xFAB11BAF)")
+                addLine("   → Version: $version (expected 24-29)")
+                addLine("   → This usually means metadata is encrypted")
             }
         }
     }
 
     setProgress(0.6f)
 
-    // 8. Extract strings from libil2cpp.so (categorize like SRC-MLBB-NUSANTARA)
+    // 8. Extract strings from libil2cpp.so (always works, even with encrypted metadata)
     addLine("\n🔍 Extracting strings from libil2cpp.so...")
     val allStrings = mutableSetOf<String>()
     var bytesRead = 0L
@@ -609,7 +601,7 @@ private suspend fun runAutoDumpV5(
 
     addLine("   ✅ Total strings: ${allStrings.size}")
 
-    // Categorize strings (like SRC-MLBB-NUSANTARA structure)
+    // Categorize strings
     val typeStrings = allStrings.filter { it.startsWith("L") && it.contains("/") && it.endsWith(";") }
     val methodStrings = allStrings.filter { it.contains("(") && (it.contains("V") || it.contains("I") || it.contains("Z")) }
     val nsStrings = allStrings.filter { it.contains("::") && !it.contains("(") }
@@ -627,7 +619,6 @@ private suspend fun runAutoDumpV5(
     dumpCs.append("// Network/Auth: ${networkStrings.size}\n")
     dumpCs.append("// Offset related: ${offsetStrings.size}\n\n")
 
-    // Output game-specific strings (most important for cheat development)
     if (gameStrings.isNotEmpty()) {
         dumpCs.append("// === Game Structure Strings ===\n")
         for (s in gameStrings.sorted().take(2000)) {
@@ -635,7 +626,6 @@ private suspend fun runAutoDumpV5(
         }
     }
 
-    // Output type descriptors
     if (typeStrings.isNotEmpty()) {
         dumpCs.append("\n// === Type Descriptors ===\n")
         for (s in typeStrings.sorted().take(5000)) {
@@ -643,7 +633,6 @@ private suspend fun runAutoDumpV5(
         }
     }
 
-    // Output method signatures
     if (methodStrings.isNotEmpty()) {
         dumpCs.append("\n// === Method Signatures ===\n")
         for (s in methodStrings.sorted().take(5000)) {
@@ -651,7 +640,6 @@ private suspend fun runAutoDumpV5(
         }
     }
 
-    // Output namespace strings
     if (nsStrings.isNotEmpty()) {
         dumpCs.append("\n// === Namespace Strings ===\n")
         for (s in nsStrings.sorted().take(5000)) {
@@ -659,7 +647,6 @@ private suspend fun runAutoDumpV5(
         }
     }
 
-    // Output Unity strings
     if (unityStrings.isNotEmpty()) {
         dumpCs.append("\n// === Unity Engine Strings ===\n")
         for (s in unityStrings.sorted().take(1000)) {
@@ -667,7 +654,6 @@ private suspend fun runAutoDumpV5(
         }
     }
 
-    // Output network strings
     if (networkStrings.isNotEmpty()) {
         dumpCs.append("\n// === Network/Auth Strings ===\n")
         for (s in networkStrings.sorted().take(1000)) {
@@ -675,7 +661,6 @@ private suspend fun runAutoDumpV5(
         }
     }
 
-    // Output offset strings
     if (offsetStrings.isNotEmpty()) {
         dumpCs.append("\n// === Offset Related Strings ===\n")
         for (s in offsetStrings.sorted().take(1000)) {
@@ -722,8 +707,17 @@ private suspend fun runAutoDumpV5(
     csFile.writeText(dumpCs.toString())
     addLine("\n✅ dump.cs saved to ${csFile.absolutePath}")
     addLine("   Raw dumps: ${saveDir.absolutePath}/")
-    addLine("\n🎉 Dump complete! ${allStrings.size} strings, $dumpCount regions, dump.cs generated.")
-    setStatus("Done: ${allStrings.size} strings, $dumpCount regions, dump.cs")
+
+    if (metaFound) {
+        addLine("\n🎉 Dump complete! ${allStrings.size} strings, $dumpCount regions, dump.cs generated.")
+    } else {
+        addLine("\n🎉 Partial dump complete!")
+        addLine("   → ${allStrings.size} strings extracted from libil2cpp.so")
+        addLine("   → $dumpCount raw memory regions dumped")
+        addLine("   → Metadata was encrypted - use strings for analysis")
+        addLine("   → For full dump: dump libil2cpp.so + use Il2CppDumper on PC")
+    }
+    setStatus("Done: ${allStrings.size} strings, $dumpCount regions")
     setProgress(1.0f)
 }
 
