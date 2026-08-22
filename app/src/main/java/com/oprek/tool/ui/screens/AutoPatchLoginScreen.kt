@@ -22,12 +22,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
+import androidx.compose.ui.graphics.Color
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+data class CrackFinding(
+    val offset: Int,
+    val type: String,
+    val pattern: String,
+    val originalBytes: String,
+    val matchedStr: String = "",
+    val confidence: String = "HIGH"
+)
 
 /**
  * AutoPatchLoginScreen v2 — Full ELF auto-crack
@@ -51,14 +61,7 @@ fun AutoPatchLoginScreen(navController: NavController) {
     var showSaveDialog by remember { mutableStateOf(false) }
     var archMode by remember { mutableStateOf("") }
 
-    data class CrackFinding(
-        val offset: Int,
-        val type: String,
-        val pattern: String,
-        val originalBytes: String,
-        val matchedStr: String = "",
-        val confidence: String = "HIGH"
-    )
+
 
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { scope.launch(Dispatchers.IO) {
