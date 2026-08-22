@@ -1,500 +1,352 @@
 package com.oprek.tool.ui.screens
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.platform.*
-import androidx.compose.ui.text.font.*
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.oprek.tool.core.NativeLib
 import com.oprek.tool.ui.theme.*
-import kotlinx.coroutines.*
-import java.io.*
-import java.util.concurrent.atomic.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmulatorScreen() {
     val context = LocalContext.current
-    var loadedFile by remember { mutableStateOf<File?>(null) }
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("CPU State", "Disasm", "Memory Map", "Syscalls", "Hooks", "Log")
-    val output = remember { mutableStateListOf<String>() }
+    val scope = rememberCoroutineScope()
+    var fileData by remember { mutableStateOf<ByteArray?>(null) }
+    var fileName by remember { mutableStateOf("") }
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("🖥️ CPU", "🔍 Disasm", "💾 Memory", "📋 Syscalls", "⚡ Hooks", "📝 Log")
+    val log = remember { mutableStateListOf<String>() }
 
-    // CPU State
-    val regs = remember { mutableStateOf(LongArray(32) { 0L }) }
-    var pc by remember { mutableLongStateOf(0L) }
-    var sp by remember { mutableLongStateOf(0L) }
-    var fp by remember { mutableLongStateOf(0L) }
-    var lr by remember { mutableLongStateOf(0L) }
-    var cpsr by remember { mutableLongStateOf(0L) }
+    // CPU Registers (ARM64: X0-X30, SP, PC, PSTATE)
+    val regs = remember { mutableStateOf(LongArray(33) { 0L }) }
+    var pc by remember { mutableStateOf(0L) }
+    var sp by remember { mutableStateOf(0x7FFF0000L) }
     var isRunning by remember { mutableStateOf(false) }
-    var maxSteps by remember { mutableIntStateOf(1000) }
+    var stepCount by remember { mutableStateOf(0) }
 
     // Disasm
-    var disasmLines = remember { mutableStateOf(emptyList<String>()) }
-    var disasmStart by remember { mutableStateOf("0x0") }
-    var disasmCount by remember { mutableIntStateOf(20) }
+    var disasmOut by remember { mutableStateOf("") }
+    var archMode by remember { mutableStateOf(2) }
 
-    // Memory maps
-    var memMaps = remember { mutableStateOf(emptyList<String>()) }
+    // Memory map
+    var memMaps by remember { mutableStateOf(listOf<String>()) }
 
     // Syscalls
-    var syscallLog = remember { mutableStateOf(emptyList<String>()) }
-    var hookSyscalls by remember { mutableStateOf(true) }
+    var syscallLog by remember { mutableStateOf(listOf<String>()) }
 
     // Hooks
-    var hookAddress by remember { mutableStateOf("") }
-    var hookAction by remember { mutableStateOf("log") }
-    val hooks = remember { mutableStateOf(mapOf<Long, String>()) }
+    var hookAddr by remember { mutableStateOf("") }
+    var hookAction by remember { mutableStateOf("NOP") }
+    val hooks = remember { mutableStateOf(mutableMapOf<Long, String>()) }
 
     fun addLog(msg: String) {
-        output.add("[${output.size}] $msg")
-        if (output.size > 1000) output.removeRange(0, 200)
+        log.add(msg)
+        if (log.size > 2000) log.removeRange(0, 500)
     }
 
     fun loadFile() {
-        val f = context.cacheDir.listFiles()?.filter { it.isFile }?.maxByOrNull { it.lastModified() }
+        val f = context.cacheDir.listFiles()?.filter { it.isFile && it.length() > 0 }?.maxByOrNull { it.lastModified() }
         if (f != null) {
-            loadedFile = f
             val data = f.readBytes()
-            // Parse ELF entry point
-            if (data.size >= 0x20) {
-                val is64 = data[4] == 2.toByte()
-                if (is64 && data.size >= 0x20) {
-                    pc = (data[0x18].toLong() and 0xFF) or ((data[0x19].toLong() and 0xFF) shl 8) or
-                            ((data[0x1A].toLong() and 0xFF) shl 16) or ((data[0x1B].toLong() and 0xFF) shl 24) or
-                            ((data[0x1C].toLong() and 0xFF) shl 32) or ((data[0x1D].toLong() and 0xFF) shl 40) or
-                            ((data[0x1E].toLong() and 0xFF) shl 48) or ((data[0x1F].toLong() and 0xFF) shl 56)
-                } else if (!is64 && data.size >= 0x18) {
-                    pc = (data[0x18].toLong() and 0xFF) or ((data[0x19].toLong() and 0xFF) shl 8) or
-                            ((data[0x1A].toLong() and 0xFF) shl 16) or ((data[0x1B].toLong() and 0xFF) shl 24)
-                }
-            }
-            sp = 0xBFFF0000L
-            fp = sp
-            regs.value[30] = 0L // LR
+            fileData = data
+            fileName = f.name
             addLog("[+] Loaded: ${f.name} (${data.size} bytes)")
-            addLog("[+] Entry point: 0x${pc.toString(16)}")
-            addLog("[+] SP: 0x${sp.toString(16)}")
-        } else addLog("[-] No file in cache")
-    }
 
-    // ARM64 instruction decoder
-    fun decodeArm64(insn: Long): String {
-        return when {
-            insn == 0xD4200000L -> "SVC #0"
-            insn == 0xD503201FL -> "NOP"
-            insn == 0xD65F03C0L -> "RET"
-            insn == 0xD63F0000L -> "BLR X${(insn shr 5) and 0x1FL}"
-            insn == 0xD61F0000L -> "BR X${(insn shr 5) and 0x1FL}"
-            insn and 0xFFE003E0L == 0xA90003E0L -> "STP X${(insn shr 16) and 0x1FL}, X${(insn shr 10) and 0x1FL}, [X${insn and 0x1FL}]"
-            insn and 0xFFE003E0L == 0xA94003E0L -> "LDP X${(insn shr 16) and 0x1FL}, X${(insn shr 10) and 0x1FL}, [X${insn and 0x1FL}]"
-            insn and 0xFFC003FFL == 0xD10003FFL -> "SUB SP, SP, #${(insn shr 10) and 0xFFFL}"
-            insn and 0xFFC003FFL == 0x910003FFL -> "ADD SP, SP, #${(insn shr 10) and 0xFFFL}"
-            insn and 0xFF000000L == 0x14000000L -> "B ${String.format("0x%X", (insn and 0x3FFFFFFL) * 4)}"
-            insn and 0xFF000000L == 0x94000000L -> "BL ${String.format("0x%X", (insn and 0x3FFFFFFL) * 4)}"
-            insn and 0xFF000000L == 0xB4000000L -> "CBZ X${insn and 0x1FL}, ..."
-            insn and 0xFF000000L == 0xB5000000L -> "CBNZ X${insn and 0x1FL}, ..."
-            insn and 0xFF000000L == 0x34000000L -> "CBZ W${insn and 0x1FL}, ..."
-            insn and 0xFF000000L == 0x35000000L -> "CBNZ W${insn and 0x1FL}, ..."
-            insn and 0xFFE0001FL == 0xAA0003E0L -> "MOV X${(insn shr 0) and 0x1FL}, X${(insn shr 16) and 0x1FL}"
-            insn and 0xFF800000L == 0xD2800000L -> "MOVZ X${insn and 0x1FL}, #${((insn shr 5) and 0xFFFFL) shl (((insn shr 21) and 3L) * 16).toInt()}"
-            insn and 0xFFE00000L == 0xF9400000L -> "LDR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
-            insn and 0xFFE00000L == 0xF9000000L -> "STR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
-            insn and 0xFFE00000L == 0xB9400000L -> "LDR W${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
-            insn and 0xFFE00000L == 0xB9000000L -> "STR W${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
-            insn and 0xFFC003E0L == 0xF81F0000L -> "STR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}, #-${(insn shr 10) and 0xFFFL}]!"
-            insn and 0xFFC003E0L == 0xF84003E0L -> "LDR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}], #${(insn shr 10) and 0xFFFL}"
-            insn == 0xD69F03E0L -> "ERET"
-            insn and 0xFF000000L == 0xD4000000L -> "BRK #${(insn shr 5) and 0xFFFL}"
-            insn and 0xFFC00000L == 0xF8400000L -> "LDR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}, #${(insn shr 10) and 0xFFFL}]"
-            else -> "UND ${String.format("0x%08X", insn)}"
+            // Parse ELF entry + create memory map
+            if (data.size >= 20 && data[0] == 0x7F.toByte() && data[1] == 'E'.code.toByte()) {
+                val is64 = data[4] == 2.toByte()
+                val entry = if (is64) {
+                    var v = 0L; for (i in 0..7) v = v or ((data[0x18 + i].toLong() and 0xFF) shl (i * 8)); v
+                } else {
+                    var v = 0L; for (i in 0..3) v = v or ((data[0x18 + i].toLong() and 0xFF) shl (i * 8)); v
+                }
+                pc = entry
+                sp = 0x7FFF0000L
+                regs.value[29] = sp // FP
+                regs.value[30] = 0L // LR
+
+                val machine = (data[18].toInt() and 0xFF) or ((data[19].toInt() and 0xFF) shl 8)
+                val (_, mode) = NativeLib.detectArchFromElf(machine)
+                archMode = mode
+
+                // Create fake memory maps
+                memMaps = listOf(
+                    "00000000-00000000 r-xp 00000000 00:00 0  ${f.name} (code)",
+                    "7f000000-7f${"%06X".format(data.size.coerceAtMost(0xFFFFFF))} r--p 00000000 00:00 0  ${f.name} (rodata)",
+                    "7fff0000-7fffffff rw-p 00000000 00:00 0  [stack]",
+                    "ffff0000-ffffffff r-xp 00000000 00:00 0  [vdso]"
+                )
+                addLog("[+] Entry: 0x${"%X".format(entry)} | Arch: ${when(machine) { 0xB7->"ARM64"; 0x28->"ARM"; 0x3E->"x86_64"; else->"?" }}")
+                addLog("[+] Memory maps: ${memMaps.size} regions")
+            } else {
+                pc = 0
+                addLog("[+] Raw binary - no ELF structure")
+            }
+        } else {
+            addLog("[-] No file in cache. Open a file first.")
         }
     }
 
-    fun readInsn(data: ByteArray, addr: Long): Long {
-        if (addr < 0 || addr + 4 > data.size) return 0
-        return (data[addr.toInt()].toLong() and 0xFF) or
-                ((data[(addr+1).toInt()].toLong() and 0xFF) shl 8) or
-                ((data[(addr+2).toInt()].toLong() and 0xFF) shl 16) or
-                ((data[(addr+3).toInt()].toLong() and 0xFF) shl 24)
-    }
-
-    fun stepEmulation() {
-        val f = loadedFile ?: return
-        val data = f.readBytes()
-        if (pc + 4 > data.size) { addLog("[!] PC out of range"); return }
-
-        val insn = readInsn(data, pc)
-        val decoded = decodeArm64(insn)
-        val regsCopy = regs.value.copyOf()
-
-        // Simulate execution
-        when {
-            decoded.startsWith("NOP") -> { pc += 4 }
-            decoded.startsWith("MOV X") -> {
-                val parts = decoded.replace("MOV X", "").split(", X")
-                if (parts.size == 2) {
-                    val rd = parts[0].trim().toIntOrNull() ?: 0
-                    val rn = parts[1].trim().toIntOrNull() ?: 0
-                    regs.value[rd] = regsCopy[rn]
-                }
-                pc += 4
-            }
-            decoded.startsWith("MOVZ X") -> {
-                val parts = decoded.replace("MOVZ X", "").split(", #")
-                if (parts.size >= 2) {
-                    val rd = parts[0].trim().toIntOrNull() ?: 0
-                    val imm = parts[1].trim().split(" ")[0].toLongOrNull() ?: 0
-                    regs.value[rd] = imm
-                }
-                pc += 4
-            }
-            decoded.startsWith("ADD SP") -> {
-                val imm = Regex("#(\\d+)").find(decoded)?.groupValues?.get(1)?.toLongOrNull() ?: 0
-                sp += imm; pc += 4
-            }
-            decoded.startsWith("SUB SP") -> {
-                val imm = Regex("#(\\d+)").find(decoded)?.groupValues?.get(1)?.toLongOrNull() ?: 0
-                sp -= imm; pc += 4
-            }
-            decoded.startsWith("STR X") -> {
-                val parts = decoded.replace("STR X", "").split(", [X")
-                if (parts.size >= 2) {
-                    val rt = parts[0].trim().toIntOrNull() ?: 0
-                    val rn = parts[1].trim().removeSuffix("]").toIntOrNull() ?: 0
-                    val addr = regsCopy[rn]
-                    addLog("[MEM] STR X$rt -> [X$rn] = 0x${addr.toString(16)}")
-                }
-                pc += 4
-            }
-            decoded.startsWith("LDR X") -> {
-                val parts = decoded.replace("LDR X", "").split(", [X")
-                if (parts.size >= 2) {
-                    val rt = parts[0].trim().toIntOrNull() ?: 0
-                    val rn = parts[1].trim().removeSuffix("]").trim().split(",")[0].toIntOrNull() ?: 0
-                    if (rn < 32) regs.value[rt] = regsCopy[rn]
-                    addLog("[MEM] LDR X$rt <- [X$rn]")
-                }
-                pc += 4
-            }
-            decoded.startsWith("STP") -> { pc += 4 }
-            decoded.startsWith("LDP") -> { pc += 4 }
-            decoded.startsWith("RET") -> {
-                if (lr != 0L) { pc = lr; lr = 0L }
-                else { addLog("[!] RET with LR=0, stopping"); isRunning = false }
-            }
-            decoded.startsWith("BL ") -> {
-                val target = Regex("0x([\\dA-F]+)").find(decoded)?.groupValues?.get(1)?.toLongOrNull(16) ?: 0
-                lr = pc + 4
-                pc = target
-                addLog("[CALL] BL 0x${target.toString(16)} (LR=0x${lr.toString(16)})")
-            }
-            decoded.startsWith("BR X") -> {
-                val rn = Regex("BR X(\\d+)").find(decoded)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                pc = regsCopy[rn]
-                addLog("[JMP] BR X$rn -> 0x${pc.toString(16)}")
-            }
-            decoded.startsWith("BLR X") -> {
-                val rn = Regex("BLR X(\\d+)").find(decoded)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                lr = pc + 4
-                pc = regsCopy[rn]
-                addLog("[CALL] BLR X$rn -> 0x${pc.toString(16)}")
-            }
-            decoded.startsWith("CBZ") -> {
-                val parts = Regex("CBNZ? X(\\d+)").find(decoded)
-                val rt = parts?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                pc += 4
-                addLog("[CBZ] X$rt = ${regsCopy[rt]}")
-            }
-            decoded.startsWith("CBNZ") -> {
-                val rt = Regex("CBNZ X(\\d+)").find(decoded)?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                if (regsCopy[rt] != 0L) {
-                    addLog("[CBNZ] X$rt != 0, would branch")
-                }
-                pc += 4
-            }
-            decoded.startsWith("SVC") -> {
-                val imm = Regex("#(\\d+)").find(decoded)?.groupValues?.get(1)?.toLongOrNull() ?: 0
-                val syscallNum = regsCopy[8] // X8 = syscall number on ARM64
-                addLog("[SYSCALL] SVC #$imm (X8=$syscallNum, X0=${regsCopy[0]})")
-                when (syscallNum) {
-                    63L -> { // read
-                        addLog("  -> read(${regsCopy[0]}, buf, ${regsCopy[2]})")
-                        regs.value[0] = regsCopy[2] // return bytes read
-                    }
-                    64L -> { // write
-                        addLog("  -> write(${regsCopy[0]}, buf, ${regsCopy[2]})")
-                        regs.value[0] = regsCopy[2]
-                    }
-                    57L -> { // fork
-                        addLog("  -> fork() = 0 (child)")
-                        regs.value[0] = 0
-                    }
-                    56L -> { // exit
-                        addLog("  -> exit(${regsCopy[0]})")
-                        isRunning = false
-                    }
-                    221L -> { // execve
-                        addLog("  -> execve()")
-                        regs.value[0] = -2 // ENOENT
-                    }
-                    else -> {
-                        addLog("  -> syscall #$syscallNum")
-                        regs.value[0] = 0
-                    }
-                }
-                pc += 4
-            }
-            decoded.startsWith("BRK") -> {
-                addLog("[TRAP] BRK at 0x${pc.toString(16)}")
-                isRunning = false
-                pc += 4
-            }
-            decoded.startsWith("B ") -> {
-                val target = Regex("0x([\\dA-F]+)").find(decoded)?.groupValues?.get(1)?.toLongOrNull(16) ?: 0
-                pc = target
-                addLog("[JMP] B 0x${target.toString(16)}")
-            }
-            decoded.startsWith("B.cond") || decoded.startsWith("B.EQ") || decoded.startsWith("B.NE") -> {
-                addLog("[BCC] Conditional branch at 0x${pc.toString(16)}")
-                pc += 4
-            }
-            decoded.startsWith("ERET") -> {
-                addLog("[!] ERET - cannot emulate in userspace")
-                isRunning = false
-            }
-            else -> {
-                pc += 4
-            }
-        }
-    }
-
-    fun runEmulation() {
-        if (loadedFile == null) { addLog("[-] No file loaded"); return }
-        isRunning = true
-        CoroutineScope(Dispatchers.Default).launch {
-            val steps = mutableListOf<String>()
-            var count = 0
-            while (isRunning && count < maxSteps) {
-                val data = loadedFile!!.readBytes()
-                if (pc + 4 > data.size) { addLog("[!] PC out of bounds"); break }
-                val insn = readInsn(data, pc)
-                val decoded = decodeArm64(insn)
-                steps.add(String.format("  %08X:  %08X  %s  X0=%X SP=%X", pc, insn, decoded, regs.value[0], sp))
-                stepEmulation()
-                count++
-                if (count % 100 == 0) {
-                    withContext(Dispatchers.Main) {
-                        addLog("[...] Step $count, PC=0x${pc.toString(16)}")
-                    }
-                }
-            }
-            withContext(Dispatchers.Main) {
-                disasmLines.value = steps.toList()
-                addLog("[+] Emulation done: $count steps, PC=0x${pc.toString(16)}")
-                isRunning = false
-            }
-        }
-    }
-
-    // Load file on start
     LaunchedEffect(Unit) { loadFile() }
 
     Column(modifier = Modifier.fillMaxSize().background(Color(0xFF0A0A1A))) {
+        // Header
         Surface(color = Color(0xFF1A1A2E), modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("ARM64 Emulator", color = AccentPurple, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = { loadFile() },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentPurple),
-                        modifier = Modifier.height(32.dp)) { Text("Load", fontSize = 12.sp) }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { runEmulation() },
-                        enabled = !isRunning,
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
-                        modifier = Modifier.height(32.dp)) { Text(if (isRunning) "Running..." else "▶ Run", color = Color.Black, fontSize = 12.sp) }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { if (loadedFile != null) stepEmulation() },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                        modifier = Modifier.height(32.dp)) { Text("Step", color = Color.Black, fontSize = 12.sp) }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { isRunning = false },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        modifier = Modifier.height(32.dp)) { Text("Stop", fontSize = 12.sp) }
+                    Text("⚡ Emulator", color = AccentCyan, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    if (isRunning) {
+                        Text("RUNNING", color = AccentGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-                if (loadedFile != null) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("${loadedFile!!.name} | PC: 0x${pc.toString(16)} | Steps: ${disasmLines.value.size}",
-                        color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Spacer(Modifier.height(4.dp))
+                Row {
+                    Button(onClick = { loadFile() }, colors = ButtonDefaults.buttonColors(containerColor = AccentCyan), modifier = Modifier.height(32.dp)) {
+                        Icon(Icons.Default.Refresh, null, Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Load", fontSize = 11.sp)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = {
+                        if (!isRunning && fileData != null) {
+                            isRunning = true
+                            scope.launch(Dispatchers.IO) {
+                                addLog("[+] Starting emulation from 0x${"%X".format(pc)}")
+                                // Simulate: disassemble and step through
+                                val data = fileData ?: return@launch
+                                val start = pc.toInt().coerceIn(0, (data.size - 4).coerceAtLeast(0))
+                                val end = (start + 4096).coerceAtMost(data.size)
+                                val code = data.sliceArray(start until end)
+                                try {
+                                    val result = NativeLib.disassemble(code, pc, 1, archMode, 100)
+                                    val lines = result.lines().filter { it.isNotBlank() }
+                                    for ((i, line) in lines.withIndex()) {
+                                        if (!isRunning) break
+                                        // Check hooks
+                                        val addrStr = line.trim().substringBefore(" ").trim()
+                                        val addr = try { addrStr.removePrefix("0x").toLong(16) } catch (e: Exception) { 0L }
+                                        if (addr in hooks.value) {
+                                            val action = hooks.value[addr]!!
+                                            addLog("⚡ HOOK @ $addr: $action")
+                                            when (action) {
+                                                "NOP" -> { /* skip instruction */ }
+                                                "LOG" -> addLog("📍 HIT: ${line.trim()}")
+                                                "RET" -> { addLog("↩️ Return at $addr"); isRunning = false }
+                                            }
+                                        } else {
+                                            addLog("  ${line.trim()}")
+                                        }
+                                        pc += 4
+                                        stepCount++
+                                        kotlinx.coroutines.delay(50) // visual delay
+                                    }
+                                    addLog("[+] Emulation complete: $stepCount instructions")
+                                } catch (e: Exception) {
+                                    addLog("[-] Error: ${e.message}")
+                                }
+                                isRunning = false
+                            }
+                        }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = if (isRunning) AccentRed else AccentGreen), modifier = Modifier.height(32.dp)) {
+                        Icon(if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow, null, Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(if (isRunning) "Stop" else "Run", fontSize = 11.sp)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Button(onClick = {
+                        // Single step
+                        if (fileData != null) {
+                            val data = fileData!!
+                            val start = pc.toInt().coerceIn(0, (data.size - 4).coerceAtLeast(0))
+                            val code = data.sliceArray(start until (start + 4).coerceAtMost(data.size))
+                            try {
+                                val result = NativeLib.disassemble(code, pc, 1, archMode, 1)
+                                addLog("STEP: ${result.trim()}")
+                                pc += 4
+                                stepCount++
+                            } catch (e: Exception) { addLog("[-] Step error: ${e.message}") }
+                        }
+                    }, colors = ButtonDefaults.buttonColors(containerColor = AccentPurple), modifier = Modifier.height(32.dp)) {
+                        Text("Step", fontSize = 11.sp)
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text("$fileName | Step: $stepCount", color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 }
             }
         }
 
+        // Tabs
         ScrollableTabRow(selectedTabIndex = selectedTab, containerColor = Color(0xFF16213E)) {
-            tabs.forEachIndexed { i, name ->
+            tabs.forEachIndexed { i, n ->
                 Tab(selected = selectedTab == i, onClick = { selectedTab = i },
-                    text = { Text(name, fontSize = 10.sp, color = if (selectedTab == i) AccentPurple else Color.Gray) })
+                    text = { Text(n, fontSize = 11.sp, color = if (selectedTab == i) AccentCyan else Color.Gray) })
             }
         }
 
         when (selectedTab) {
-            0 -> CpuStateTab(regs.value, pc, sp, fp, lr, cpsr)
-            1 -> EmuDisasmTab(disasmLines.value)
-            2 -> MemoryMapTab(memMaps.value)
-            3 -> SyscallTab(syscallLog.value, hookSyscalls, { hookSyscalls = it })
-            4 -> EmuHookTab(hookAddress, { hookAddress = it }, hookAction, { hookAction = it },
-                hooks.value, { a, action -> })
-            5 -> EmuLogTab(output)
-        }
-
-        Surface(color = Color(0xFF0F3460), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
-            Row(modifier = Modifier.padding(8.dp)) {
-                Text("PC: 0x${pc.toString(16)}", color = AccentPurple, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("SP: 0x${sp.toString(16)}", color = AccentCyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("X0: 0x${regs.value[0].toString(16)}", color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Steps: ${disasmLines.value.size}", color = Color.Gray, fontSize = 10.sp)
-            }
-        }
-    }
-}
-
-@Composable
-private fun CpuStateTab(regs: LongArray, pc: Long, sp: Long, fp: Long, lr: Long, cpsr: Long) {
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-        item {
-            Text("General Purpose Registers (ARM64)", color = AccentPurple, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-        items(regs.indices.toList().chunked(2)) { pair ->
-            Row(modifier = Modifier.fillMaxWidth()) {
-                for (idx in pair) {
-                    Surface(color = Color(0xFF16213E), modifier = Modifier.weight(1f).padding(2.dp)) {
-                        Row(modifier = Modifier.padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("X$idx", color = AccentCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(30.dp))
-                            Text(String.format("%016X", regs[idx]), color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+            0 -> { // CPU State
+                Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
+                    Text("CPU Registers", color = AccentCyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Key registers
+                    Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF0D1117)), shape = RoundedCornerShape(8.dp)) {
+                        Column(Modifier.padding(12.dp)) {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Column {
+                                    Text("PC = 0x${"%016X".format(pc)}", color = AccentGreen, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                                    Text("SP = 0x${"%016X".format(sp)}", color = AccentCyan, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                                    Text("FP = 0x${"%016X".format(regs.value[29])}", color = AccentPurple, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                                    Text("LR = 0x${"%016X".format(regs.value[30])}", color = AccentOrange, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                                }
+                                Column {
+                                    Text("Steps: $stepCount", color = Color.Gray, fontSize = 11.sp)
+                                    Text("Hooks: ${hooks.value.size}", color = Color.Gray, fontSize = 11.sp)
+                                }
+                            }
                         }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("General Purpose (X0-X30)", color = AccentCyan, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // Register grid
+                    for (row in 0..10) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            for (col in 0..2) {
+                                val idx = row * 3 + col
+                                if (idx <= 30) {
+                                    Card(Modifier.weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)), shape = RoundedCornerShape(4.dp)) {
+                                        Column(Modifier.padding(4.dp)) {
+                                            Text("X$idx", fontSize = 8.sp, color = Color.Gray)
+                                            Text("0x${"%016X".format(regs.value[idx])}", fontSize = 9.sp, color = AccentGreen, fontFamily = FontFamily.Monospace)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                    }
+                }
+            }
+            1 -> { // Disasm
+                Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
+                    Text("Disassembly @ PC", color = AccentCyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (fileData != null) {
+                        val data = fileData!!
+                        val start = pc.toInt().coerceIn(0, (data.size - 4).coerceAtLeast(0))
+                        val end = (start + 2048).coerceAtMost(data.size)
+                        val code = data.sliceArray(start until end)
+                        try {
+                            val result = NativeLib.disassemble(code, pc, 1, archMode, 100)
+                            Text(result, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.fillMaxWidth().background(Color(0xFF0D1117), RoundedCornerShape(8.dp)).padding(8.dp))
+                        } catch (e: Exception) {
+                            Text("Disasm error: ${e.message}", color = AccentRed, fontSize = 11.sp)
+                        }
+                    } else {
+                        Text("No file loaded", color = Color.Gray, fontSize = 12.sp)
+                    }
+                }
+            }
+            2 -> { // Memory Map
+                Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
+                    Text("Memory Map", color = AccentCyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    memMaps.forEach { map ->
+                        Card(Modifier.fillMaxWidth().padding(vertical = 2.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF0D1117)), shape = RoundedCornerShape(4.dp)) {
+                            Text(map, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(8.dp))
+                        }
+                    }
+                    if (memMaps.isEmpty()) {
+                        Text("No memory maps - load an ELF first", color = Color.Gray, fontSize = 12.sp)
+                    }
+                }
+            }
+            3 -> { // Syscalls
+                Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
+                    Text("System Calls", color = AccentCyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (syscallLog.isEmpty()) {
+                        Text("No syscalls recorded yet. Start emulation to capture.", color = Color.Gray, fontSize = 12.sp)
+                    }
+                    syscallLog.forEach { line ->
+                        Text(line, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                    }
+                }
+            }
+            4 -> { // Hooks
+                Column(modifier = Modifier.padding(12.dp).verticalScroll(rememberScrollState())) {
+                    Text("Function Hooks", color = AccentCyan, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(value = hookAddr, onValueChange = { hookAddr = it }, label = { Text("Address", fontSize = 11.sp) },
+                            modifier = Modifier.weight(1f), singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace))
+                        Spacer(Modifier.width(8.dp))
+                        DropdownMenuSample(hookAction, listOf("NOP", "LOG", "RET")) { hookAction = it }
+                        Spacer(Modifier.width(8.dp))
+                        Button(onClick = {
+                            val a = try { hookAddr.trim().removePrefix("0x").toLong(16) } catch (e: Exception) { -1L }
+                            if (a >= 0) { hooks.value[a] = hookAction; addLog("[+] Hook @ 0x${"%X".format(a)} → $hookAction"); hookAddr = "" }
+                        }, colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) { Text("+", fontSize = 14.sp) }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    hooks.value.forEach { (addr, action) ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("⚡ 0x${"%08X".format(addr)} → $action", color = AccentOrange, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
+                            IconButton(onClick = { hooks.value.remove(addr) }, modifier = Modifier.size(24.dp)) {
+                                Icon(Icons.Default.Close, null, Modifier.size(14.dp), tint = AccentRed)
+                            }
+                        }
+                    }
+                    if (hooks.value.isEmpty()) Text("No hooks set", color = Color.Gray, fontSize = 12.sp)
+                }
+            }
+            5 -> { // Log
+                LazyColumn(modifier = Modifier.padding(8.dp)) {
+                    items(log) { line ->
+                        val color = when {
+                            line.startsWith("[+]") -> AccentGreen
+                            line.startsWith("[-]") -> AccentRed
+                            line.startsWith("⚡") -> AccentOrange
+                            else -> AccentCyan
+                        }
+                        Text(line, color = color, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                     }
                 }
             }
         }
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Special Registers", color = AccentPurple, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-        item {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                listOf("PC" to pc, "SP" to sp, "FP" to fp, "LR" to lr, "CPSR" to cpsr).forEach { (name, value) ->
-                    Surface(color = Color(0xFF1A1A3E), modifier = Modifier.weight(1f).padding(2.dp)) {
-                        Column(modifier = Modifier.padding(4.dp)) {
-                            Text(name, color = AccentPurple, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            Text(String.format("%016X", value), color = Color.White, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
-                        }
-                    }
-                }
+    }
+}
+
+@Composable
+fun DropdownMenuSample(selected: String, options: List<String>, onSelect: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton(onClick = { expanded = true }) { Text(selected, fontSize = 10.sp) }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { opt ->
+                DropdownMenuItem(text = { Text(opt) }, onClick = { onSelect(opt); expanded = false })
             }
-        }
-    }
-}
-
-@Composable
-private fun EmuDisasmTab(lines: List<String>) {
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-        items(lines) { line ->
-            Text(line, color = AccentGreen, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
-        }
-        if (lines.isEmpty()) {
-            item { Text("Click '▶ Run' to emulate or 'Step' to single-step.", color = Color.Gray, fontSize = 11.sp) }
-        }
-    }
-}
-
-@Composable
-private fun MemoryMapTab(maps: List<String>) {
-    Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-        Text("Memory Maps", color = AccentPurple, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-        if (maps.isEmpty()) {
-            Text("No memory maps loaded. Emulate first.", color = Color.Gray, fontSize = 11.sp)
-        }
-    }
-}
-
-@Composable
-private fun SyscallTab(log: List<String>, hookSyscalls: Boolean, onToggle: (Boolean) -> Unit) {
-    Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Syscall Log", color = AccentPurple, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.weight(1f))
-            Switch(checked = hookSyscalls, onCheckedChange = onToggle,
-                colors = SwitchDefaults.colors(checkedTrackColor = AccentPurple))
-            Text("Hook", color = Color.Gray, fontSize = 10.sp)
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(log) { line ->
-                Text(line, color = AccentCyan, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmuHookTab(
-    address: String, onAddressChange: (String) -> Unit,
-    action: String, onActionChange: (String) -> Unit,
-    hooks: Map<Long, String>, onAdd: (Long, String) -> Unit
-) {
-    Column(modifier = Modifier.padding(8.dp)) {
-        Text("Function Hooks", color = AccentPurple, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Row {
-            OutlinedTextField(value = address, onValueChange = onAddressChange,
-                label = { Text("Address", fontSize = 11.sp) },
-                modifier = Modifier.weight(1f).height(48.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace))
-            Spacer(modifier = Modifier.width(8.dp))
-            OutlinedTextField(value = action, onValueChange = onActionChange,
-                label = { Text("Action", fontSize = 11.sp) },
-                modifier = Modifier.weight(1f).height(48.dp),
-                textStyle = LocalTextStyle.current.copy(color = Color.White, fontSize = 12.sp))
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = {
-            val a = try { address.trim().removePrefix("0x").toLong(16) } catch (e: Exception) { -1L }
-            if (a > 0) onAdd(a, action)
-        }, colors = ButtonDefaults.buttonColors(containerColor = AccentGreen), modifier = Modifier.height(36.dp)) {
-            Text("Add Hook", color = Color.Black, fontSize = 12.sp)
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        if (hooks.isEmpty()) {
-            Text("No hooks set. Use this to intercept function calls.", color = Color.Gray, fontSize = 11.sp)
-        }
-    }
-}
-
-@Composable
-private fun EmuLogTab(output: List<String>) {
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-        items(output) { line ->
-            Text(line, color = when {
-                line.contains("[+]") -> AccentGreen
-                line.contains("[-]") -> Color(0xFF666666)
-                line.contains("[!]") -> Color.Red
-                line.contains("[SYSCALL]") -> Color.Yellow
-                line.contains("[MEM]") -> AccentCyan
-                line.contains("[CALL]") -> AccentPurple
-                line.contains("[JMP]") -> AccentOrange
-                else -> Color.White
-            }, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
         }
     }
 }

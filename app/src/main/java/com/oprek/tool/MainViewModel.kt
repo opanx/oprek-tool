@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -65,7 +66,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _currentRawFile.value = tempFile
                 _statusMessage.value = "Loaded: ${info.name} (${formatSize(info.size)})"
 
-                // Auto-analyze based on type
+                // Auto-analyze based on type - NO LIMITS
                 when (info.type) {
                     FileType.ELF, FileType.SO -> {
                         _elfInfo.value = FileAnalyzer.parseElfHeaders(tempFile)
@@ -77,12 +78,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     else -> {}
                 }
             } catch (e: Exception) {
-                _statusMessage.value = "Error: ${e.message}"
+                _statusMessage.value = "Error loading file: ${e.message}"
             }
             _isLoading.value = false
         }
     }
 
+    // No limit hex dump - read all or from offset
     fun loadHex(offset: Long = 0, length: Int = 65536) {
         viewModelScope.launch(Dispatchers.IO) {
             _currentRawFile.value?.let { file ->
@@ -116,7 +118,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 if (FileAnalyzer.patchByte(file, offset, newByte)) {
                     _patches.value = _patches.value + PatchEntry(offset, byteArrayOf(newByte), "byte")
                     _statusMessage.value = "Patched byte at 0x${"%08X".format(offset)}"
-                    // Reload hex
                     loadHex(maxOf(0, offset - 128), 512)
                 } else {
                     _statusMessage.value = "Patch failed!"
@@ -161,13 +162,32 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 for (i in 0..fileBytes.size - bytes.size) {
                     if (fileBytes.sliceArray(i until i + bytes.size).contentEquals(bytes)) {
                         results.add(i.toLong())
-                        if (results.size >= 100) break
+                        if (results.size >= 1000) break // Increased from 100 to 1000
                     }
                 }
                 _statusMessage.value = "Found ${results.size} matches"
                 if (results.isNotEmpty()) {
                     loadHex(results.first(), 512)
                 }
+            }
+        }
+    }
+
+    fun searchString(pattern: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _currentRawFile.value?.let { file ->
+                val content = file.readBytes()
+                val text = content.toString(Charsets.US_ASCII)
+                val lines = mutableListOf<String>()
+                var idx = 0
+                while (idx < text.length) {
+                    val found = text.indexOf(pattern, idx, ignoreCase = true)
+                    if (found < 0) break
+                    lines.add("0x${"%08X".format(found)}: ...${text.substring(maxOf(0, found - 20), minOf(text.length, found + pattern.length + 40))}...")
+                    idx = found + 1
+                    if (lines.size >= 1000) break
+                }
+                _statusMessage.value = "Found ${lines.size} occurrences of '$pattern'"
             }
         }
     }
