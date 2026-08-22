@@ -102,7 +102,7 @@ fun EmulatorScreen() {
             insn and 0xFF000000L == 0x34000000L -> "CBZ W${insn and 0x1FL}, ..."
             insn and 0xFF000000L == 0x35000000L -> "CBNZ W${insn and 0x1FL}, ..."
             insn and 0xFFE0001FL == 0xAA0003E0L -> "MOV X${(insn shr 0) and 0x1FL}, X${(insn shr 16) and 0x1FL}"
-            insn and 0xFF800000L == 0xD2800000L -> "MOVZ X${insn and 0x1FL}, #${((insn shr 5) and 0xFFFFL) shl ((insn shr 21) and 3L) * 16}"
+            insn and 0xFF800000L == 0xD2800000L -> "MOVZ X${insn and 0x1FL}, #${((insn shr 5) and 0xFFFFL) shl (((insn shr 21) and 3L) * 16).toInt()}"
             insn and 0xFFE00000L == 0xF9400000L -> "LDR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
             insn and 0xFFE00000L == 0xF9000000L -> "STR X${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
             insn and 0xFFE00000L == 0xB9400000L -> "LDR W${insn and 0x1FL}, [X${(insn shr 5) and 0x1FL}]"
