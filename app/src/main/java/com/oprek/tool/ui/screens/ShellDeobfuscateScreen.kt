@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.core.LoadedFileHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,7 +43,7 @@ fun ShellDeobfuscateScreen(navController: NavController) {
     val modes = listOf("🔍 Auto Detect", "📋 Base64", "🔢 Hex", "🔄 ROT13/47", "🌐 URL Decode", "⚡ XOR Brute")
 
     fun loadFromCache() {
-        val f = context.cacheDir.listFiles()?.filter { it.isFile && it.length() > 0 }?.maxByOrNull { it.lastModified() }
+        val f = LoadedFileHelper.findLoadedFile(context)
         if (f != null && f.length() < 1_000_000) { // Only load text files < 1MB
             try {
                 val text = f.readText(Charsets.UTF_8)

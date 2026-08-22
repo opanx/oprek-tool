@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oprek.tool.core.NativeLib
+import com.oprek.tool.core.LoadedFileHelper
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -65,7 +66,7 @@ fun EmulatorScreen() {
     }
 
     fun loadFile() {
-        val f = context.cacheDir.listFiles()?.filter { it.isFile && it.length() > 0 }?.maxByOrNull { it.lastModified() }
+        val f = LoadedFileHelper.findLoadedFile(context)
         if (f != null) {
             val data = f.readBytes()
             fileData = data

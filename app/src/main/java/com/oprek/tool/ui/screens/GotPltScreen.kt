@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
+import com.oprek.tool.core.LoadedFileHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,8 +38,7 @@ fun GotPltScreen(navController: NavController) {
     var fileName by remember { mutableStateOf("") }
 
     fun loadAndParse() {
-        val f = context.cacheDir.listFiles()?.filter { it.isFile && it.length() > 40 }
-            ?.maxByOrNull { it.lastModified() }
+        val f = LoadedFileHelper.findLoadedFile(context)
         if (f == null) { status = "No file. Open from Home first."; return }
         fileName = f.name
         scope.launch(Dispatchers.IO) {

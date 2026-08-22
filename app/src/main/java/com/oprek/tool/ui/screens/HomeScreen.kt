@@ -174,6 +174,8 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("⚙️ Emulator", "ARM64 ESIL emulation", Icons.Outlined.Memory, AccentCyan, "emulator"),
                 ToolItem("🔑 Admin Password Searcher", "Brute force, SQLi, panel detect", Icons.Default.Key, AccentRed, "adminsearch"),
                 ToolItem("🛡️ Malware Detector", "Reboot/wipe/spyware detect + NOP", Icons.Default.Shield, AccentRed, "malwaredetect"),
+                ToolItem("📦 UPX Unpacker", "Detect & unpack UPX packed ELF", Icons.Default.Unarchive, AccentOrange, "upx"),
+                ToolItem("🔓 Auto Leak Source", "Extract URLs, tokens, secrets, SQL", Icons.Default.Warning, AccentRed, "autoleak"),
             )
 
             LazyVerticalGrid(

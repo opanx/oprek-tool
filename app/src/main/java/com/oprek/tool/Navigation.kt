@@ -93,5 +93,7 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("emulator") { EmulatorScreen() }
         composable("adminsearch") { AdminPasswordSearcherScreen(navController) }
         composable("malwaredetect") { MalwareDetectorScreen(navController) }
+        composable("upx") { UpxUnpackerScreen(navController) }
+        composable("autoleak") { AutoLeakSourceScreen(navController) }
     }
 }
