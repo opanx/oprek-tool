@@ -957,7 +957,7 @@ private fun parseMetadataFull(
 
     // Parse IL2CPP metadata header based on version
     if (version in 24..29 && metaData.size >= 128) {
-        valstringLiteralOffset = bb.getInt(8)
+        val stringLiteralOffset = bb.getInt(8)
         val stringLiteralCount = bb.getInt(12)
 
         // Version-dependent offsets
