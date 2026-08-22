@@ -91,5 +91,6 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         }
         composable("debugger") { DebuggerScreen() }
         composable("emulator") { EmulatorScreen() }
+        composable("adminsearch") { AdminPasswordSearcherScreen(navController) }
     }
 }

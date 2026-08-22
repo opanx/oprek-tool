@@ -172,6 +172,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("🚀 Auto Dump", "One-click root game dump", Icons.Default.PlayArrow, AccentRed, "autodump"),
                 ToolItem("🔧 Debugger", "Breakpoints, memory, registers", Icons.Outlined.BugReport, AccentPurple, "debugger"),
                 ToolItem("⚙️ Emulator", "ARM64 ESIL emulation", Icons.Outlined.Memory, AccentCyan, "emulator"),
+                ToolItem("🔑 Admin Password Searcher", "Brute force, SQLi, panel detect", Icons.Default.Key, AccentRed, "adminsearch"),
             )
 
             LazyVerticalGrid(
