@@ -309,7 +309,7 @@ private fun scanForCracks(data: ByteArray, strategy: Int): List<CrackFinding> {
             }
 
             // MOV W0, #0 (return false → true): 0x52800000
-            if ((insn and 0xFFE00000) == 0x52800000.toInt()) {
+            if ((insn and 0xFFE00000.toInt()) == 0x52800000.toInt()) {
                 if (isNearAuthString(data, i, strings)) {
                     findings.add(CrackFinding(
                         offset = i, type = "ARM64-MOV-RET", pattern = String.format("MOV W%d, #0", insn and 0x1F),
