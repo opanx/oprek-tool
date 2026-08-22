@@ -89,7 +89,7 @@ fun AutoDumpScreen(navController: NavController) {
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
             // Game selector + scan mode
-            Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = SurfaceDark), shape = RoundedCornerShape(12.dp)) {
+            Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
                     Text("🎮 Quick Select", fontWeight = FontWeight.Bold, color = AccentCyan, fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))
@@ -189,7 +189,7 @@ fun AutoDumpScreen(navController: NavController) {
 
                                 // Find global-metadata.dat
                                 addLine("\n📦 Searching for global-metadata.dat...")
-                                val metaRegion = dataRegions.find { readFromProcess(pid, it, 4).contentEquals(byteArrayOf(0xAF.toByte(), 0x1B, 0xF1, 0xFA)) }
+                                val metaRegion = dataRegions.find { readFromProcess(pid, it, 4).contentEquals(byteArrayOf(0xAF.toByte(), 0x1B.toByte(), 0xF1.toByte(), 0xFA.toByte())) }
                                 if (metaRegion != null) {
                                     addLine("✅ Found global-metadata.dat (magic: 0xFAB11BAF)")
                                 } else {
@@ -270,7 +270,7 @@ fun AutoDumpScreen(navController: NavController) {
             }
 
             // Output
-            Card(Modifier.fillMaxWidth().weight(1f).padding(12.dp), colors = CardDefaults.cardColors(containerColor = SurfaceDark), shape = RoundedCornerShape(12.dp)) {
+            Card(Modifier.fillMaxWidth().weight(1f).padding(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("📋 Output (${output.size} lines)", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 13.sp)

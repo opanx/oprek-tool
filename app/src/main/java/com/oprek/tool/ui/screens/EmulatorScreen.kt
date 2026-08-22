@@ -258,7 +258,7 @@ fun EmulatorScreen() {
                         try {
                             val result = NativeLib.disassemble(code, pc, 1, archMode, 100)
                             Text(result, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.fillMaxWidth().background(Color(0xFF0D1117), RoundedCornerShape(8.dp)).padding(8.dp))
+                                    modifier = Modifier.fillMaxWidth().background(Color(0xFF0D1117), RoundedCornerShape(8.dp)).padding(8.dp))
                         } catch (e: Exception) {
                             Text("Disasm error: ${e.message}", color = AccentRed, fontSize = 11.sp)
                         }
