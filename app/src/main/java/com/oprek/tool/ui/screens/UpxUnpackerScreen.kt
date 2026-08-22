@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import com.oprek.tool.core.LoadedFileHelper
 import com.oprek.tool.core.NativeLib
 import com.oprek.tool.ui.theme.*
+import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -175,7 +176,7 @@ fun UpxUnpackerScreen(navController: NavController) {
             }
 
             // Output
-            Card(Modifier.fillMaxWidth().weight(1f).padding(12.dp), colors = CardDefaults.cardColors(containerColor = SurfaceDark), shape = RoundedCornerShape(12.dp)) {
+            Card(Modifier.fillMaxWidth().weight(1f).padding(12.dp), colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A2E)), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
                     Text("📋 Output (${output.size} lines)", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 13.sp)
                     Spacer(Modifier.height(8.dp))
