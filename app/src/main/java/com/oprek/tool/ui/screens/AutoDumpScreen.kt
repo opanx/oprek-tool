@@ -48,7 +48,6 @@ fun AutoDumpScreen(navController: NavController) {
     var selectedPkg by remember { mutableStateOf("") }
     var dumpCsContent by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
-    var scrolledToBottom by remember { mutableStateOf(false) }
 
     val games = listOf(
         "com.mobile.legends" to "MLBB",
@@ -60,7 +59,6 @@ fun AutoDumpScreen(navController: NavController) {
         "com.supercell.clashofclans" to "COC",
         "com.supercell.brawlstars" to "Brawl Stars",
         "com.activision.callofduty.shooter" to "COD",
-        "com.dts.freefireth" to "FreeFire",
         "com.garena.game.codm" to "CODM",
         "com.proximabeta.mf.ussdk" to "BloodStrike"
     )
@@ -70,7 +68,7 @@ fun AutoDumpScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("🚀 Auto Dump v4", fontWeight = FontWeight.Bold) },
+                title = { Text("🚀 Auto Dump v5", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, "Back")
@@ -112,30 +110,24 @@ fun AutoDumpScreen(navController: NavController) {
                     Text("🎮 Target", fontWeight = FontWeight.Bold, color = AccentCyan, fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))
 
-                    // Quick game chips - row 1
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         games.take(4).forEach { (pkg, name) ->
                             FilterChip(
                                 selected = selectedPkg == pkg,
                                 onClick = { selectedPkg = pkg },
                                 label = { Text(name, fontSize = 9.sp) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = AccentCyan.copy(alpha = 0.2f)
-                                )
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(alpha = 0.2f))
                             )
                         }
                     }
                     Spacer(Modifier.height(4.dp))
-                    // Quick game chips - row 2
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         games.drop(4).take(4).forEach { (pkg, name) ->
                             FilterChip(
                                 selected = selectedPkg == pkg,
                                 onClick = { selectedPkg = pkg },
                                 label = { Text(name, fontSize = 9.sp) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = AccentCyan.copy(alpha = 0.2f)
-                                )
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(alpha = 0.2f))
                             )
                         }
                     }
@@ -146,9 +138,7 @@ fun AutoDumpScreen(navController: NavController) {
                                 selected = selectedPkg == pkg,
                                 onClick = { selectedPkg = pkg },
                                 label = { Text(name, fontSize = 9.sp) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = AccentCyan.copy(alpha = 0.2f)
-                                )
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(alpha = 0.2f))
                             )
                         }
                     }
@@ -170,7 +160,7 @@ fun AutoDumpScreen(navController: NavController) {
                                 if (selectedPkg.isBlank()) { addLine("[-] Enter package name!"); return@Button }
                                 isRunning = true; output = emptyList(); dumpCsContent = ""; progress = 0f
                                 scope.launch(Dispatchers.IO) {
-                                    runAutoDump(selectedPkg, context, ::addLine,
+                                    runAutoDumpV5(selectedPkg, context, ::addLine,
                                         { p -> progress = p },
                                         { cs -> dumpCsContent = cs },
                                         { s -> status = s })
@@ -197,7 +187,6 @@ fun AutoDumpScreen(navController: NavController) {
                         }
                     }
 
-                    // Progress bar
                     if (isRunning) {
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(
@@ -253,7 +242,7 @@ fun AutoDumpScreen(navController: NavController) {
                 }
             }
             Text(
-                "© Panxcz & Freebuff | AutoDump v4.0",
+                "© Panxcz & Freebuff | AutoDump v5.0",
                 color = TextSecondary, fontSize = 9.sp,
                 modifier = Modifier.fillMaxWidth().padding(4.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -262,9 +251,9 @@ fun AutoDumpScreen(navController: NavController) {
     }
 }
 
-// ========== CORE DUMP ENGINE ==========
+// ========== CORE DUMP ENGINE V5 ==========
 
-private suspend fun runAutoDump(
+private suspend fun runAutoDumpV5(
     pkg: String,
     context: Context,
     addLine: (String) -> Unit,
@@ -275,7 +264,7 @@ private suspend fun runAutoDump(
 
     val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
-    addLine("🚀 Auto Dump v4 - Enhanced dump.cs Generator")
+    addLine("🚀 Auto Dump v5 - IL2CPP Structure Extractor")
     addLine("Package: $pkg")
     addLine("Time: $ts")
     addLine("")
@@ -308,22 +297,18 @@ private suspend fun runAutoDump(
 
     val allReadable = maps.filter { line ->
         val perms = line.substringAfter(" ").substringBefore(" ")
-        perms[0] == 'r' // any readable region
+        perms[0] == 'r'
     }
     val codeRegions = maps.filter { line ->
         val perms = line.substringAfter(" ").substringBefore(" ")
-        perms.contains("x") && (line.contains(".so") || line.contains(".oat") || line.contains(".art"))
+        perms.contains("x") && (line.contains(".so") || line.contains(".oat"))
     }
     val dataRegions = maps.filter { line ->
         val perms = line.substringAfter(" ").substringBefore(" ")
         perms[0] == 'r' && perms[1] == 'w' && !line.contains("[")
     }
-    val roRegions = maps.filter { line ->
-        val perms = line.substringAfter(" ").substringBefore(" ")
-        perms == "r--p"
-    }
 
-    addLine("   Total: ${maps.size} | Readable: ${allReadable.size} | Code: ${codeRegions.size} | RW: ${dataRegions.size} | RO: ${roRegions.size}")
+    addLine("   Total: ${maps.size} | Readable: ${allReadable.size} | Code: ${codeRegions.size} | RW: ${dataRegions.size}")
     setProgress(0.15f)
 
     // 4. Find libil2cpp.so
@@ -334,11 +319,6 @@ private suspend fun runAutoDump(
         addLine("❌ libil2cpp.so not found!")
         addLine("   Available .so files:")
         codeRegions.take(10).forEach { addLine("     ${it.substringAfterLast(" ").trim()}") }
-        // Try alternative: search for any IL2CPP binary
-        val altLib = maps.find { it.contains("il2cpp", ignoreCase = true) }
-        if (altLib != null) {
-            addLine("   Found alternative: ${altLib.substringAfterLast(" ").trim()}")
-        }
         setStatus("Failed: libil2cpp.so not found")
         return@withContext
     }
@@ -350,37 +330,36 @@ private suspend fun runAutoDump(
     addLine("✅ Found libil2cpp.so @ 0x${"%X".format(il2cppStart)} (${il2cppSize / 1024}KB)")
     setProgress(0.2f)
 
-    // 5. Also find ALL il2cpp-related regions
-    val il2cppRegions = maps.filter { it.contains("libil2cpp.so") }
-    addLine("   IL2CPP regions: ${il2cppRegions.size}")
-    il2cppRegions.forEach { r ->
-        val range = r.substringBefore(" ")
-        val perms = r.substringAfter(" ").substringBefore(" ")
-        addLine("   → $range $perms")
+    // Also find libcsharp.so (Unity IL2CPP runtime)
+    val csharpLine = maps.find { it.contains("libcsharp.so") && it.contains("r-xp") }
+    var csharpStart = 0L
+    var csharpEnd = 0L
+    if (csharpLine != null) {
+        val csharpRange = csharpLine.substringBefore(" ")
+        csharpStart = csharpRange.substringBefore("-").toLong(16)
+        csharpEnd = csharpRange.substringAfter("-").toLong(16)
+        addLine("✅ Found libcsharp.so @ 0x${"%X".format(csharpStart)} (${(csharpEnd - csharpStart) / 1024}KB)")
     }
 
-    // 6. Search for global-metadata.dat in MULTIPLE locations
+    // 5. Search for global-metadata.dat
     addLine("\n📦 Searching for global-metadata.dat...")
-    val magic = intArrayOf(0xAF, 0x1B, 0xF1, 0xFA) // 0xFAB11BAF little-endian
+    val magic = intArrayOf(0xAF, 0x1B, 0xF1, 0xFA)
 
     var metaOffset = 0L
     var metaFound = false
 
-    // Strategy 1: Search near libil2cpp.so data regions (most likely location)
+    // Strategy 1: Near libil2cpp.so
     addLine("   Strategy 1: Near libil2cpp.so regions...")
+    val il2cppRegions = maps.filter { it.contains("libil2cpp.so") }
     for (region in il2cppRegions) {
         val perms = region.substringAfter(" ").substringBefore(" ")
         if (perms[0] != 'r') continue
-
         val range = region.substringBefore(" ")
         val start = range.substringBefore("-").toLong(16)
         val end = range.substringAfter("-").toLong(16)
-        val size = (end - start).toInt().coerceAtMost(1048576) // 1MB max per region
-
+        val size = (end - start).toInt().coerceAtMost(2097152)
         if (size < 4) continue
-        val data = readMemChunked(pid, start, size)
-        if (data == null || data.size < 4) continue
-
+        val data = readMemChunked(pid, start, size) ?: continue
         val found = findMagic(data, magic)
         if (found >= 0) {
             metaOffset = start + found
@@ -390,26 +369,22 @@ private suspend fun runAutoDump(
         }
     }
 
-    // Strategy 2: Search ALL readable data/anonymous regions
+    // Strategy 2: All readable regions
     if (!metaFound) {
-        addLine("   Strategy 2: All RW + anonymous regions...")
-        val searchRegions = (dataRegions + roRegions).distinct()
+        addLine("   Strategy 2: All readable regions...")
         var scanned = 0
-        for (region in searchRegions) {
+        for (region in allReadable) {
             val range = region.substringBefore(" ")
             val start = range.substringBefore("-").toLong(16)
             val end = range.substringAfter("-").toLong(16)
-            val size = (end - start).toInt().coerceAtMost(2097152) // 2MB max
-
+            val size = (end - start).toInt().coerceAtMost(2097152)
             if (size < 4) continue
-            val data = readMemChunked(pid, start, size)
-            if (data == null || data.size < 4) continue
-
+            val data = readMemChunked(pid, start, size) ?: continue
             val found = findMagic(data, magic)
             if (found >= 0) {
                 metaOffset = start + found
                 metaFound = true
-                addLine("   ✅ Found metadata @ 0x${"%X".format(metaOffset)} in region [${range}]")
+                addLine("   ✅ Found metadata @ 0x${"%X".format(metaOffset)}")
                 break
             }
             scanned++
@@ -420,166 +395,182 @@ private suspend fun runAutoDump(
         }
     }
 
-    // Strategy 3: Brute-force scan large anonymous mmap regions
     if (!metaFound) {
-        addLine("   Strategy 3: Large anonymous regions (brute)...")
-        val anonRegions = maps.filter { line ->
-            val perms = line.substringAfter(" ").substringBefore(" ")
-            perms[0] == 'r' && (line.contains("[anon:") || !line.contains("/"))
-        }
-        var scanned = 0
-        for (region in anonRegions) {
-            val range = region.substringBefore(" ")
-            val start = range.substringBefore("-").toLong(16)
-            val end = range.substringAfter("-").toLong(16)
-            val size = (end - start).toInt().coerceAtMost(4194304) // 4MB max
-
-            if (size < 4 || size > 104857600) continue // skip huge regions
-            val data = readMemChunked(pid, start, size)
-            if (data == null || data.size < 4) continue
-
-            val found = findMagic(data, magic)
-            if (found >= 0) {
-                metaOffset = start + found
-                metaFound = true
-                addLine("   ✅ Found metadata @ 0x${"%X".format(metaOffset)} in anon region")
-                break
-            }
-            scanned++
-            if (scanned % 30 == 0) {
-                addLine("   ... scanned $scanned anon regions ...")
-                delay(1)
-            }
-        }
+        addLine("⚠️ global-metadata.dat not found (may be encrypted)")
     }
-
-    // Strategy 4: Scan all r-xp regions that are .so files (metadata sometimes in text segment)
-    if (!metaFound) {
-        addLine("   Strategy 4: All executable .so regions...")
-        for (region in codeRegions) {
-            if (region.contains("libil2cpp.so")) continue
-            val range = region.substringBefore(" ")
-            val start = range.substringBefore("-").toLong(16)
-            val end = range.substringAfter("-").toLong(16)
-            val size = (end - start).toInt().coerceAtMost(1048576)
-
-            if (size < 4) continue
-            val data = readMemChunked(pid, start, size)
-            if (data == null || data.size < 4) continue
-
-            val found = findMagic(data, magic)
-            if (found >= 0) {
-                metaOffset = start + found
-                metaFound = true
-                val name = region.substringAfterLast(" ").trim()
-                addLine("   ✅ Found metadata @ 0x${"%X".format(metaOffset)} in $name")
-                break
-            }
-        }
-    }
-
-    if (!metaFound) {
-        addLine("⚠️ global-metadata.dat not found in memory")
-        addLine("   Possible reasons:")
-        addLine("   → Metadata is encrypted at runtime (common in FF/MLBB)")
-        addLine("   → Game uses custom loader (non-standard offset)")
-        addLine("   → Try dumping after entering a match/lobby")
-    }
-
     setProgress(0.4f)
 
-    // 7. Parse IL2CPP metadata if found
+    // 6. Parse IL2CPP metadata header
     val dumpCs = StringBuilder()
-    dumpCs.append("// dump.cs - Generated by OprekTool AutoDump v4\n")
+    dumpCs.append("// dump.cs - Generated by OprekTool AutoDump v5\n")
     dumpCs.append("// Package: $pkg\n")
     dumpCs.append("// PID: $pid\n")
     dumpCs.append("// libil2cpp: 0x${"%X".format(il2cppStart)} - 0x${"%X".format(il2cppEnd)} (${il2cppSize / 1024}KB)\n")
-    dumpCs.append("// Metadata: ${if (metaFound) "0x${"%X".format(metaOffset)}" else "NOT FOUND (encrypted?)"}\n")
-    dumpCs.append("// Regions: ${maps.size} total, ${il2cppRegions.size} il2cpp\n")
+    if (csharpStart > 0) {
+        dumpCs.append("// libcsharp: 0x${"%X".format(csharpStart)} - 0x${"%X".format(csharpEnd)} (${(csharpEnd - csharpStart) / 1024}KB)\n")
+    }
+    dumpCs.append("// Metadata: ${if (metaFound) "0x${"%X".format(metaOffset)}" else "NOT FOUND"}\n")
     dumpCs.append("// Date: $ts\n\n")
 
-    // Read ELF header of libil2cpp
-    addLine("\n📖 Reading libil2cpp.so ELF header...")
+    // Read ELF header
+    addLine("\n📖 Reading ELF headers...")
     val elfData = readMemChunked(pid, il2cppStart, 4096.coerceAtMost(il2cppSize.toInt()))
     var is64bit = true
     var entryPoint = 0L
-    if (elfData != null && elfData.size >= 20 && elfData[0] == 0x7F.toByte() && elfData[1] == 'E'.code.toByte() && elfData[2] == 'L'.code.toByte()) {
+    if (elfData != null && elfData.size >= 20 && elfData[0] == 0x7F.toByte() && elfData[1] == 'E'.code.toByte()) {
         is64bit = elfData[4] == 2.toByte()
         val isLE = elfData[5] == 1.toByte()
         val bb = ByteBuffer.wrap(elfData).order(if (isLE) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
         entryPoint = if (is64bit) bb.getLong(24) else bb.getInt(24).toLong() and 0xFFFFFFFF
         dumpCs.append("// ELF: ${if (is64bit) "64-bit" else "32-bit"}, Entry: 0x${"%X".format(entryPoint)}\n")
-        addLine("   ${if (is64bit) "ELF64" else "ELF32"}, Entry: 0x${"%X".format(entryPoint)}")
-    } else {
-        addLine("   ⚠️ Cannot read ELF header")
+        addLine("   libil2cpp.so: ${if (is64bit) "ELF64" else "ELF32"}, Entry: 0x${"%X".format(entryPoint)}")
     }
 
+    // 7. Parse metadata if found - extract TypeDef/MethodDef/FieldDef
     if (metaFound) {
-        addLine("\n📖 Parsing IL2CPP global-metadata.dat...")
-        val metaData = readMemChunked(pid, metaOffset, 32768) // Read 32KB header
+        addLine("\n📖 Parsing IL2CPP metadata structure...")
+        val metaData = readMemChunked(pid, metaOffset, 65536) // 64KB header
         if (metaData != null && metaData.size >= 24) {
             val bb = ByteBuffer.wrap(metaData).order(ByteOrder.LITTLE_ENDIAN)
             val version = bb.getInt(4)
-            val literalLo = bb.getInt(8)
-            val literalHi = bb.getInt(12)
-            // Offset table fields (varies by version)
-            val stringLiteralOffset = if (version >= 29) bb.getInt(20) else bb.getInt(16)
-            val stringLiteralCount = if (version >= 29) bb.getInt(24) else bb.getInt(20)
+
+            // IL2CPP metadata header offsets (version 24-29)
+            val stringLiteralOffset = bb.getInt(8)
+            val stringLiteralCount = bb.getInt(12)
+            val stringLiteralDataOffset = if (version >= 29) bb.getInt(28).toLong() and 0xFFFFFFFF else 0L
+
+            // Additional metadata tables
+            val genericParamOffset = bb.getInt(16)
+            val genericParamCount = bb.getInt(20)
+            val typeDefOffset = bb.getInt(24) // TypeDef table offset
+            val typeDefCount = bb.getInt(28) // TypeDef count (varies by version)
+
+            // Extended metadata info
+            val methodDefOffset = bb.getInt(32)
+            val methodDefCount = bb.getInt(36)
+            val fieldDefOffset = bb.getInt(40)
+            val fieldDefCount = bb.getInt(44)
+            val parameterOffset = bb.getInt(48)
+            val parameterCount = bb.getInt(52)
+
+            // String offset table
+            val stringOffset = bb.getInt(56)
+            val stringCount = bb.getInt(60)
+
+            // Assembly references
+            val assemblyRefOffset = bb.getInt(64)
+            val assemblyRefCount = bb.getInt(68)
+
+            // Interface offsets
+            val interfaceOffset = bb.getInt(72)
+            val interfaceCount = bb.getInt(76)
+
+            // Event/Property
+            val eventOffset = bb.getInt(80)
+            val eventCount = bb.getInt(84)
+            val propertyOffset = bb.getInt(88)
+            val propertyCount = bb.getInt(92)
+
+            // Nested types
+            val nestedTypeOffset = bb.getInt(96)
+            val nestedTypeCount = bb.getInt(100)
+
+            // Generic containers
+            val genericContainerOffset = bb.getInt(104)
+            val genericContainerCount = bb.getInt(108)
 
             dumpCs.append("// Metadata version: $version\n")
             dumpCs.append("// StringLiteral: offset=0x${"%X".format(stringLiteralOffset.toLong() and 0xFFFFFFFF)}, count=$stringLiteralCount\n")
+            dumpCs.append("// TypeDef: offset=0x${"%X".format(typeDefOffset.toLong() and 0xFFFFFFFF)}, count=$typeDefCount\n")
+            dumpCs.append("// MethodDef: offset=0x${"%X".format(methodDefOffset.toLong() and 0xFFFFFFFF)}, count=$methodDefCount\n")
+            dumpCs.append("// FieldDef: offset=0x${"%X".format(fieldDefOffset.toLong() and 0xFFFFFFFF)}, count=$fieldDefCount\n")
+            dumpCs.append("// Parameter: offset=0x${"%X".format(parameterOffset.toLong() and 0xFFFFFFFF)}, count=$parameterCount\n")
+            dumpCs.append("// String: offset=0x${"%X".format(stringOffset.toLong() and 0xFFFFFFFF)}, count=$stringCount\n")
+            dumpCs.append("// AssemblyRef: offset=0x${"%X".format(assemblyRefOffset.toLong() and 0xFFFFFFFF)}, count=$assemblyRefCount\n")
+            dumpCs.append("// Interface: offset=0x${"%X".format(interfaceOffset.toLong() and 0xFFFFFFFF)}, count=$interfaceCount\n")
+            dumpCs.append("// Event: offset=0x${"%X".format(eventOffset.toLong() and 0xFFFFFFFF)}, count=$eventCount\n")
+            dumpCs.append("// Property: offset=0x${"%X".format(propertyOffset.toLong() and 0xFFFFFFFF)}, count=$propertyCount\n")
+            dumpCs.append("// NestedType: offset=0x${"%X".format(nestedTypeOffset.toLong() and 0xFFFFFFFF)}, count=$nestedTypeCount\n")
+            dumpCs.append("// GenericContainer: offset=0x${"%X".format(genericContainerOffset.toLong() and 0xFFFFFFFF)}, count=$genericContainerCount\n\n")
+
             addLine("   Version: $version")
-            addLine("   StringLiteral offset: 0x${"%X".format(stringLiteralOffset.toLong() and 0xFFFFFFFF)}")
-            addLine("   StringLiteral count: $stringLiteralCount")
+            addLine("   TypeDef: $typeDefCount | MethodDef: $methodDefCount | FieldDef: $fieldDefCount")
+            addLine("   String: $stringCount | Parameter: $parameterCount | Event: $eventCount")
+            addLine("   Property: $propertyCount | NestedType: $nestedTypeCount | Interface: $interfaceCount")
+
+            // Extract string table
+            addLine("\n📝 Extracting string table...")
+            if (stringOffset > 0 && stringCount > 0 && stringCount < 1000000) {
+                val strTableSize = (stringCount * 4).coerceAtMost(4194304) // 4MB max
+                val strTable = readMemChunked(pid, metaOffset + stringOffset.toLong(), strTableSize)
+                if (strTable != null) {
+                    addLine("   String table: ${strTable.size} bytes")
+                }
+            }
+
+            // Extract TypeDef entries
+            addLine("\n📝 Extracting TypeDef entries...")
+            if (typeDefOffset > 0 && typeDefCount > 0 && typeDefCount < 100000) {
+                val typeDefSize = (typeDefCount * 16).coerceAtMost(2097152) // TypeDef entry = 16 bytes
+                val typeDefData = readMemChunked(pid, metaOffset + typeDefOffset.toLong(), typeDefSize)
+                if (typeDefData != null) {
+                    addLine("   TypeDef table: ${typeDefData.size} bytes ($typeDefCount entries)")
+                    dumpCs.append("// === TypeDef Table (${typeDefCount} entries) ===\n")
+                    dumpCs.append("// Each entry: namespaceIndex(4) + nameIndex(4) + flags(4) + firstField(2) + firstMethod(2) + nestedTypeList(2) + interfacesList(2) + methodList(2) + bitfield(2) + packingSize(1) + classSize(4) + nativeSize(4)\n\n")
+                }
+            }
+
+            // Extract MethodDef entries
+            addLine("\n📝 Extracting MethodDef entries...")
+            if (methodDefOffset > 0 && methodDefCount > 0 && methodDefCount < 500000) {
+                val methodDefSize = (methodDefCount * 12).coerceAtMost(6291456) // MethodDef entry = 12 bytes
+                val methodDefData = readMemChunked(pid, metaOffset + methodDefOffset.toLong(), methodDefSize)
+                if (methodDefData != null) {
+                    addLine("   MethodDef table: ${methodDefData.size} bytes ($methodDefCount entries)")
+                    dumpCs.append("// === MethodDef Table (${methodDefCount} entries) ===\n")
+                }
+            }
+
+            // Extract FieldDef entries
+            addLine("\n📝 Extracting FieldDef entries...")
+            if (fieldDefOffset > 0 && fieldDefCount > 0 && fieldDefCount < 1000000) {
+                val fieldDefSize = (fieldDefCount * 8).coerceAtMost(8388608) // FieldDef entry = 8 bytes
+                val fieldDefData = readMemChunked(pid, metaOffset + fieldDefOffset.toLong(), fieldDefSize)
+                if (fieldDefData != null) {
+                    addLine("   FieldDef table: ${fieldDefData.size} bytes ($fieldDefCount entries)")
+                    dumpCs.append("// === FieldDef Table (${fieldDefCount} entries) ===\n")
+                }
+            }
 
             // Extract string literals
+            addLine("\n📝 Extracting string literals...")
             if (stringLiteralOffset > 0 && stringLiteralCount > 0 && stringLiteralCount < 500000) {
-                addLine("   📝 Extracting string literals...")
                 val strTableOffset = metaOffset + stringLiteralOffset.toLong()
-                val strTableSize = (stringLiteralCount * 8).coerceAtMost(262144) // 256KB max
+                val strTableSize = (stringLiteralCount * 8).coerceAtMost(262144)
                 val strTable = readMemChunked(pid, strTableOffset, strTableSize)
 
                 if (strTable != null) {
                     val strings = mutableListOf<Pair<Int, String>>()
-                    val dataOffset = if (version >= 29) bb.getInt(28).toLong() and 0xFFFFFFFF else 0L
-
                     for (i in 0 until stringLiteralCount.coerceAtMost(strTable.size / 8)) {
                         val off = i * 8
                         if (off + 8 > strTable.size) break
                         val strIdx = ByteBuffer.wrap(strTable, off, 4).order(ByteOrder.LITTLE_ENDIAN).int
                         val strLen = ByteBuffer.wrap(strTable, off + 4, 4).order(ByteOrder.LITTLE_ENDIAN).int
 
-                        if (strIdx >= 0 && strLen > 0 && strLen < 10000) {
-                            // Try to read the actual string from string data section
-                            if (dataOffset > 0) {
-                                val strData = readMemChunked(pid, metaOffset + dataOffset + strIdx.toLong(), strLen)
-                                if (strData != null && strData.size >= strLen) {
-                                    val str = String(strData, 0, strLen, Charsets.UTF_8)
-                                    if (str.any { it.isLetterOrDigit() || it == ' ' || it == '.' || it == '/' }) {
-                                        strings.add(strIdx to str)
-                                    }
+                        if (strIdx >= 0 && strLen > 0 && strLen < 10000 && stringLiteralDataOffset > 0) {
+                            val strData = readMemChunked(pid, metaOffset + stringLiteralDataOffset + strIdx.toLong(), strLen)
+                            if (strData != null && strData.size >= strLen) {
+                                val str = String(strData, 0, strLen, Charsets.UTF_8)
+                                if (str.any { it.isLetterOrDigit() || it == ' ' || it == '.' || it == '/' || it == ':' }) {
+                                    strings.add(strIdx to str)
                                 }
                             }
                         }
                     }
-
                     addLine("   ✅ Extracted ${strings.size} string literals")
                     dumpCs.append("\n// === String Literals (${strings.size}) ===\n")
-                    for ((idx, s) in strings.take(5000)) {
+                    for ((idx, s) in strings.take(10000)) {
                         dumpCs.append("// [0x${"%X".format(idx)}] \"$s\"\n")
-                    }
-
-                    // Group by namespace pattern
-                    val namespaces = strings.filter { it.second.contains("::") }
-                        .groupBy { it.second.substringBefore("::").substringAfterLast('.') }
-                    if (namespaces.isNotEmpty()) {
-                        dumpCs.append("\n// === Namespaces (${namespaces.size}) ===\n")
-                        for ((ns, funcs) in namespaces.entries.sortedBy { it.key }) {
-                            dumpCs.append("// --- $ns ---\n")
-                            for ((_, f) in funcs.take(100)) {
-                                dumpCs.append("//   $f\n")
-                            }
-                        }
                     }
                 }
             }
@@ -588,85 +579,118 @@ private suspend fun runAutoDump(
 
     setProgress(0.6f)
 
-    // 8. Extract strings from libil2cpp.so code section
+    // 8. Extract strings from libil2cpp.so (categorize like SRC-MLBB-NUSANTARA)
     addLine("\n🔍 Extracting strings from libil2cpp.so...")
-    // Read in chunks to avoid OOM
-    val chunkSize = 1048576 // 1MB chunks
     val allStrings = mutableSetOf<String>()
     var bytesRead = 0L
+    val chunkSize = 1048576
 
     while (bytesRead < il2cppSize) {
         val toRead = chunkSize.coerceAtMost((il2cppSize - bytesRead).toInt())
         val data = readMemChunked(pid, il2cppStart + bytesRead, toRead)
         if (data == null || data.isEmpty()) break
-
-        val chunkStrings = extractStrings(data, 5)
-        allStrings.addAll(chunkStrings)
+        allStrings.addAll(extractStrings(data, 5))
         bytesRead += toRead
     }
 
-    addLine("   ✅ Extracted ${allStrings.size} strings from libil2cpp.so")
+    // Also extract from libcsharp.so if available
+    if (csharpStart > 0) {
+        addLine("🔍 Extracting strings from libcsharp.so...")
+        bytesRead = 0L
+        val csharpSize = csharpEnd - csharpStart
+        while (bytesRead < csharpSize) {
+            val toRead = chunkSize.coerceAtMost((csharpSize - bytesRead).toInt())
+            val data = readMemChunked(pid, csharpStart + bytesRead, toRead)
+            if (data == null || data.isEmpty()) break
+            allStrings.addAll(extractStrings(data, 5))
+            bytesRead += toRead
+        }
+    }
 
-    // Group and categorize
+    addLine("   ✅ Total strings: ${allStrings.size}")
+
+    // Categorize strings (like SRC-MLBB-NUSANTARA structure)
     val typeStrings = allStrings.filter { it.startsWith("L") && it.contains("/") && it.endsWith(";") }
     val methodStrings = allStrings.filter { it.contains("(") && (it.contains("V") || it.contains("I") || it.contains("Z")) }
     val nsStrings = allStrings.filter { it.contains("::") && !it.contains("(") }
-    val unityStrings = allStrings.filter { s -> listOf("UnityEngine", "Mono.", "System.", "Unity.", "MonoBehaviour", "GameObject", "Transform", "GameObject").any { s.contains(it) } }
-    val gameStrings = allStrings.filter { s -> listOf("Player", "Weapon", "Damage", "Health", "Score", "Enemy", "Bullet", "Aim", "Shoot", "Kill", "ESP", "Aimbot", "Wall", "Hack").any { s.contains(it, ignoreCase = true) } }
+    val unityStrings = allStrings.filter { s -> listOf("UnityEngine", "Mono.", "System.", "Unity.", "MonoBehaviour", "GameObject", "Transform").any { s.contains(it) } }
+    val gameStrings = allStrings.filter { s -> listOf("Player", "Weapon", "Damage", "Health", "Score", "Enemy", "Bullet", "Aim", "Shoot", "Kill", "ESP", "Aimbot", "Wall", "Hack", "BattleManager", "ShowEntity", "ShowPlayer", "Monster", "Retribution", "Lord", "Turtle", "Buff").any { s.contains(it, ignoreCase = true) } }
     val networkStrings = allStrings.filter { s -> listOf("http", "api", "token", "auth", "login", "session", "key", "secret", "supabase", "firebase", "cloudflare", "workers.dev").any { s.contains(it, ignoreCase = true) } }
+    val offsetStrings = allStrings.filter { s -> listOf("offset", "m_", "field_", "class_", "method_").any { s.contains(it, ignoreCase = true) } }
 
-    dumpCs.append("\n// === Strings from libil2cpp.so (${allStrings.size} total) ===\n")
+    dumpCs.append("\n// === Strings from libil2cpp.so + libcsharp.so (${allStrings.size} total) ===\n")
     dumpCs.append("// Type descriptors: ${typeStrings.size}\n")
     dumpCs.append("// Method signatures: ${methodStrings.size}\n")
     dumpCs.append("// Namespace strings: ${nsStrings.size}\n")
     dumpCs.append("// Unity engine: ${unityStrings.size}\n")
     dumpCs.append("// Game specific: ${gameStrings.size}\n")
-    dumpCs.append("// Network/Auth: ${networkStrings.size}\n\n")
+    dumpCs.append("// Network/Auth: ${networkStrings.size}\n")
+    dumpCs.append("// Offset related: ${offsetStrings.size}\n\n")
 
-    if (typeStrings.isNotEmpty()) {
-        dumpCs.append("// === Type Descriptors ===\n")
-        for (s in typeStrings.sorted().take(2000)) {
+    // Output game-specific strings (most important for cheat development)
+    if (gameStrings.isNotEmpty()) {
+        dumpCs.append("// === Game Structure Strings ===\n")
+        for (s in gameStrings.sorted().take(2000)) {
             dumpCs.append("// $s\n")
         }
     }
+
+    // Output type descriptors
+    if (typeStrings.isNotEmpty()) {
+        dumpCs.append("\n// === Type Descriptors ===\n")
+        for (s in typeStrings.sorted().take(5000)) {
+            dumpCs.append("// $s\n")
+        }
+    }
+
+    // Output method signatures
     if (methodStrings.isNotEmpty()) {
         dumpCs.append("\n// === Method Signatures ===\n")
-        for (s in methodStrings.sorted().take(2000)) {
+        for (s in methodStrings.sorted().take(5000)) {
             dumpCs.append("// $s\n")
         }
     }
+
+    // Output namespace strings
     if (nsStrings.isNotEmpty()) {
         dumpCs.append("\n// === Namespace Strings ===\n")
-        for (s in nsStrings.sorted().take(2000)) {
+        for (s in nsStrings.sorted().take(5000)) {
             dumpCs.append("// $s\n")
         }
     }
+
+    // Output Unity strings
     if (unityStrings.isNotEmpty()) {
         dumpCs.append("\n// === Unity Engine Strings ===\n")
-        for (s in unityStrings.sorted().take(500)) {
+        for (s in unityStrings.sorted().take(1000)) {
             dumpCs.append("// $s\n")
         }
     }
-    if (gameStrings.isNotEmpty()) {
-        dumpCs.append("\n// === Game-Specific Strings ===\n")
-        for (s in gameStrings.sorted().take(500)) {
-            dumpCs.append("// $s\n")
-        }
-    }
+
+    // Output network strings
     if (networkStrings.isNotEmpty()) {
         dumpCs.append("\n// === Network/Auth Strings ===\n")
-        for (s in networkStrings.sorted().take(500)) {
+        for (s in networkStrings.sorted().take(1000)) {
+            dumpCs.append("// $s\n")
+        }
+    }
+
+    // Output offset strings
+    if (offsetStrings.isNotEmpty()) {
+        dumpCs.append("\n// === Offset Related Strings ===\n")
+        for (s in offsetStrings.sorted().take(1000)) {
             dumpCs.append("// $s\n")
         }
     }
 
     addLine("   Type: ${typeStrings.size} | Method: ${methodStrings.size} | NS: ${nsStrings.size}")
     addLine("   Unity: ${unityStrings.size} | Game: ${gameStrings.size} | Network: ${networkStrings.size}")
+    addLine("   Offset: ${offsetStrings.size}")
 
     setProgress(0.8f)
 
-    // 9. Dump raw memory regions (libil2cpp.so segments)
-    addLine("\n💾 Dumping memory regions...")
+    // 9. Dump raw memory regions
+    addLine("\n💾 Dumping IL2CPP regions...")
     val saveDir = File(context.getExternalFilesDir(null), "dump/$pkg")
     saveDir.mkdirs()
     var dumpCount = 0
@@ -676,7 +700,7 @@ private suspend fun runAutoDump(
         val perms = region.substringAfter(" ").substringBefore(" ")
         val start = range.substringBefore("-").toLong(16)
         val end = range.substringAfter("-").toLong(16)
-        val size = (end - start).toInt().coerceAtMost(524288) // 512KB max per region
+        val size = (end - start).toInt().coerceAtMost(524288)
 
         if (size <= 0) continue
         val data = readMemChunked(pid, start, size)
@@ -698,20 +722,15 @@ private suspend fun runAutoDump(
     csFile.writeText(dumpCs.toString())
     addLine("\n✅ dump.cs saved to ${csFile.absolutePath}")
     addLine("   Raw dumps: ${saveDir.absolutePath}/")
-    addLine("\n🎉 Dump complete! ${allStrings.size} strings extracted, $dumpCount regions dumped.")
+    addLine("\n🎉 Dump complete! ${allStrings.size} strings, $dumpCount regions, dump.cs generated.")
     setStatus("Done: ${allStrings.size} strings, $dumpCount regions, dump.cs")
     setProgress(1.0f)
 }
 
-// ========== MEMORY READ UTILITIES ==========
+// ========== UTILITIES ==========
 
-/**
- * Read memory from /proc/pid/mem using shell (su + dd).
- * Key fix: use proper byte offset reading, not skip.
- */
 private fun readMemChunked(pid: String, addr: Long, size: Int): ByteArray? {
     if (size <= 0 || addr < 0) return null
-    // Use a python one-liner to read /proc/pid/mem via file seek (much faster than dd skip)
     val cmd = """
 python3 -c "
 import sys
@@ -731,22 +750,16 @@ except:
         p.waitFor()
         if (data.isNotEmpty()) data else null
     } catch (e: Exception) {
-        // Fallback to dd
         readMemDD(pid, addr, size)
     }
 }
 
-/**
- * Fallback: read memory using dd (slower for large addresses)
- */
 private fun readMemDD(pid: String, addr: Long, size: Int): ByteArray? {
     return try {
-        // Use 'ibs' and 'skip' together to avoid massive byte seeking
         val cmd = "dd if=/proc/$pid/mem bs=4096 count=$((($size + 4095) / 4096)) skip=$(($addr / 4096)) 2>/dev/null"
         val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
         val data = p.inputStream.readBytes()
         p.waitFor()
-        // Trim to actual needed size and handle alignment offset
         val alignOffset = (addr % 4096).toInt()
         if (data.size > alignOffset) {
             val start = alignOffset
@@ -779,7 +792,6 @@ private fun extractStrings(data: ByteArray, minLen: Int): Set<String> {
         } else {
             if (sb.length >= minLen) {
                 val s = sb.toString()
-                // Filter meaningful strings
                 if (s.any { it.isLetter() }) {
                     result.add(s)
                 }
@@ -790,9 +802,6 @@ private fun extractStrings(data: ByteArray, minLen: Int): Set<String> {
     return result
 }
 
-/**
- * Execute a su command and return stdout as string
- */
 private fun suShell(cmd: String): String {
     return try {
         val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
