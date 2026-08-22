@@ -38,8 +38,9 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
     var minLength by remember { mutableStateOf(4) }
     var showSettings by remember { mutableStateOf(false) }
 
-    val filteredStrings = remember(strings, filterQuery, filterType) {
-        strings.filter { entry ->
+    val stringValues = strings.map { it.value }
+    val filteredStrings = remember(stringValues, filterQuery, filterType) {
+        stringValues.filter { entry ->
             val matchesQuery = filterQuery.isEmpty() || entry.contains(filterQuery, ignoreCase = true)
             val matchesType = when (filterType) {
                 1 -> entry.contains("http", true) || entry.contains(".com", true) || entry.contains(".net", true) || entry.contains(".id", true)

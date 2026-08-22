@@ -298,7 +298,7 @@ private fun scanForCracks(data: ByteArray, strategy: Int): List<CrackFinding> {
             }
 
             // RET: 0xD65F03C0
-            if (insn == 0xD65F03C0L) {
+            if (insn == 0xD65F03C0.toInt()) {
                 if (isNearAuthString(data, i, strings)) {
                     findings.add(CrackFinding(
                         offset = i, type = "ARM64-RET", pattern = "RET (login return point)",
@@ -309,7 +309,7 @@ private fun scanForCracks(data: ByteArray, strategy: Int): List<CrackFinding> {
             }
 
             // MOV W0, #0 (return false → true): 0x52800000
-            if ((insn and 0xFFE00000) == 0x52800000L) {
+            if ((insn and 0xFFE00000) == 0x52800000.toInt()) {
                 if (isNearAuthString(data, i, strings)) {
                     findings.add(CrackFinding(
                         offset = i, type = "ARM64-MOV-RET", pattern = String.format("MOV W%d, #0", insn and 0x1F),
@@ -436,22 +436,22 @@ private fun applyCrack(data: ByteArray, offset: Int, strategy: Int) {
     when (strategy) {
         0 -> { // NOP (ARM64: 0x1F2003D5, ARM32: 0xE1A00000)
             if (data.size > offset + 3) {
-                data[offset] = 0x1F.toByte(); data[offset+1] = 0x20; data[offset+2] = 0x03; data[offset+3] = 0xD5.toByte()
+                data[offset] = 0x1F.toByte(); data[offset+1] = 0x20.toByte(); data[offset+2] = 0x03.toByte(); data[offset+3] = 0xD5.toByte()
             }
         }
         1 -> { // B-always (ARM64: 0x14000000 | imm26=1 → skip, ARM32: 0xEA000000)
             if (data.size > offset + 3) {
-                data[offset] = 0x00.toByte(); data[offset+1] = 0x00; data[offset+2] = 0x00; data[offset+3] = 0x14.toByte()
+                data[offset] = 0x00.toByte(); data[offset+1] = 0x00.toByte(); data[offset+2] = 0x00.toByte(); data[offset+3] = 0x14.toByte()
             }
         }
         2 -> { // MOV W0/X0, #0 → return 0
             if (data.size > offset + 3) {
-                data[offset] = 0x00.toByte(); data[offset+1] = 0x00; data[offset+2] = 0x80; data[offset+3] = 0x52.toByte()
+                data[offset] = 0x00.toByte(); data[offset+1] = 0x00.toByte(); data[offset+2] = 0x80.toByte(); data[offset+3] = 0x52.toByte()
             }
         }
         3 -> { // XOR R0/W0, R0, R0 → return 0
             if (data.size > offset + 3) {
-                data[offset] = 0x00.toByte(); data[offset+1] = 0x00; data[offset+2] = 0x00; data[offset+3] = 0xCA.toByte()
+                data[offset] = 0x00.toByte(); data[offset+1] = 0x00.toByte(); data[offset+2] = 0x00.toByte(); data[offset+3] = 0xCA.toByte()
             }
         }
     }
