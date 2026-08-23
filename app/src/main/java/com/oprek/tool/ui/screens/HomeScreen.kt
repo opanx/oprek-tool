@@ -1,5 +1,5 @@
-package com.oprek.tool.ui.screens
 @file:Suppress("DEPRECATION")
+package com.oprek.tool.ui.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
