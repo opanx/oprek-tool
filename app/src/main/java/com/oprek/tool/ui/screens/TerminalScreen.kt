@@ -110,7 +110,7 @@ fun TerminalScreen(navController: NavController) {
                         addLine("df             - Show disk usage")
                         addLine("ps             - Show running processes")
                     }
-                    "pwd" -> withContext(Dispatchers.Main) { addLine(System.getProperty("user.dir")) }
+                    "pwd" -> withContext(Dispatchers.Main) { addLine(System.getProperty("user.dir") ?: ".") }
                     "date" -> withContext(Dispatchers.Main) { addLine(java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())) }
                     "whoami" -> withContext(Dispatchers.Main) { addLine(System.getProperty("user.name") ?: "root") }
                     "info" -> withContext(Dispatchers.Main) {
