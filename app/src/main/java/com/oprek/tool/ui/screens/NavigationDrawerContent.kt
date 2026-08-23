@@ -53,6 +53,7 @@ val toolCategories = listOf(
         NavToolItem("Patch Instructions", "patchinst", Icons.Default.EditNote),
         NavToolItem("UPX Unpacker", "upx", Icons.Default.Unarchive),
         NavToolItem("Admin Password Searcher", "adminpass", Icons.Default.AdminPanelSettings),
+        NavToolItem("SO Patcher", "sopatch", Icons.Default.Build),
     ), AccentOrange),
     NavToolCategory("🔐 Crypto & Deobfuscate", Icons.Default.EnhancedEncryption, listOf(
         NavToolItem("Deobfuscate", "deobfuscate", Icons.Default.Psychology),
@@ -68,6 +69,8 @@ val toolCategories = listOf(
         NavToolItem("JNI Builder", "jnibuilder", Icons.Default.Code),
         NavToolItem("APK Signer", "apksigner", Icons.Default.Verified),
         NavToolItem("APK Tools", "apkmisc", Icons.Default.Build),
+        NavToolItem("Batch Renamer", "batchrenamer", Icons.Default.DriveFileRename),
+        NavToolItem("Permission Remover", "permremover", Icons.Default.RemoveCircle),
     ), AccentRed),
     NavToolCategory("🛡️ Security", Icons.Default.Shield, listOf(
         NavToolItem("Certificate Analyzer", "certanalysis", Icons.Default.Verified),

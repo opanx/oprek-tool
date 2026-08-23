@@ -108,5 +108,8 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("memscan") { MemoryScannerScreen(navController) }
         composable("apkbuilder") { ApkBuilderScreen(navController) }
         composable("jnibuilder") { JniBuilderScreen(navController) }
+        composable("batchrenamer") { BatchRenamerScreen(navController) }
+        composable("permremover") { PermissionRemoverScreen(navController) }
+        composable("sopatch") { SoPatchScreen(navController) }
     }
 }

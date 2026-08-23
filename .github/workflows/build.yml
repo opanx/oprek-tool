@@ -41,25 +41,17 @@ jobs:
 
       - name: Setup signing keystore
         run: |
-          # Use stored keystore from secrets (base64 encoded)
-          # If secret not set, generate a new one (first build only)
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+          # ALWAYS use the committed keystore (consistent signing key)
+          if [ -f release.keystore ]; then
+            echo "✅ Using committed release.keystore (consistent key)"
+          elif [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
-            echo "Using stored keystore from secrets"
+            echo "✅ Using stored keystore from secrets"
           else
-            echo "No stored keystore found. Generating new one..."
-            keytool -genkeypair -v \
-              -keystore release.keystore \
-              -storepass oprektool2024 \
-              -alias oprektool \
-              -keypass oprektool2024 \
-              -keyalg RSA \
-              -keysize 2048 \
-              -validity 36500 \
-              -dname "CN=OprekTool,OU=Panxcz,O=Freebuff,L=Jakarta,ST=ID,C=ID"
-            echo "⚠️ New keystore generated! You need to uninstall old app first."
-            echo "💡 To fix: base64 release.keystore > keystore_b64.txt and add as GitHub Secret KEYSTORE_BASE64"
+            echo "❌ No keystore found! This should not happen."
+            exit 1
           fi
+          keytool -list -keystore release.keystore -storepass oprektool2024 2>&1 | head -5
 
       - name: Build Debug APK (SIGNED)
         run: |
@@ -70,10 +62,10 @@ jobs:
           storeFile=../release.keystore
           EOF
           cp release.keystore app/
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon -Dorg.gradle.jvmargs="-Xmx2g -XX:+UseParallelGC"
 
       - name: Build Release APK (SIGNED)
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx2g -XX:+UseParallelGC"
 
       - name: Sign Release APK manually
         run: |
