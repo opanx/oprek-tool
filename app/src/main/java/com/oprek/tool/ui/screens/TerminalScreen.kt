@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -72,15 +72,43 @@ fun TerminalScreen(navController: NavController) {
                         addLine("help           - Show this help")
                         addLine("logcat         - Android logcat dump")
                         addLine("share          - Share terminal output")
+                        addLine("")
+                        addLine("── File Operations ──")
+                        addLine("ls [path]      - List directory contents")
+                        addLine("cat <path>     - Print file contents")
+                        addLine("head <path>    - Show first 20 lines")
+                        addLine("tail <path>    - Show last 20 lines")
+                        addLine("wc <path>      - Word/line/byte count")
+                        addLine("cp <src> <dst> - Copy file")
+                        addLine("mv <src> <dst> - Move/rename file")
+                        addLine("rm <path>      - Delete file")
+                        addLine("mkdir <path>   - Create directory")
+                        addLine("touch <path>   - Create empty file")
+                        addLine("chmod <mode> <path> - Change permissions")
+                        addLine("find <dir> <name> - Find files by name")
+                        addLine("grep <pattern> <path> - Search in file")
+                        addLine("sed <path> <old> <new> - Find & replace")
+                        addLine("edit <path>    - Edit file (opens editor)")
+                        addLine("write <path> <content> - Write to file")
+                        addLine("append <path> <content> - Append to file")
+                        addLine("")
+                        addLine("── Analysis ──")
                         addLine("file <path>    - Show file info (magic bytes)")
                         addLine("xxd <path>     - Hex dump of file")
                         addLine("strings <path> - Extract printable strings")
                         addLine("readelf <path> - Show ELF headers")
-                        addLine("ls             - List current directory")
+                        addLine("unzip <path>   - List ZIP/APK contents")
+                        addLine("md5 <path>     - Calculate MD5 hash")
+                        addLine("sha256 <path>  - Calculate SHA256 hash")
+                        addLine("")
+                        addLine("── System ──")
                         addLine("pwd            - Print working directory")
                         addLine("date           - Show current date/time")
                         addLine("whoami         - Show current user")
                         addLine("info           - Show app info")
+                        addLine("env            - Show environment variables")
+                        addLine("df             - Show disk usage")
+                        addLine("ps             - Show running processes")
                     }
                     "pwd" -> withContext(Dispatchers.Main) { addLine(System.getProperty("user.dir")) }
                     "date" -> withContext(Dispatchers.Main) { addLine(java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(java.util.Date())) }
@@ -165,6 +193,217 @@ fun TerminalScreen(navController: NavController) {
                             context.startActivity(Intent.createChooser(intent, "Share terminal output"))
                         }
                     }
+                    "cat" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: cat <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        if (f.isDirectory) { withContext(Dispatchers.Main) { addLine("Is a directory: $path", isError = true) }; return@withContext }
+                        val lines2 = f.readLines()
+                        lines2.take(500).forEach { l -> withContext(Dispatchers.Main) { addLine(l) } }
+                        if (lines2.size > 500) withContext(Dispatchers.Main) { addLine("... ${lines2.size - 500} more lines") }
+                    }
+                    "head" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: head <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        f.readLines().take(20).forEach { l -> withContext(Dispatchers.Main) { addLine(l) } }
+                    }
+                    "tail" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: tail <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        f.readLines().takeLast(20).forEach { l -> withContext(Dispatchers.Main) { addLine(l) } }
+                    }
+                    "wc" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: wc <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        val text = f.readText()
+                        val lines3 = text.lines().size
+                        val words = text.split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
+                        val bytes = f.length()
+                        withContext(Dispatchers.Main) { addLine("  $lines3  $words  $bytes  $path") }
+                    }
+                    "cp" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 3) { withContext(Dispatchers.Main) { addLine("Usage: cp <src> <dst>", isError = true) }; return@withContext }
+                        val src = java.io.File(parts[1])
+                        val dst = java.io.File(parts[2])
+                        if (!src.exists()) { withContext(Dispatchers.Main) { addLine("Source not found: ${parts[1]}", isError = true) }; return@withContext }
+                        src.copyTo(dst, overwrite = true)
+                        withContext(Dispatchers.Main) { addLine("Copied ${parts[1]} -> ${parts[2]}") }
+                    }
+                    "mv" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 3) { withContext(Dispatchers.Main) { addLine("Usage: mv <src> <dst>", isError = true) }; return@withContext }
+                        val src = java.io.File(parts[1])
+                        val dst = java.io.File(parts[2])
+                        if (!src.exists()) { withContext(Dispatchers.Main) { addLine("Source not found: ${parts[1]}", isError = true) }; return@withContext }
+                        src.renameTo(dst)
+                        withContext(Dispatchers.Main) { addLine("Moved ${parts[1]} -> ${parts[2]}") }
+                    }
+                    "rm" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: rm <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        f.delete()
+                        withContext(Dispatchers.Main) { addLine("Deleted: $path") }
+                    }
+                    "mkdir" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: mkdir <path>", isError = true) }; return@withContext }
+                        java.io.File(path).mkdirs()
+                        withContext(Dispatchers.Main) { addLine("Created: $path") }
+                    }
+                    "touch" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: touch <path>", isError = true) }; return@withContext }
+                        java.io.File(path).createNewFile()
+                        withContext(Dispatchers.Main) { addLine("Created: $path") }
+                    }
+                    "chmod" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 3) { withContext(Dispatchers.Main) { addLine("Usage: chmod <mode> <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(parts[2])
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: ${parts[2]}", isError = true) }; return@withContext }
+                        f.setReadable(true); f.setWritable(true); f.setExecutable(true)
+                        withContext(Dispatchers.Main) { addLine("Set permissions on ${parts[2]}") }
+                    }
+                    "find" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 3) { withContext(Dispatchers.Main) { addLine("Usage: find <dir> <name>", isError = true) }; return@withContext }
+                        val dir = java.io.File(parts[1])
+                        if (!dir.exists()) { withContext(Dispatchers.Main) { addLine("Dir not found: ${parts[1]}", isError = true) }; return@withContext }
+                        val name = parts[2]
+                        var count = 0
+                        dir.walkTopDown().maxDepth(5).forEach { f ->
+                            if (f.name.contains(name, ignoreCase = true)) {
+                                withContext(Dispatchers.Main) { addLine(f.absolutePath) }
+                                count++
+                                if (count > 100) return@forEach
+                            }
+                        }
+                        withContext(Dispatchers.Main) { addLine("Found: $count files") }
+                    }
+                    "grep" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 3) { withContext(Dispatchers.Main) { addLine("Usage: grep <pattern> <path>", isError = true) }; return@withContext }
+                        val pattern = parts[1]
+                        val f = java.io.File(parts[2])
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: ${parts[2]}", isError = true) }; return@withContext }
+                        val matches = f.readLines().filter { it.contains(pattern, ignoreCase = true) }
+                        matches.take(100).forEach { l -> withContext(Dispatchers.Main) { addLine(l) } }
+                        withContext(Dispatchers.Main) { addLine("${matches.size} matches found") }
+                    }
+                    "sed" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 4) { withContext(Dispatchers.Main) { addLine("Usage: sed <path> <old> <new>", isError = true) }; return@withContext }
+                        val f = java.io.File(parts[1])
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: ${parts[1]}", isError = true) }; return@withContext }
+                        val old = parts[2]
+                        val new = parts[3]
+                        val text2 = f.readText()
+                        val count2 = text2.split(old).size - 1
+                        f.writeText(text2.replace(old, new))
+                        withContext(Dispatchers.Main) { addLine("Replaced $count2 occurrences of '$old' with '$new'") }
+                    }
+                    "write" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 3) { withContext(Dispatchers.Main) { addLine("Usage: write <path> <content>", isError = true) }; return@withContext }
+                        val f = java.io.File(parts[1])
+                        val content = cmd.substringAfter(parts[0]).substringAfter(parts[1]).trim()
+                        f.writeText(content)
+                        withContext(Dispatchers.Main) { addLine("Written ${content.length} bytes to ${parts[1]}") }
+                    }
+                    "append" -> withContext(Dispatchers.IO) {
+                        if (parts.size < 3) { withContext(Dispatchers.Main) { addLine("Usage: append <path> <content>", isError = true) }; return@withContext }
+                        val f = java.io.File(parts[1])
+                        val content = cmd.substringAfter(parts[0]).substringAfter(parts[1]).trim()
+                        f.appendText(content + "\n")
+                        withContext(Dispatchers.Main) { addLine("Appended ${content.length} bytes to ${parts[1]}") }
+                    }
+                    "ls" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "." }
+                        val dir = java.io.File(path)
+                        if (!dir.exists()) { withContext(Dispatchers.Main) { addLine("Path not found: $path", isError = true) }; return@withContext }
+                        if (!dir.isDirectory) { withContext(Dispatchers.Main) { addLine("Not a directory: $path", isError = true) }; return@withContext }
+                        val files = dir.listFiles()?.sortedBy { it.name } ?: emptyArray()
+                        files.take(100).forEach { f ->
+                            val icon = if (f.isDirectory) "d" else "-"
+                            val size = if (f.isDirectory) "<DIR>" else "${f.length()}"
+                            withContext(Dispatchers.Main) { addLine("$icon ${f.name.padEnd(30)} $size") }
+                        }
+                        withContext(Dispatchers.Main) { addLine("${files.size} items") }
+                    }
+                    "md5" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: md5 <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        val digest = java.security.MessageDigest.getInstance("MD5")
+                        f.inputStream().use { dis ->
+                            val buffer = ByteArray(8192)
+                            var read: Int
+                            while (dis.read(buffer).also { read = it } != -1) digest.update(buffer, 0, read)
+                        }
+                        val hash = digest.digest().joinToString("") { "%02x".format(it) }
+                        withContext(Dispatchers.Main) { addLine("MD5($path) = $hash") }
+                    }
+                    "sha256" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: sha256 <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        val digest = java.security.MessageDigest.getInstance("SHA-256")
+                        f.inputStream().use { dis ->
+                            val buffer = ByteArray(8192)
+                            var read: Int
+                            while (dis.read(buffer).also { read = it } != -1) digest.update(buffer, 0, read)
+                        }
+                        val hash = digest.digest().joinToString("") { "%02x".format(it) }
+                        withContext(Dispatchers.Main) { addLine("SHA256($path) = $hash") }
+                    }
+                    "unzip" -> withContext(Dispatchers.IO) {
+                        val path = parts.getOrElse(1) { "" }
+                        if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: unzip <path>", isError = true) }; return@withContext }
+                        val f = java.io.File(path)
+                        if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
+                        try {
+                            val zf = java.util.zip.ZipFile(f)
+                            val entries = zf.entries()
+                            var count3 = 0
+                            while (entries.hasMoreElements()) {
+                                val e = entries.nextElement()
+                                withContext(Dispatchers.Main) { addLine("${e.size.toString().padStart(10)}  ${e.name}") }
+                                count3++
+                                if (count3 > 200) { withContext(Dispatchers.Main) { addLine("... (truncated)") }; break }
+                            }
+                            zf.close()
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) { addLine("Error: ${e.message}", isError = true) }
+                        }
+                    }
+                    "env" -> withContext(Dispatchers.Main) {
+                        val envVars = listOf("PATH", "HOME", "USER", "SHELL", "LANG", "TMPDIR")
+                        envVars.forEach { key -> addLine("$key=${System.getenv(key) ?: ""}") }
+                    }
+                    "df" -> withContext(Dispatchers.IO) {
+                        val dir2 = java.io.File("/sdcard")
+                        val total = dir2.totalSpace
+                        val free = dir2.freeSpace
+                        val used = total - free
+                        withContext(Dispatchers.Main) {
+                            addLine("Filesystem      Size   Used  Free")
+                            addLine("/sdcard    ${formatSize(total)} ${formatSize(used)} ${formatSize(free)}")
+                        }
+                    }
+                    "ps" -> withContext(Dispatchers.Main) {
+                        addLine("PID   NAME")
+                        try {
+                            val proc2 = Runtime.getRuntime().exec(arrayOf("/system/bin/sh", "-c", "ps 2>/dev/null | head -30"))
+                            BufferedReader(InputStreamReader(proc2.inputStream)).useLines { seq ->
+                                seq.forEach { line2 -> addLine(line2) }
+                            }
+                        } catch (e: Exception) { addLine("Error: ${e.message}", isError = true) }
+                    }
                     else -> {
                         val proc = Runtime.getRuntime().exec(arrayOf("/system/bin/sh", "-c", cmd))
                         val stdout = BufferedReader(InputStreamReader(proc.inputStream))
@@ -208,7 +447,7 @@ fun TerminalScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = { Text("💻 Terminal", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { lines.clear() }) { Icon(Icons.Default.DeleteSweep, "Clear") }
                     IconButton(onClick = {
@@ -280,5 +519,14 @@ fun TerminalScreen(navController: NavController) {
         }
         }
     }
+
+private fun formatSize(bytes: Long): String {
+    return when {
+        bytes < 1024 -> "${bytes}B"
+        bytes < 1024 * 1024 -> "${bytes / 1024}KB"
+        bytes < 1024L * 1024 * 1024 -> "${bytes / (1024 * 1024)}MB"
+        else -> "${bytes / (1024L * 1024 * 1024)}GB"
+    }
+}
 
 data class TerminalLine(val text: String, val isCommand: Boolean = false, val isError: Boolean = false)

@@ -14,7 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -115,7 +115,7 @@ fun LuaAnalyzerScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("🌙 Lua Analyzer", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { clipboard.setPrimaryClip(ClipData.newPlainText("lua", rawContent)); Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show() }) {
                         Icon(Icons.Default.ContentCopy, "Copy")

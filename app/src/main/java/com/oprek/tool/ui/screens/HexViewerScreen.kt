@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -53,7 +54,7 @@ fun HexViewerScreen(navController: NavController, vm: MainViewModel) {
         topBar = {
             TopAppBar(
                 title = { Text("Hex Viewer v2", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     IconButton(onClick = { showSearchBar = !showSearchBar }) { Icon(Icons.Default.Search, "Search") }
                     IconButton(onClick = { showGotoDialog = true }) { Icon(Icons.Default.DoubleArrow, "Goto") }
