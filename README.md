@@ -1,6 +1,6 @@
 # 🔧 OprekTool — Android Reverse Engineering Toolkit
 
-> **v0.9.1** | Build status: ✅ Passing | APKs: Signed + Consistent Key
+> **v0.9.2** | Build status: ✅ Passing | APKs: Signed + Consistent Key
 
 **An honest Android reverse engineering toolkit** — not a magic wand, but a solid set of tools for on-device binary analysis.
 
@@ -14,7 +14,12 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 
 ## 📱 What's New
 
-### v0.9.1 (Latest)
+### v0.9.2 (Latest)
+- **Batch Decompiler**: Decompile all symbols at once with progress
+- **GhidraScriptScreen**: Fixed Frida `$init`/`$new` escape issues
+- **Zero warnings**: All deprecated icon/API warnings resolved
+
+### v0.9.1
 - **APKTool Suite**: Decode APK → extract resources, manifest, DEX, native libs
 - **AutoDump v7**: Fixed nullable types, improved MLBB support
 - **Navigation Drawer**: Added APKTool Suite entry
@@ -44,7 +49,7 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 |------|-------------|----------|
 | **ELF Viewer** | Full header, segments, sections, symbols, GOT/PLT | ✅ 100% |
 | **Disassembler** | Capstone ARM32/ARM64/x86/x86_64 | ✅ 95% |
-| **Decompiler** | Pseudo-C with struct/loop/switch patterns | ⚠️ 80-95% |
+| **Decompiler** | Pseudo-C with batch decompile all functions | ⚠️ 80-95% |
 | **Hex Viewer** | Raw hex + ASCII with navigation + search | ✅ 100% |
 | **String Extractor** | Printable strings + filter + export | ✅ 100% |
 | **Memory Scanner** | Scan process memory for patterns | ✅ 100% (root) |
