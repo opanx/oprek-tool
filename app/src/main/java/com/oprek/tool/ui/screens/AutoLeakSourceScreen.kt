@@ -79,7 +79,7 @@ fun AutoLeakSourceScreen(navController: NavController) {
                     } ?: "unknown"
                     fileName = name
                     addLog("[+] Loaded: $name (${bytes.size} bytes)")
-                    scanData(bytes, name)
+                    scan(bytes)
                 } catch (e: Exception) {
                     addLog("[-] Error: ${e.message}")
                 }
@@ -88,7 +88,7 @@ fun AutoLeakSourceScreen(navController: NavController) {
         }
     }
 
-    fun scanData(data: ByteArray, name: String) {
+    fun scan(data: ByteArray, name: String) {
         addLog("[+] Starting deep leak scan on: $name")
         addLog("[+] File size: ${data.size} bytes")
 
