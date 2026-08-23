@@ -69,7 +69,7 @@ fun LogcatScreen(navController: NavController) {
             Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(value = filter, onValueChange = { filter = it }, modifier = Modifier.weight(1f),
                     placeholder = { Text("Filter (e.g. MyTag:*)", color = TextMuted) }, singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                    colors = darkTextFieldColors())
                 Spacer(Modifier.width(8.dp))
                 Button(onClick = {
                     lines.clear(); isRunning = true

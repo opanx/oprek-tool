@@ -53,7 +53,7 @@ fun XrefScreen(navController: NavController) {
                 Row(Modifier.fillMaxWidth()) {
                     OutlinedTextField(value = targetAddr, onValueChange = { targetAddr = it },
                         label = { Text("Target address (hex)") }, modifier = Modifier.weight(1f).padding(end = 8.dp),
-                        singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                        singleLine = true, colors = darkTextFieldColors())
                     Button(onClick = {
                         xrefs = listOf()
                         try {

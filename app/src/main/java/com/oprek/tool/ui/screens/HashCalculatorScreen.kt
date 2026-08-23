@@ -78,7 +78,7 @@ fun HashCalculatorScreen(navController: NavController) {
 
                     OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.fillMaxWidth().height(120.dp),
                         placeholder = { Text("Enter text or paste content...", color = TextMuted) },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                        colors = darkTextFieldColors())
                 }
             }
             Spacer(Modifier.height(12.dp))

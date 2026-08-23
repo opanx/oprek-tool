@@ -508,7 +508,7 @@ fun TerminalScreen(navController: NavController) {
                     singleLine = true,
                     enabled = !isRunning,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen, cursorColor = AccentGreen, unfocusedBorderColor = Color.Transparent)
+                    colors = darkTextFieldColors()
                 )
                 IconButton(onClick = {
                     runCmd(command)

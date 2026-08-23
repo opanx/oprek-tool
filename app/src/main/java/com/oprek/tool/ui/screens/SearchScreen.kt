@@ -60,7 +60,7 @@ fun SearchScreen(navController: NavController, vm: MainViewModel, initialQuery: 
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Hex: 7F 45 4C 46\nText: hello world") },
                         minLines = 2,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
+                        colors = darkTextFieldColors()
                     )
                     Spacer(Modifier.height(8.dp))
                     Button(

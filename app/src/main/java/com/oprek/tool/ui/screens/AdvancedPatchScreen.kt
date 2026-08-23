@@ -187,7 +187,7 @@ fun AdvancedPatchScreen(navController: NavController) {
                     Text("⚡ Manual Patches", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentPurple)
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = offsetHex, onValueChange = { offsetHex = it }, label = { Text("Offset (hex)") },
-                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple))
+                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         QuickPatchBtn("NOP", AccentGreen) { applyQuickPatch(context, offsetHex, "nop") { result = it } }
@@ -205,10 +205,10 @@ fun AdvancedPatchScreen(navController: NavController) {
                     Text("📝 String Patch", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentCyan)
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = searchStr, onValueChange = { searchStr = it }, label = { Text("Search string") },
-                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = replaceStr, onValueChange = { replaceStr = it }, label = { Text("Replace string") },
-                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = {
                         scope.launch(Dispatchers.Default) {

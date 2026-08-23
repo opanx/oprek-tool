@@ -31,7 +31,7 @@ fun XorBruteForceScreen(navController: NavController) {
         Column(Modifier.padding(padding).padding(12.dp)) {
             OutlinedTextField(value = input, onValueChange = { input = it },
                 label = { Text("Hex string or text to brute-force") }, modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                colors = darkTextFieldColors())
             Spacer(Modifier.height(8.dp))
             Button(onClick = {
                 results = mutableListOf()

@@ -121,11 +121,11 @@ fun Il2CppDumperScreen(navController: NavController) {
                         if (dumpMode == 0) {
                             OutlinedTextField(value = libPath, onValueChange = { libPath = it },
                                 label = { Text("libil2cpp.so path") }, modifier = Modifier.fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                                colors = darkTextFieldColors())
                             Spacer(Modifier.height(4.dp))
                             OutlinedTextField(value = metaPath, onValueChange = { metaPath = it },
                                 label = { Text("global-metadata.dat path (optional)") }, modifier = Modifier.fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                                colors = darkTextFieldColors())
                         } else {
                             Text("🎮 Game Preset:", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 13.sp)
                             Spacer(Modifier.height(4.dp))
@@ -145,7 +145,7 @@ fun Il2CppDumperScreen(navController: NavController) {
                             Spacer(Modifier.height(4.dp))
                             OutlinedTextField(value = packageName, onValueChange = { packageName = it },
                                 label = { Text("Or enter package name") }, modifier = Modifier.fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                                colors = darkTextFieldColors())
                             Spacer(Modifier.height(8.dp))
                             Text("⚡ Scan Depth:", fontSize = 12.sp, color = Color.Gray)
                             Row {

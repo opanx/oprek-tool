@@ -210,7 +210,7 @@ fun ShellDeobfuscateScreen(navController: NavController) {
                 OutlinedTextField(value = content, onValueChange = { content = it },
                     modifier = Modifier.fillMaxWidth().weight(0.4f).padding(horizontal = 12.dp),
                     label = { Text("Shell Script Content", fontSize = 11.sp) },
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan, focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary),
+                    colors = darkTextFieldColors(),
                     textStyle = LocalTextStyle.current.copy(fontSize = 10.sp, fontFamily = FontFamily.Monospace))
 
                 // Deobfuscate button

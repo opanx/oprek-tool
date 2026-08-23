@@ -68,7 +68,7 @@ fun Base64Screen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.fillMaxWidth().height(100.dp),
                         placeholder = { Text("Input...", color = TextMuted) },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                        colors = darkTextFieldColors())
                 }
             }
             Spacer(Modifier.height(8.dp))

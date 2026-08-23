@@ -92,7 +92,7 @@ fun DexDumperScreen(navController: NavController) {
                         if (dumpMode == 0) {
                             OutlinedTextField(value = apkPath, onValueChange = { apkPath = it }, modifier = Modifier.fillMaxWidth(),
                                 label = { Text("APK path", color = TextMuted) }, singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange, cursorColor = AccentOrange),
+                                colors = darkTextFieldColors(),
                                 leadingIcon = { Icon(Icons.Default.Archive, null, tint = AccentOrange) })
                             Spacer(Modifier.height(6.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -104,7 +104,7 @@ fun DexDumperScreen(navController: NavController) {
                         } else {
                             OutlinedTextField(value = packageName, onValueChange = { packageName = it }, modifier = Modifier.fillMaxWidth(),
                                 label = { Text("Package name / PID", color = TextMuted) }, singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentRed, cursorColor = AccentRed),
+                                colors = darkTextFieldColors(),
                                 leadingIcon = { Icon(Icons.Default.Memory, null, tint = AccentRed) })
                             Spacer(Modifier.height(8.dp))
 
@@ -130,10 +130,10 @@ fun DexDumperScreen(navController: NavController) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 OutlinedTextField(value = minDexSize, onValueChange = { minDexSize = it }, modifier = Modifier.weight(1f),
                                     label = { Text("Min size", fontSize = 10.sp) }, singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                                    colors = darkTextFieldColors())
                                 OutlinedTextField(value = maxDexSize, onValueChange = { maxDexSize = it }, modifier = Modifier.weight(1f),
                                     label = { Text("Max size", fontSize = 10.sp) }, singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                                    colors = darkTextFieldColors())
                             }
                         }
 

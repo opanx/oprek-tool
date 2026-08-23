@@ -48,10 +48,10 @@ fun FridaHookScreen(navController: NavController) {
                     Text("Config", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = AccentGreen)
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = libName, onValueChange = { libName = it }, label = { Text("Library name") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = funcName, onValueChange = { funcName = it }, label = { Text("Function name / offset (hex)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

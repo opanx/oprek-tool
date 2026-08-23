@@ -89,7 +89,7 @@ fun ScriptEngineScreen(navController: NavController) {
                     fontSize = 12.sp,
                     color = Color(0xFF00FF41)
                 ),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
+                colors = darkTextFieldColors()
             )
 
             Spacer(Modifier.height(12.dp))

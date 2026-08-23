@@ -45,7 +45,7 @@ fun InlineHookScreen(navController: NavController) {
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DarkCard), shape = RoundedCornerShape(12.dp)) {
                 Column(Modifier.padding(12.dp)) {
                     OutlinedTextField(value = funcName, onValueChange = { funcName = it }, label = { Text("Function name") },
-                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

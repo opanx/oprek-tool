@@ -179,7 +179,7 @@ fun DeobfuscateScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = inputText, onValueChange = { inputText = it }, modifier = Modifier.fillMaxWidth().height(100.dp),
                         placeholder = { Text("Paste obfuscated text...", color = TextMuted) },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                        colors = darkTextFieldColors())
                 }
             }
 

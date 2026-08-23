@@ -120,7 +120,7 @@ fun DecompilerScreen(navController: NavController) {
                                 onValueChange = { selectedSymbol = it },
                                 label = { Text("Function") }, modifier = Modifier.fillMaxWidth().menuAnchor(MenuAnchorType.PrimaryNotEditable),
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
+                                colors = darkTextFieldColors()
                             )
                             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                                 DropdownMenuItem(text = { Text("All functions", fontSize = 11.sp) }, onClick = {
@@ -148,7 +148,7 @@ fun DecompilerScreen(navController: NavController) {
                         OutlinedTextField(value = funcName, onValueChange = { funcName = it },
                             label = { Text("e.g. main, sub_12345 (empty = all)") },
                             modifier = Modifier.fillMaxWidth(), singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple))
+                            colors = darkTextFieldColors())
                     }
                 }
             }

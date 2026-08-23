@@ -1,6 +1,6 @@
 # 🔧 OprekTool — Android Reverse Engineering Toolkit
 
-> **v0.6.1** | Build status: ✅ Passing | APKs: Signed + Auto-released
+> **v0.9.0** | Build status: ✅ Passing | APKs: Signed + Consistent Key
 
 **An honest Android reverse engineering toolkit** — not a magic wand, but a solid set of tools for on-device binary analysis.
 

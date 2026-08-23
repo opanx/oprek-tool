@@ -57,7 +57,7 @@ fun SmaliScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = classFilter, onValueChange = { classFilter = it },
                         label = { Text("e.g. com.example.app") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple))
+                        colors = darkTextFieldColors())
                 }
             }
 

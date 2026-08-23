@@ -50,9 +50,9 @@ fun PatchStringScreen(navController: NavController) {
             if (!loaded) { Button(onClick = { picker.launch(arrayOf("*/*")) }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)) { Text("Open Binary") } }
             if (loaded) {
                 OutlinedTextField(value = searchStr, onValueChange = { searchStr = it }, label = { Text("Search string") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                    colors = darkTextFieldColors())
                 OutlinedTextField(value = replaceStr, onValueChange = { replaceStr = it }, label = { Text("Replace with") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange, cursorColor = AccentOrange))
+                    colors = darkTextFieldColors())
                 Spacer(Modifier.height(8.dp))
                 Row {
                     Button(onClick = {

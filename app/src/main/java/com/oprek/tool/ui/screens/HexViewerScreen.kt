@@ -80,7 +80,7 @@ fun HexViewerScreen(navController: NavController, vm: MainViewModel) {
                             Icon(Icons.Default.Search, "Go")
                         }
                     },
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen, cursorColor = AccentGreen))
+                    colors = darkTextFieldColors())
             }
 
             // Info panel
@@ -133,7 +133,7 @@ fun HexViewerScreen(navController: NavController, vm: MainViewModel) {
             text = {
                 OutlinedTextField(value = gotoOffset, onValueChange = { gotoOffset = it },
                     label = { Text("Offset (hex, e.g. 0x1234)") }, modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                    colors = darkTextFieldColors())
             },
             confirmButton = {
                 Button(onClick = {
@@ -156,11 +156,11 @@ fun HexViewerScreen(navController: NavController, vm: MainViewModel) {
                 Column {
                     OutlinedTextField(value = patchOffset, onValueChange = { patchOffset = it },
                         label = { Text("Offset (hex)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = patchValue, onValueChange = { patchValue = it },
                         label = { Text("New bytes (hex, e.g. 90 90 90)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        colors = darkTextFieldColors())
                 }
             },
             confirmButton = {
@@ -185,11 +185,11 @@ fun HexViewerScreen(navController: NavController, vm: MainViewModel) {
                 Column {
                     OutlinedTextField(value = bookmarkName, onValueChange = { bookmarkName = it },
                         label = { Text("Name") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                        colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = bookmarkOffset, onValueChange = { bookmarkOffset = it },
                         label = { Text("Offset (hex)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                        colors = darkTextFieldColors())
                 }
             },
             confirmButton = {

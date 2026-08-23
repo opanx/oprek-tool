@@ -163,7 +163,7 @@ fun FridaLibraryScreen(navController: NavController) {
         Column(Modifier.padding(padding).fillMaxSize()) {
             OutlinedTextField(value = filter, onValueChange = { filter = it },
                 placeholder = { Text("Search scripts...") }, modifier = Modifier.fillMaxWidth().padding(12.dp), singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                colors = darkTextFieldColors())
 
             Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 categories.forEach { cat ->

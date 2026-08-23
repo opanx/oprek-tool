@@ -79,7 +79,7 @@ fun AdvancedDisasmScreen(navController: NavController) {
                 Row {
                     OutlinedTextField(value = offset, onValueChange = { offset = it }, label = { Text("Offset (hex)") },
                         modifier = Modifier.weight(1f).padding(end = 8.dp), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                        colors = darkTextFieldColors())
                     Row { listOf("ARM32", "ARM64", "X86").forEachIndexed { i, name ->
                         FilterChip(selected = arch == i, onClick = { arch = i }, label = { Text(name, fontSize = 10.sp) },
                             modifier = Modifier.padding(end = 4.dp), colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(0.2f)))

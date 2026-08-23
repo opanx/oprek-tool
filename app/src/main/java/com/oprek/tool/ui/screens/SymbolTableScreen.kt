@@ -39,7 +39,7 @@ fun SymbolTableScreen(navController: NavController) {
             OutlinedTextField(value = search, onValueChange = { search = it },
                 label = { Text("Search symbols...") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
                 singleLine = true, leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AccentCyan) },
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                colors = darkTextFieldColors())
             Row(Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                 types.forEach { t ->
                     FilterChip(selected = typeFilter == t, onClick = { typeFilter = t },

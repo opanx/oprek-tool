@@ -90,11 +90,11 @@ fun ManifestPatcherScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = search, onValueChange = { search = it },
                         label = { Text("Search") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                        colors = darkTextFieldColors())
                     Spacer(Modifier.height(4.dp))
                     OutlinedTextField(value = replace, onValueChange = { replace = it },
                         label = { Text("Replace with") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                        colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
                     Button(onClick = {
                         if (search.isNotEmpty() && manifest.isNotEmpty()) {

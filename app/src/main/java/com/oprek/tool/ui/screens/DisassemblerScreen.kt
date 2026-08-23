@@ -138,12 +138,12 @@ fun DisassemblerScreen(navController: NavController) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         OutlinedTextField(value = offsetHex, onValueChange = { offsetHex = it },
                             label = { Text("Offset (hex)") }, modifier = Modifier.weight(1f), singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple))
+                            colors = darkTextFieldColors())
                         Spacer(Modifier.width(8.dp))
                         OutlinedTextField(value = countStr, onValueChange = { countStr = it },
                             label = { Text("Count") }, modifier = Modifier.width(80.dp), singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple))
+                            colors = darkTextFieldColors())
                     }
                 }
             }

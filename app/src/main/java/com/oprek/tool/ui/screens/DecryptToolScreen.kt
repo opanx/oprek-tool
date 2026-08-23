@@ -97,19 +97,19 @@ fun DecryptToolScreen(navController: NavController) {
                                 OutlinedTextField(value = key, onValueChange = { key = it },
                                     label = { Text("Multi-byte key (hex: 4A6F686E)") },
                                     modifier = Modifier.fillMaxWidth(), singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                                    colors = darkTextFieldColors())
                             }
                             10 -> {
                                 OutlinedTextField(value = caesarShift, onValueChange = { caesarShift = it },
                                     label = { Text("Shift (1-25)") }, modifier = Modifier.width(120.dp), singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                                    colors = darkTextFieldColors())
                             }
                             else -> {
                                 OutlinedTextField(value = key, onValueChange = { key = it },
                                     label = { Text("Decryption key") },
                                     modifier = Modifier.fillMaxWidth(), singleLine = true,
-                                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan))
+                                    colors = darkTextFieldColors())
                                 if (selectedMethod == 3) Text("AES: 16 or 32 bytes key", fontSize = 10.sp, color = TextMuted)
                                 if (selectedMethod == 4) Text("DES: 8 bytes key", fontSize = 10.sp, color = TextMuted)
                             }
@@ -126,7 +126,7 @@ fun DecryptToolScreen(navController: NavController) {
                     OutlinedTextField(value = input, onValueChange = { input = it },
                         label = { Text("Enter text/hex to decrypt...") },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                        colors = darkTextFieldColors())
                 }
             }
 

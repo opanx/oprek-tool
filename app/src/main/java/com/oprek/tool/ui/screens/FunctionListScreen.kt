@@ -74,7 +74,7 @@ fun FunctionListScreen(navController: NavController) {
             OutlinedTextField(value = search, onValueChange = { search = it }, label = { Text("Search functions...") },
                 modifier = Modifier.fillMaxWidth(), singleLine = true,
                 leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AccentCyan) },
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                colors = darkTextFieldColors())
             Row(Modifier.padding(vertical = 4.dp)) {
                 listOf("FUNC", "OBJECT", "ALL").forEach { t ->
                     FilterChip(selected = typeFilter == t, onClick = { typeFilter = t }, label = { Text(t, fontSize = 10.sp) },

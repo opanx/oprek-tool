@@ -65,7 +65,7 @@ fun SectionHeaderScreen(navController: NavController) {
         Column(Modifier.padding(padding)) {
             OutlinedTextField(value = filter, onValueChange = { filter = it },
                 label = { Text("Filter sections...") }, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan, focusedLabelColor = AccentCyan))
+                singleLine = true, colors = darkTextFieldColors())
 
             if (status.isNotEmpty() && sections.isEmpty() && !isLoading) {
                 Card(Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(8.dp)) {

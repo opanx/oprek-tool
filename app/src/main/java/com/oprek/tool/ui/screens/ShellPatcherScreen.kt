@@ -92,10 +92,10 @@ fun ShellPatcherScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     // Search & replace
                     OutlinedTextField(value = searchStr, onValueChange = { searchStr = it }, label = { Text("Search") },
-                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = darkTextFieldColors())
                     Spacer(Modifier.height(4.dp))
                     OutlinedTextField(value = replaceStr, onValueChange = { replaceStr = it }, label = { Text("Replace") },
-                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        modifier = Modifier.fillMaxWidth(), singleLine = true, colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
 
                     Button(onClick = {

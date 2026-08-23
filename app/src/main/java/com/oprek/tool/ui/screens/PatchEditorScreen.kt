@@ -121,7 +121,7 @@ fun PatchEditorScreen(navController: NavController, vm: MainViewModel) {
                         label = { Text("Offset (hex)") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
+                        colors = darkTextFieldColors()
                     )
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
@@ -130,7 +130,7 @@ fun PatchEditorScreen(navController: NavController, vm: MainViewModel) {
                         label = { Text("Bytes (hex, e.g. 00 11 22)") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
+                        colors = darkTextFieldColors()
                     )
                 }
             },
@@ -167,7 +167,7 @@ fun PatchEditorScreen(navController: NavController, vm: MainViewModel) {
                         value = bulkText,
                         onValueChange = { bulkText = it },
                         modifier = Modifier.fillMaxWidth().height(200.dp),
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen)
+                        colors = darkTextFieldColors()
                     )
                 }
             },

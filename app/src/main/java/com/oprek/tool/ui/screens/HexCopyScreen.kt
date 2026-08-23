@@ -50,7 +50,7 @@ fun HexCopyScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(value = input, onValueChange = { input = it }, modifier = Modifier.fillMaxWidth().height(100.dp),
                         placeholder = { Text("7F 45 4C 46 02 01 01 00", color = TextMuted) },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen))
+                        colors = darkTextFieldColors())
                 }
             }
             Spacer(Modifier.height(8.dp))

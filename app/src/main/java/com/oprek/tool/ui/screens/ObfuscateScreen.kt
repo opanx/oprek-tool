@@ -103,7 +103,7 @@ fun ObfuscateScreen(navController: NavController) {
                             label = { Text("XOR Key (hex, e.g. FF)") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange)
+                            colors = darkTextFieldColors()
                         )
                     }
                 }
@@ -123,7 +123,7 @@ fun ObfuscateScreen(navController: NavController) {
                         onValueChange = { inputText = it },
                         modifier = Modifier.fillMaxWidth().height(120.dp),
                         placeholder = { Text("Enter text to obfuscate...", color = TextMuted) },
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan)
+                        colors = darkTextFieldColors()
                     )
                 }
             }

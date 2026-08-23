@@ -118,11 +118,11 @@ fun BookmarkScreen(navController: NavController) {
             text = {
                 Column {
                     OutlinedTextField(value = newOffset, onValueChange = { newOffset = it }, label = { Text("Offset (hex)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                        colors = darkTextFieldColors())
                     Spacer(Modifier.height(8.dp))
 
                     OutlinedTextField(value = newLabel, onValueChange = { newLabel = it }, label = { Text("Label") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                        colors = darkTextFieldColors())
                 }
             },
             confirmButton = {

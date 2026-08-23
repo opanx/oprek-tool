@@ -40,9 +40,9 @@ fun StringEncryptorScreen(navController: NavController) {
     }, containerColor = DarkBg) { padding ->
         Column(Modifier.padding(padding).padding(12.dp)) {
             OutlinedTextField(value = input, onValueChange = { input = it }, label = { Text("Input string") }, modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                colors = darkTextFieldColors())
             OutlinedTextField(value = key, onValueChange = { key = it }, label = { Text("Key (hex or text)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange, cursorColor = AccentOrange))
+                colors = darkTextFieldColors())
             Row(Modifier.padding(vertical = 8.dp)) {
                 listOf("XOR", "AES", "ROT13", "Base64+XOR").forEach { m ->
                     FilterChip(selected = method == m, onClick = { method = m }, label = { Text(m, fontSize = 10.sp) },

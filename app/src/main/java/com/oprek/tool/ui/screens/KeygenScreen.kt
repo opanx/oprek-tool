@@ -49,10 +49,10 @@ fun KeygenScreen(navController: NavController) {
                     Spacer(Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         OutlinedTextField(value = length, onValueChange = { length = it }, label = { Text("Length") },
-                            modifier = Modifier.width(80.dp), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                            modifier = Modifier.width(80.dp), singleLine = true, colors = darkTextFieldColors())
                         Spacer(Modifier.width(12.dp))
                         OutlinedTextField(value = count, onValueChange = { count = it }, label = { Text("Count") },
-                            modifier = Modifier.width(80.dp), singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentOrange))
+                            modifier = Modifier.width(80.dp), singleLine = true, colors = darkTextFieldColors())
                     }
                     Spacer(Modifier.height(8.dp))
 

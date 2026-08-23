@@ -86,7 +86,7 @@ fun ScriptingScreen(navController: NavController) {
                 onValueChange = { script = it },
                 modifier = Modifier.fillMaxWidth().weight(1f).padding(12.dp),
                 label = { Text("Script (IDC-like syntax)") },
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentPurple, cursorColor = AccentGreen),
+                colors = darkTextFieldColors(),
                 textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = AccentGreen)
             )
 

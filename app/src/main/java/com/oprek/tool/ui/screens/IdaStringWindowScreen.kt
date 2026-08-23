@@ -74,7 +74,7 @@ fun IdaStringWindowScreen(navController: NavController) {
             OutlinedTextField(value = search, onValueChange = { search = it }, label = { Text("Filter strings...") },
                 modifier = Modifier.fillMaxWidth(), singleLine = true,
                 leadingIcon = { Icon(Icons.Outlined.Search, null, tint = AccentCyan) },
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                colors = darkTextFieldColors())
             Text("${strings.size} strings", fontSize = 11.sp, color = TextMuted)
             LazyColumn(Modifier.weight(1f)) {
 

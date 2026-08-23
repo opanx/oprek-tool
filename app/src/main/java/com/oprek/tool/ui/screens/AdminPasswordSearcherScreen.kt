@@ -91,7 +91,7 @@ fun AdminPasswordSearcherScreen(navController: androidx.navigation.NavController
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("https://example.com/admin", color = TextSecondary) },
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary)
+                        colors = darkTextFieldColors()
                     )
                     Spacer(Modifier.height(8.dp))
 

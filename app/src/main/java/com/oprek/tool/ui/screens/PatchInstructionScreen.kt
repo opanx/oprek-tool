@@ -65,7 +65,7 @@ fun PatchInstructionScreen(navController: NavController) {
             if (!loaded) { Button(onClick = { picker.launch(arrayOf("*/*")) }, Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)) { Text("Open ELF") } }
             if (loaded) {
                 OutlinedTextField(value = offset, onValueChange = { offset = it }, label = { Text("Offset (hex)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentCyan, cursorColor = AccentCyan))
+                    colors = darkTextFieldColors())
                 Spacer(Modifier.height(8.dp))
                 Text("Patch type:", color = TextSecondary, fontSize = 12.sp)
                 Row { listOf("NOP", "RET", "RET X0=0", "JMP").forEach { t ->

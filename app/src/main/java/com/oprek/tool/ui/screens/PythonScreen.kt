@@ -89,7 +89,7 @@ fun PythonScreen(navController: NavController) {
                 onValueChange = { script = it },
                 modifier = Modifier.fillMaxWidth().weight(1f).padding(12.dp),
                 label = { Text("Python Script") },
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen, cursorColor = AccentGreen),
+                colors = darkTextFieldColors(),
                 textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, fontSize = 12.sp, color = AccentGreen)
             )
 
