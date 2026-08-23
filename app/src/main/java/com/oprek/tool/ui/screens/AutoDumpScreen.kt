@@ -1,4 +1,5 @@
 @file:Suppress("DEPRECATION")
+@file:OptIn(ExperimentalLayoutApi::class)
 package com.oprek.tool.ui.screens
 
 import android.content.ClipData
@@ -9,6 +10,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -170,8 +172,8 @@ except Exception as e:
             if (!rootCheck.contains("uid=0")) {
                 addLine("❌ No root access! This tool requires root.")
                 addLine("   Install Magisk/KernelSU and grant root to OprekTool")
-                withContext(Dispatchers.Main) { isRunning = false; return@withContext }
-                return@withContext
+                withContext(Dispatchers.Main) { isRunning = false; return@launch }
+                return@launch
             }
             addLine("✅ Root confirmed")
             setProgress(0.05f)
@@ -183,8 +185,8 @@ except Exception as e:
                 addLine("❌ Process not found: $pkg")
                 addLine("   💡 Make sure the game is running!")
                 addLine("   💡 Open the game, enter lobby/match, then try again")
-                withContext(Dispatchers.Main) { isRunning = false; return@withContext }
-                return@withContext
+                withContext(Dispatchers.Main) { isRunning = false; return@launch }
+                return@launch
             }
             addLine("✅ PID: $pid")
             setProgress(0.1f)
@@ -239,8 +241,8 @@ except Exception as e:
                     addLine("   → ${it.substringAfterLast(" ").trim()}")
                 }
                 addLine("   💡 Make sure the game is fully loaded (enter lobby/match)")
-                withContext(Dispatchers.Main) { isRunning = false; return@withContext }
-                return@withContext
+                withContext(Dispatchers.Main) { isRunning = false; return@launch }
+                return@launch
             }
 
             val il2cppRange = il2cppLine.substringBefore(" ")
@@ -514,8 +516,8 @@ except Exception as e:
                             textStyle = LocalTextStyle.current.copy(color = TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace))
                     } else {
                         Spacer(Modifier.height(4.dp))
-                        Text("${preset.pkg} → ${preset.il2cppLib}", fontSize = 9.sp, color = TextSecondary, fontFamily = FontFamily.Monospace)
-                        Text(preset.desc, fontSize = 9.sp, color = TextMuted)
+                        Text("${gamePresets[selectedPreset].pkg} → ${gamePresets[selectedPreset].il2cppLib}", fontSize = 9.sp, color = TextSecondary, fontFamily = FontFamily.Monospace)
+                        Text(gamePresets[selectedPreset].desc, fontSize = 9.sp, color = TextMuted)
                     }
 
                     Spacer(Modifier.height(8.dp))
