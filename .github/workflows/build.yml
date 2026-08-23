@@ -62,10 +62,10 @@ jobs:
           storeFile=../release.keystore
           EOF
           cp release.keystore app/
-          ./gradlew assembleDebug --no-daemon -Dorg.gradle.jvmargs="-Xmx2g -XX:+UseParallelGC"
+          ./gradlew assembleDebug --no-daemon
 
       - name: Build Release APK (SIGNED)
-        run: ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx2g -XX:+UseParallelGC"
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Sign Release APK manually
         run: |
