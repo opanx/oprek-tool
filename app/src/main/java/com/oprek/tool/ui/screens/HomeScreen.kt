@@ -13,6 +13,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalDrawerSheet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +35,7 @@ import com.oprek.tool.MainViewModel
 import com.oprek.tool.core.FileType
 import com.oprek.tool.ui.theme.*
 import android.content.Intent
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +44,9 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
     val currentFile by vm.currentFile.collectAsState()
     val isLoading by vm.isLoading.collectAsState()
     val statusMessage by vm.statusMessage.collectAsState()
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    var showQuickTools by remember { mutableStateOf(false) }
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
@@ -48,6 +55,10 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
         }
     }
 
+    AppNavigationDrawer(
+        drawerState = drawerState,
+        navController = navController
+    ) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -59,6 +70,16 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                             Text("OprekTool", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                             Text("Reverse Engineering Toolkit", fontSize = 11.sp, color = TextSecondary)
                         }
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                        Icon(Icons.Default.Menu, "Menu", tint = AccentGreen)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showQuickTools = !showQuickTools }) {
+                        Icon(Icons.Default.MoreVert, "Quick Tools", tint = TextSecondary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
@@ -247,6 +268,7 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
             Spacer(Modifier.height(24.dp))
         }
     }
+    } // AppNavigationDrawer
 }
 
 @Composable
@@ -364,7 +386,6 @@ fun ToolCard(tool: ToolItem, onClick: () -> Unit) {
     }
 }
 
-data class ToolItem(val name: String, val desc: String, val icon: ImageVector, val color: Color, val route: String)
 
 private fun formatSize(bytes: Long): String = when {
     bytes < 1024 -> "${bytes}B"

@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.oprek.tool.ui.screens
 
 import android.content.ClipData
