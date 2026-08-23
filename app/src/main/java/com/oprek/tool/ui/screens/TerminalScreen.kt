@@ -325,11 +325,11 @@ fun TerminalScreen(navController: NavController) {
                         val dir = java.io.File(path)
                         if (!dir.exists()) { withContext(Dispatchers.Main) { addLine("Path not found: $path", isError = true) }; return@withContext }
                         if (!dir.isDirectory) { withContext(Dispatchers.Main) { addLine("Not a directory: $path", isError = true) }; return@withContext }
-                        val files = dir.listFiles()?.sortedBy { it.name } ?: emptyArray()
-                        files.take(100).forEach { f ->
-                            val icon = if (f.isDirectory) "d" else "-"
-                            val size = if (f.isDirectory) "<DIR>" else "${f.length()}"
-                            withContext(Dispatchers.Main) { addLine("$icon ${f.name.padEnd(30)} $size") }
+                        val files = dir.listFiles()?.sortedBy { it.name } ?: emptyList()
+                        files.take(100).forEach { file ->
+                            val icon = if (file.isDirectory) "d" else "-"
+                            val size = if (file.isDirectory) "<DIR>" else "${file.length()}"
+                            withContext(Dispatchers.Main) { addLine("$icon ${file.name.padEnd(30)} $size") }
                         }
                         withContext(Dispatchers.Main) { addLine("${files.size} items") }
                     }
