@@ -55,32 +55,13 @@ jobs:
 
       - name: Build Debug APK (SIGNED)
         run: |
-          cat > app/signing.properties << 'EOF'
-          storePassword=oprektool2024
-          keyPassword=oprektool2024
-          keyAlias=oprektool
-          storeFile=../release.keystore
-          EOF
           cp release.keystore app/
           ./gradlew assembleDebug --no-daemon
 
       - name: Build Release APK (SIGNED)
-        run: ./gradlew assembleRelease --no-daemon
-
-      - name: Sign Release APK manually
         run: |
-          # Find the unsigned release APK
-          UNSIGNED=$(find . -name "*release*.apk" -type f | head -1)
-          if [ -n "$UNSIGNED" ]; then
-            SIGNED="OprekTool-v$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')-release.apk"
-            jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-              -keystore release.keystore \
-              -storepass oprektool2024 \
-              -keypass oprektool2024 \
-              "$UNSIGNED" oprektool
-            zipalign -v 4 "$UNSIGNED" "$SIGNED" 2>/dev/null || cp "$UNSIGNED" "$SIGNED"
-            echo "Signed release APK: $SIGNED"
-          fi
+          cp release.keystore app/
+          ./gradlew assembleRelease --no-daemon
 
       - name: Get version
         id: version

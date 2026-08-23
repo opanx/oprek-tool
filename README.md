@@ -1,6 +1,6 @@
 # 🔧 OprekTool — Android Reverse Engineering Toolkit
 
-> **v0.9.2** | Build status: ✅ Passing | APKs: Signed + Consistent Key
+> **v0.9.3** | Build status: ✅ Passing | APKs: Signed + Consistent Key
 
 **An honest Android reverse engineering toolkit** — not a magic wand, but a solid set of tools for on-device binary analysis.
 
@@ -14,7 +14,8 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 
 ## 📱 What's New
 
-### v0.9.2 (Latest)
+### v0.9.3 (Latest)
+- **FIXED: Consistent signing key** — Both debug & release use same keystore. No uninstall needed!
 - **Batch Decompiler**: Decompile all symbols at once with progress
 - **GhidraScriptScreen**: Fixed Frida `$init`/`$new` escape issues
 - **Zero warnings**: All deprecated icon/API warnings resolved

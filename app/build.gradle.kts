@@ -8,12 +8,24 @@ android {
     namespace = "com.oprek.tool"
     compileSdk = 35
 
+    signingConfigs {
+        create("release") {
+            val ksFile = rootProject.file("release.keystore")
+            if (ksFile.exists()) {
+                storeFile = ksFile
+                storePassword = "oprektool2024"
+                keyAlias = "oprektool"
+                keyPassword = "oprektool2024"
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.oprek.tool"
         minSdk = 26
         targetSdk = 35
-        versionCode = 65
-        versionName = "0.9.2"
+        versionCode = 66
+        versionName = "0.9.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -41,9 +53,11 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isDebuggable = true
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
