@@ -69,7 +69,7 @@ val toolCategories = listOf(
         NavToolItem("JNI Builder", "jnibuilder", Icons.Default.Code),
         NavToolItem("APK Signer", "apksigner", Icons.Default.Verified),
         NavToolItem("APK Tools", "apkmisc", Icons.Default.Build),
-        NavToolItem("Batch Renamer", "batchrenamer", Icons.Default.DriveFileRename),
+        NavToolItem("Batch Renamer", "batchrenamer", Icons.Default.Edit),
         NavToolItem("Permission Remover", "permremover", Icons.Default.RemoveCircle),
     ), AccentRed),
     NavToolCategory("🛡️ Security", Icons.Default.Shield, listOf(

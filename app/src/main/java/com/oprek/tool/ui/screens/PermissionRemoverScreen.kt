@@ -45,13 +45,13 @@ fun PermissionRemoverScreen(navController: NavController) {
             output = listOf("[*] Analyzing APK permissions...")
             scope.launch(Dispatchers.IO) {
                 try {
-                    val stream = context.contentResolver.openInputStream(it) ?: return@withContext
+                    val stream = context.contentResolver.openInputStream(it) ?: return@launch
                     val bytes = stream.readBytes()
                     stream.close()
 
                     if (bytes.size < 4 || bytes[0] != 0x50.toByte()) {
                         withContext(Dispatchers.Main) { output = listOf("[-] Not a valid APK file"); isRunning = false }
-                        return@withContext
+                        return@launch
                     }
 
                     // Extract permissions from binary manifest

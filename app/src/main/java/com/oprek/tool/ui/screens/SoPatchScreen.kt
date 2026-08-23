@@ -48,7 +48,7 @@ fun SoPatchScreen(navController: NavController) {
             output = listOf("[*] Loading .so file...")
             scope.launch(Dispatchers.IO) {
                 try {
-                    val stream = context.contentResolver.openInputStream(it) ?: return@withContext
+                    val stream = context.contentResolver.openInputStream(it) ?: return@launch
                     val data = stream.readBytes()
                     stream.close()
 
