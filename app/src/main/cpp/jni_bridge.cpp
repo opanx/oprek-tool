@@ -103,7 +103,7 @@ Java_com_oprek_tool_core_NativeLib_elfGetInfo(JNIEnv *env, jclass, jbyteArray da
     snprintf(buf, sizeof(buf),
         "Arch: %s %s\n"
         "Machine: %s (0x%04X)\n"
-        "Entry: 0x%016" PRIX64 "\n"
+        "Entry: 0x%016llX\n"
         "Program Headers: %u @ 0x%llX\n"
         "Section Headers: %u @ 0x%llX\n"
         "Section StrTab idx: %u\n"
