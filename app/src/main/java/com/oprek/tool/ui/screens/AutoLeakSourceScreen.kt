@@ -3,9 +3,6 @@ package com.oprek.tool.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -710,13 +707,11 @@ fun AutoLeakSourceScreen(navController: NavController) {
                         IconButton(onClick = {
                             val outDir = java.io.File("/sdcard/Download/OprekTool/leak")
                             outDir.mkdirs()
-                            val md = StringBuilder("# Leak Report\n\n")
-                            leaks.forEach { l -> md.appendLine("- [${l.severity}] **${l.category}**: ${l.value}") }
+                            val md = StringBuilder("# Leak Report
+
+")
+                            leaks.forEach { l -> md.appendLine("- [" + l.severity + "] **" + l.category + "**: " + l.value) }
                             java.io.File(outDir, "leaks.md").writeText(md.toString())
-                            val json = leaks.joinToString(",\n") { l ->
-                                "  {${chr(34)}severity${chr(34)}:${chr(34)}${l.severity}${chr(34)},${chr(34)}category${chr(34)}:${chr(34)}${l.category}${chr(34)},${chr(34)}value${chr(34)}:${chr(34)}${l.value.replace(""", "\\"")}${chr(34)}}"
-                            }
-                            java.io.File(outDir, "leaks.json").writeText("[\n$json\n]")
                             Toast.makeText(context, "Exported to /sdcard/Download/OprekTool/leak/", Toast.LENGTH_LONG).show()
                         }) { Icon(Icons.Default.Save, "Export") }
                     }
