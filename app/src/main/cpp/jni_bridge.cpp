@@ -104,10 +104,10 @@ Java_com_oprek_tool_core_NativeLib_elfGetInfo(JNIEnv *env, jclass, jbyteArray da
         "Arch: %s %s\n"
         "Machine: %s (0x%04X)\n"
         "Entry: 0x%016" PRIX64 "\n"
-        "Program Headers: %u @ 0x%lX\n"
-        "Section Headers: %u @ 0x%lX\n"
+        "Program Headers: %u @ 0x%llX\n"
+        "Section Headers: %u @ 0x%llX\n"
         "Section StrTab idx: %u\n"
-        "File size: %lu bytes",
+        "File size: %llu bytes",
         info.is_64 ? "ELF64" : "ELF32",
         info.is_le ? "Little Endian" : "Big Endian",
         arch_str, (unsigned)machine,
