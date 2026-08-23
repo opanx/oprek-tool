@@ -7,6 +7,8 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -62,7 +64,7 @@ fun NativeHookGeneratorScreen(navController: NavController) {
             val scripts = when (selectedTab) { 0 -> fridaNativeScripts; 1 -> dobbyScripts; 2 -> pltScripts; 3 -> inlineScripts; else -> fridaNativeScripts }
 
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(8.dp)) {
-                Column(Modifier.padding(8.dp), modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Column(Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
                     scripts.forEach { (name, pair) ->
                         Card(
                             onClick = { selectedScript = name; scriptOutput = pair.second },
