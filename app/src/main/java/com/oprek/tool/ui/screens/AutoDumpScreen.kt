@@ -173,9 +173,7 @@ except Exception as e:
                 addLine("❌ No root access! This tool requires root.")
                 addLine("   Install Magisk/KernelSU and grant root to OprekTool")
                 withContext(Dispatchers.Main) { isRunning = false }
-                earlyExit = true
             }
-            if (earlyExit) return@launch
             addLine("✅ Root confirmed")
             setProgress(0.05f)
 
@@ -187,9 +185,7 @@ except Exception as e:
                 addLine("   💡 Make sure the game is running!")
                 addLine("   💡 Open the game, enter lobby/match, then try again")
                 withContext(Dispatchers.Main) { isRunning = false }
-                earlyExit = true
             }
-            if (earlyExit) return@launch
             addLine("✅ PID: $pid")
             setProgress(0.1f)
 
@@ -244,9 +240,7 @@ except Exception as e:
                 }
                 addLine("   💡 Make sure the game is fully loaded (enter lobby/match)")
                 withContext(Dispatchers.Main) { isRunning = false }
-                earlyExit = true
             }
-            if (earlyExit) return@launch
 
             val il2cppRange = il2cppLine.substringBefore(" ")
             val il2cppStart = il2cppRange.substringBefore("-").toLong(16)
