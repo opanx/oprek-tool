@@ -195,7 +195,7 @@ private fun buildShellScript(context: Context, name: String, script: String): Li
     val shFile = File(dir, "$name.sh")
     shFile.writeText(script)
     shFile.setExecutable(true)
-    result.add("✅ Created: \${shFile.absolutePath}")
+    result.add("✅ Created: ${"\${shFile.absolutePath}"}")
     result.add("   Size: ${shFile.length()} bytes")
 
     // Create a simple Android package (ZIP with shell script)
@@ -214,9 +214,9 @@ private fun buildShellScript(context: Context, name: String, script: String): Li
 
     result.add("")
     result.add("💡 Usage:")
-    result.add("   sh \${shFile.absolutePath}")
+    result.add("   sh ${"\${shFile.absolutePath}"}")
     result.add("   # Or push to device:")
-    result.add("   adb push \${shFile.absolutePath} /data/local/tmp/")
+    result.add("   adb push ${"\${shFile.absolutePath}"} /data/local/tmp/")
     result.add("   adb shell sh /data/local/tmp/$name.sh")
 
     return result
@@ -297,119 +297,57 @@ private fun buildApkShell(context: Context, name: String, script: String): List<
 }
 
 private fun getApkTemplate(index: Int): String {
+    val D = "$"  // dollar sign variable
     return when (index) {
-        0 -> """#!/system/bin/sh
-# Auto Install Script
-# Usage: sh auto_install.sh <apk_path>
+        0 -> "#!/system/bin/sh\n" +
+            "# Auto Install Script\n" +
+            "# Usage: sh auto_install.sh <apk_path>\n\n" +
+            "APK=" + D + "1\n" +
+            "if [ -z " + D + "(APK) ]; then\n" +
+            "    echo \"Usage: " + D + "0 <apk_path>\"\n" +
+            "    exit 1\n" +
+            "fi\n\n" +
+            "echo \"Installing " + D + "(APK)...\"\n" +
+            "pm install -r " + D + "(APK)\n" +
+            "if [ " + D + "? -eq 0 ]; then\n" +
+            "    echo \"✅ Installed successfully!\"\"\n" +
+            "else\n" +
+            "    echo \"❌ Installation failed\"\"\n" +
+            "fi"
 
-APK="\$1"
-if [ -z "\$APK" ]; then
-    echo "Usage: \$0 <apk_path>"
-    exit 1
-fi
+        1 -> "#!/system/bin/sh\n" +
+            "# Root Check Script\n" +
+            "echo \"=== Root Check ===\"\n\n" +
+            "if [ " + D + "(id -u) = \"0\" ]; then\n" +
+            "    echo \"✅ Running as ROOT\"\n" +
+            "else\n" +
+            "    echo \"❌ Not root (uid=" + D + "(id -u))\"\n" +
+            "fi"
 
-echo "Installing \$APK..."
-pm install -r "\$APK"
-if [ \$? -eq 0 ]; then
-    echo "✅ Installed successfully!"
-else
-    echo "❌ Installation failed"
-fi"""
+        2 -> "#!/system/bin/sh\n" +
+            "# Backup Script\n" +
+            "# Usage: sh backup.sh <package_name>\n\n" +
+            "PKG=" + D + "1\n" +
+            "if [ -z " + D + "(PKG) ]; then\n" +
+            "    echo \"Usage: " + D + "0 <package_name>\"\n" +
+            "    exit 1\n" +
+            "fi\n\n" +
+            "BACKUP_DIR=/sdcard/Download/OprekTool/backup/" + D + "(PKG)\n" +
+            "mkdir -p " + D + "(BACKUP_DIR)\n" +
+            "echo \"Backing up " + D + "(PKG)...\"\"\n" +
+            "APK_PATH=" + D + "(pm path " + D + "(PKG) | head -1 | sed 's/package://')\n" +
+            "cp " + D + "(APK_PATH) " + D + "(BACKUP_DIR)/base.apk\n" +
+            "echo \"✅ Backup complete: " + D + "(BACKUP_DIR)\"\n"
 
-        1 -> """#!/system/bin/sh
-# Root Check Script
-echo "=== Root Check ==="
+        3 -> "#!/system/bin/sh\n" +
+            "# Debloat Script\n" +
+            "echo \"=== Debloat Script ===\"\n\n" +
+            "for pkg in com.google.android.youtube com.google.android.gm; do\n" +
+            "    echo \"Disabling: " + D + "pkg\"\n" +
+            "    pm disable-user --user 0 " + D + "pkg 2>/dev/null\n" +
+            "    echo \"  ✅ Done\"\n" +
+            "done"
 
-if [ "\$(id -u)" = "0" ]; then
-    echo "✅ Running as ROOT"
-else
-    echo "❌ Not root (uid=\$(id -u))"
-fi
-
-# Check su binary
-if which su >/dev/null 2>&1; then
-    echo "✅ su binary found: \$(which su)"
-else
-    echo "❌ su binary not found"
-fi
-
-# Check Magisk
-if [ -f "/data/adb/magisk/magisk64" ]; then
-    echo "✅ Magisk installed"
-else
-    echo "⚠️ Magisk not detected"
-fi
-
-# Check KSU
-if [ -f "/data/adb/ksud" ]; then
-    echo "✅ KernelSU installed"
-else
-    echo "⚠️ KernelSU not detected"
-fi"""
-
-        2 -> """#!/system/bin/sh
-# Backup Script
-# Usage: sh backup.sh <package_name>
-
-PKG="\$1"
-if [ -z "\$PKG" ]; then
-    echo "Usage: \$0 <package_name>"
-    exit 1
-fi
-
-BACKUP_DIR="/sdcard/Download/OprekTool/backup/\$PKG"
-mkdir -p "\$BACKUP_DIR"
-
-echo "Backing up \$PKG..."
-
-# APK
-APK_PATH=\$(pm path "\$PKG" | head -1 | sed 's/package://')
-if [ -n "\\$APK_PATH" ]; then
-    cp "\\$APK_PATH" "\$BACKUP_DIR/base.apk"
-    echo "✅ APK: \$BACKUP_DIR/base.apk"
-fi
-
-# Data
-if [ -d "/data/data/\$PKG" ]; then
-    tar -czf "\$BACKUP_DIR/data.tar.gz" -C /data/data "\$PKG" 2>/dev/null
-    echo "✅ Data: \$BACKUP_DIR/data.tar.gz"
-fi
-
-echo "Backup complete: \$BACKUP_DIR"
-ls -la "\$BACKUP_DIR"
-"""
-
-        3 -> """#!/system/bin/sh
-# Debloat Script
-# Remove unnecessary system apps
-
-BLOAT_LIST="
-com.google.android.youtube
-com.google.android.gm
-com.google.android.music
-com.google.android.apps.maps
-com.google.android.plus
-com.google.android.talk
-"
-
-echo "=== Debloat Script ==="
-echo "WARNING: This will disable system apps!"
-echo ""
-
-for pkg in \$BLOAT_LIST; do
-    echo "Disabling: $pkg"
-    pm disable-user --user 0 "$pkg" 2>/dev/null
-    if [ \$? -eq 0 ]; then
-        echo "  ✅ Disabled"
-    else
-        echo "  ❌ Not found or already disabled"
-    fi
-done
-
-echo ""
-echo "Done! Restart device to apply changes."
-echo "To re-enable: pm enable <package>" """
-
-        else -> "# Template $index"
+        else -> "# Template " + index
     }
 }

@@ -253,14 +253,14 @@ private fun TemplateMode(context: Context, setCpp: (String) -> Unit, setMode: (I
 
     Column(Modifier.padding(8.dp).verticalScroll(rememberScrollState())) {
         templates.forEachIndexed { i, (name, desc) ->
-            Card(Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                shape = RoundedCornerShape(6.dp),
-                onClick = {
+            Card(onClick = {
                     val code = getJniTemplate(i)
                     setCpp(code)
                     setMode(0)
-                }) {
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                colors = CardDefaults.cardColors(containerColor = DarkSurface),
+                shape = RoundedCornerShape(6.dp)) {
                 Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${i + 1}", color = AccentCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.width(8.dp))
@@ -361,7 +361,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
         return JNI_ERR;
     }
 
-    LOGI("JNI_OnLoad: Registered ${methods.size} methods");
+    LOGI("JNI_OnLoad: Registered methods successfully");
     return JNI_VERSION_1_6;
 }
 """
