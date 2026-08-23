@@ -1,4 +1,5 @@
 package com.oprek.tool.ui.screens
+@file:Suppress("DEPRECATION")
 
 import android.content.Intent
 import android.net.Uri
@@ -142,7 +143,7 @@ fun ToolCard(tool: ToolLink, onClick: () -> Unit) {
                 Text(tool.name, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = tool.color)
                 Text(tool.desc, fontSize = 11.sp, color = TextSecondary)
             }
-            Icon(Icons.AutoMirrored.Filled.OpenInNew, "Open", tint = tool.color, modifier = Modifier.size(20.dp))
+            Icon(Icons.Filled.OpenInNew, "Open", tint = tool.color, modifier = Modifier.size(20.dp))
         }
     }
 }

@@ -1,4 +1,5 @@
 package com.oprek.tool.ui.screens
+@file:Suppress("DEPRECATION")
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -513,7 +514,7 @@ fun TerminalScreen(navController: NavController) {
                     runCmd(command)
                     command = ""
                 }, enabled = command.isNotEmpty() && !isRunning) {
-                    Icon(Icons.AutoMirrored.Filled.Send, "Run", tint = if (command.isNotEmpty()) AccentGreen else TextMuted)
+                    Icon(Icons.Filled.Send, "Run", tint = if (command.isNotEmpty()) AccentGreen else TextMuted)
                 }
             }
         }
