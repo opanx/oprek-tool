@@ -3,6 +3,9 @@ package com.oprek.tool.ui.screens
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -56,8 +59,43 @@ fun AutoLeakSourceScreen(navController: NavController) {
         }
     }
 
-    fun scan() {
-        val f = SharedFileState.findFile(context) ?: run {
+    // File picker for direct scan
+    val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let {
+            isRunning = true
+            leaks = emptyList()
+            logLines = emptyList()
+            extractedFiles = emptyList()
+            progress = 0f
+            scope.launch(Dispatchers.IO) {
+                try {
+                    val stream = context.contentResolver.openInputStream(it) ?: return@launch
+                    val bytes = stream.readBytes()
+                    stream.close()
+                    val cursor = context.contentResolver.query(it, null, null, null, null)
+                    val name = cursor?.use { c ->
+                        val idx = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (c.moveToFirst() && idx >= 0) c.getString(idx) ?: "unknown" else "unknown"
+                    } ?: "unknown"
+                    fileName = name
+                    addLog("[+] Loaded: $name (${bytes.size} bytes)")
+                    scanData(bytes, name)
+                } catch (e: Exception) {
+                    addLog("[-] Error: ${e.message}")
+                }
+                isRunning = false
+            }
+        }
+    }
+
+    fun scanData(data: ByteArray, name: String) {
+        addLog("[+] Starting deep leak scan on: $name")
+        addLog("[+] File size: ${data.size} bytes")
+
+        val rawData = data
+
+        val f = SharedFileState.findFile(context)
+        if (f == null && data.isEmpty()) {
             addLog("[-] No file loaded!")
             return
         }
@@ -696,6 +734,7 @@ fun AutoLeakSourceScreen(navController: NavController) {
                 title = { Text("🔓 Auto Leak Source v3", fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
+                    IconButton(onClick = { filePicker.launch(arrayOf("*/*")) }) { Icon(Icons.Default.FolderOpen, "Pick File") }
                     IconButton(onClick = { scan() }) { Icon(Icons.Default.Refresh, "Scan") }
                     if (leaks.isNotEmpty()) {
                         IconButton(onClick = {
@@ -704,6 +743,29 @@ fun AutoLeakSourceScreen(navController: NavController) {
                             cb.setPrimaryClip(ClipData.newPlainText("leaks", text))
                             Toast.makeText(context, "Copied ${leaks.size} items!", Toast.LENGTH_SHORT).show()
                         }) { Icon(Icons.Default.ContentCopy, "Copy") }
+                        IconButton(onClick = {
+                            // Export to files
+                            val outDir = java.io.File("/sdcard/Download/OprekTool/leak")
+                            outDir.mkdirs()
+                            // Export leaks.md
+                            val md = StringBuilder("# Leak Report\n\n")
+                            leaks.forEach { l -> md.appendLine("- [${l.severity}] **${l.category}**: ${l.value}") }
+                            java.io.File(outDir, "leaks.md").writeText(md.toString())
+                            // Export stubs.h
+                            val h = StringBuilder("#ifndef STUBS_H\\n#define STUBS_H\\n\n")
+                            leaks.filter { it.value.contains("function") || it.value.contains("JNIEXPORT") || it.value.contains("class ") }.forEach { l ->
+                                h.appendLine("// ${l.category}: ${l.value.take(100)}")
+                                h.appendLine("// ${l.value}")
+                            }
+                            h.appendLine("\\n#endif // STUBS_H")
+                            java.io.File(outDir, "reconstructed_stubs.h").writeText(h.toString())
+                            // Export JSON
+                            val json = leaks.joinToString(",\n") { l ->
+                                "  {\"severity\":\"${l.severity}\",\"category\":\"${l.category}\",\"value\":\"${l.value.replace("\"", "\\\"")}\"}"  
+                            }
+                            java.io.File(outDir, "leaks.json").writeText("[\n$json\n]")
+                            Toast.makeText(context, "Exported 3 files to /sdcard/Download/OprekTool/leak/", Toast.LENGTH_LONG).show()
+                        }) { Icon(Icons.Default.Save, "Export") }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
