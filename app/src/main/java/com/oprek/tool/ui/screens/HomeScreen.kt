@@ -15,7 +15,6 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberModalDrawerSheet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -386,6 +385,8 @@ fun ToolCard(tool: ToolItem, onClick: () -> Unit) {
     }
 }
 
+
+data class ToolItem(val name: String, val desc: String, val icon: ImageVector, val color: Color, val route: String)
 
 private fun formatSize(bytes: Long): String = when {
     bytes < 1024 -> "${bytes}B"
