@@ -41,6 +41,7 @@ fun ApkToolSuiteScreen(navController: NavController) {
     var output by remember { mutableStateOf(listOf<String>()) }
     var isRunning by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0f) }
+    fun setProgress(p: Float) { progress = p }
     var mode by remember { mutableStateOf("decode") }
 
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
