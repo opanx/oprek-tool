@@ -1,21 +1,20 @@
+@file:Suppress("DEPRECATION")
 package com.oprek.tool.ui.screens
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.net.Uri
-import android.os.Environment
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,23 +23,43 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
 import java.io.File
-import java.io.FileOutputStream
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.zip.ZipFile
+
+// ═══════════════════════════════════════════════════════════════
+// AutoDump v7 — Unified IL2CPP dump pipeline
+// Strategy A: Valid metadata → parse TypeDef/MethodDef/FieldDef → dump.cs
+// Strategy B: Encrypted/missing metadata → raw dump lib + meta for PC
+// ═══════════════════════════════════════════════════════════════
+
+data class GamePreset(val name: String, val pkg: String, val il2cppLib: String, val desc: String)
+
+private val gamePresets = listOf(
+    GamePreset("MLBB", "com.mobile.legends", "libunity.so", "Unity IL2CPP (metadata encrypted)"),
+    GamePreset("FF MAX", "com.dts.freefiremax", "libil2cpp.so", "Garena Free Fire Max"),
+    GamePreset("FF", "com.dts.freefireth", "libil2cpp.so", "Garena Free Fire"),
+    GamePreset("PUBG Mobile", "com.tencent.ig", "libil2cpp.so", "PUBG Mobile"),
+    GamePreset("PUBGM HD", "com.tencent.tmgp.pubgmhd", "libil2cpp.so", "PUBG Mobile HD"),
+    GamePreset("Genshin", "com.miHoYo.GenshinImpact", "libil2cpp.so", "miHoYo Genshin Impact"),
+    GamePreset("BloodStrike", "com.proximabeta.mf.ussdk", "libil2cpp.so", "NetEase BloodStrike"),
+    GamePreset("CODM", "com.garena.game.codm", "libil2cpp.so", "Call of Duty Mobile"),
+    GamePreset("Brawl Stars", "com.supercell.brawlstars", "libil2cpp.so", "Supercell Brawl Stars"),
+    GamePreset("Manual", "", "", "Enter package + lib name manually"),
+)
+
+private const val MAGIC_META = -559038737 // 0xFAB11BAF
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,964 +69,516 @@ fun AutoDumpScreen(navController: NavController) {
     var output by remember { mutableStateOf(listOf<String>()) }
     var isRunning by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0f) }
-    var selectedPkg by remember { mutableStateOf("") }
+    var selectedPreset by remember { mutableIntStateOf(0) }
+    var manualPkg by remember { mutableStateOf("") }
+    var manualLib by remember { mutableStateOf("libil2cpp.so") }
     var dumpCsContent by remember { mutableStateOf("") }
-    var status by remember { mutableStateOf("") }
-    var dumpMode by remember { mutableIntStateOf(1) } // 0=APK, 1=Root (default Root)
-
-    val games = listOf(
-        "com.mobile.legends" to "MLBB",
-        "com.dts.freefiremax" to "FF MAX",
-        "com.dts.freefireth" to "FF",
-        "com.tencent.ig" to "PUBG",
-        "com.tencent.tmgp.pubgmhd" to "PUBGM",
-        "com.miHoYo.GenshinImpact" to "Genshin",
-        "com.proximabeta.mf.ussdk" to "BloodStrike",
-        "com.supercell.clashofclans" to "COC",
-        "com.supercell.brawlstars" to "Brawl",
-        "com.activision.callofduty.shooter" to "COD",
-        "com.garena.game.codm" to "CODM"
-    )
 
     fun addLine(msg: String) { output = output + msg }
+    fun setProgress(p: Float) { progress = p }
 
-    // APK file picker - support ALL file types for .apks
-    var apkUri by remember { mutableStateOf<Uri?>(null) }
-    var apkPath by remember { mutableStateOf("") }
-    val apkPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let {
-            apkUri = it
-            val cursor = context.contentResolver.query(it, null, null, null, null)
-            cursor?.use { c ->
-                val nameIndex = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                if (c.moveToFirst() && nameIndex >= 0) {
-                    apkPath = c.getString(nameIndex) ?: ""
+    // ─── su shell helper ───
+    fun suShell(cmd: String): String = try {
+        val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
+        val out = p.inputStream.bufferedReader().readText()
+        p.waitFor()
+        out
+    } catch (e: Exception) { "" }
+
+    // ─── Find PID with fallback ───
+    fun findPid(pkg: String): Int? {
+        // Try pidof first
+        var out = suShell("pidof $pkg").trim()
+        var pid = out.split(Regex("\\s+")).firstOrNull { it.all { c -> c.isDigit() } }?.toIntOrNull()
+        if (pid != null) return pid
+        // Fallback: ps -A
+        val psOut = suShell("ps -A")
+        psOut.lineSequence().forEach { line ->
+            if (line.contains(pkg)) {
+                val parts = line.trim().split(Regex("\\s+"))
+                pid = parts.getOrNull(1)?.toIntOrNull()
+                if (pid != null) return pid
+            }
+        }
+        return null
+    }
+
+    // ─── Check metadata magic ───
+    fun isMetadataValid(data: ByteArray): Boolean {
+        if (data.size < 8) return false
+        val magic = (data[0].toInt() and 0xFF) or
+            ((data[1].toInt() and 0xFF) shl 8) or
+            ((data[2].toInt() and 0xFF) shl 16) or
+            ((data[3].toInt() and 0xFF) shl 24)
+        return magic == MAGIC_META
+    }
+
+    // ─── Read memory via Python seek ───
+    fun readMemViaPython(pid: Int, start: Long, size: Long, outFile: File): Boolean {
+        val script = """
+import sys
+pid, start, size, path = $pid, $start, $size, r"${outFile.absolutePath}"
+try:
+    with open(f"/proc/{pid}/mem", "rb") as mem, open(path, "wb") as out:
+        mem.seek(start)
+        left = size
+        while left > 0:
+            chunk = mem.read(min(1024*1024, left))
+            if not chunk: break
+            out.write(chunk)
+            left -= len(chunk)
+    print("OK")
+except Exception as e:
+    print(f"ERR:{e}", file=sys.stderr)
+    sys.exit(1)
+""".trimIndent()
+        val tmp = File.createTempFile("dump_", ".py", context.cacheDir)
+        tmp.writeText(script)
+        try {
+            val p = Runtime.getRuntime().exec(arrayOf("su", "-c", "python3 ${tmp.absolutePath}"))
+            val result = p.inputStream.bufferedReader().readText()
+            p.waitFor()
+            return result.contains("OK") && outFile.exists() && outFile.length() > 0
+        } catch (e: Exception) { return false }
+        finally { tmp.delete() }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // MAIN DUMP FUNCTION
+    // ═══════════════════════════════════════════════════════════
+    fun runDump() {
+        val preset = gamePresets[selectedPreset]
+        val pkg = if (selectedPreset == gamePresets.size - 1) manualPkg.trim() else preset.pkg
+        val il2cppLib = if (selectedPreset == gamePresets.size - 1) manualLib.trim() else preset.il2cppLib
+
+        if (pkg.isBlank()) { addLine("❌ Enter a package name"); return }
+
+        isRunning = true
+        output = emptyList()
+        dumpCsContent = ""
+        val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date())
+
+        addLine("═══ AutoDump v7 ═══")
+        addLine("Package: $pkg | Lib: $il2cppLib")
+        addLine("Time: $ts")
+        addLine("")
+
+        scope.launch(Dispatchers.IO) {
+            // Step 1: Check root
+            addLine("🔐 Checking root...")
+            val rootCheck = suShell("id")
+            if (!rootCheck.contains("uid=0")) {
+                addLine("❌ No root access! This tool requires root.")
+                addLine("   Install Magisk/KernelSU and grant root to OprekTool")
+                withContext(Dispatchers.Main) { isRunning = false; return@withContext }
+                return@withContext
+            }
+            addLine("✅ Root confirmed")
+            setProgress(0.05f)
+
+            // Step 2: Find PID
+            addLine("\n🎯 Finding PID...")
+            val pid = findPid(pkg)
+            if (pid == null) {
+                addLine("❌ Process not found: $pkg")
+                addLine("   💡 Make sure the game is running!")
+                addLine("   💡 Open the game, enter lobby/match, then try again")
+                withContext(Dispatchers.Main) { isRunning = false; return@withContext }
+                return@withContext
+            }
+            addLine("✅ PID: $pid")
+            setProgress(0.1f)
+
+            // Step 3: Parse memory maps
+            addLine("\n📋 Parsing memory maps...")
+            val mapsRaw = suShell("cat /proc/$pid/maps")
+            val maps = mapsRaw.lines().filter { it.isNotBlank() }
+            val readable = maps.filter { it.substringAfter(" ").substringBefore(" ")[0] == 'r' }
+            val codeRegions = maps.filter { it.substringAfter(" ").substringBefore(" ").contains("x") }
+            addLine("   Total: ${maps.size} | Readable: ${readable.size} | Code: ${codeRegions.size}")
+            setProgress(0.15f)
+
+            // Step 4: Find IL2CPP library (fallback chain)
+            addLine("\n🎯 Finding $il2cppLib...")
+            var il2cppLine = maps.find { it.contains(il2cppLib) && it.contains("r-xp") }
+                ?: maps.find { it.contains(il2cppLib) }
+            var actualLib = il2cppLib
+
+            if (il2cppLine == null && il2cppLib != "libunity.so") {
+                addLine("   ⚠️ $il2cppLib not found, trying libunity.so...")
+                il2cppLine = maps.find { it.contains("libunity.so") && it.contains("r-xp") }
+                    ?: maps.find { it.contains("libunity.so") }
+                if (il2cppLine != null) actualLib = "libunity.so"
+            }
+            if (il2cppLine == null && il2cppLib != "libcsharp.so") {
+                addLine("   ⚠️ Trying libcsharp.so...")
+                il2cppLine = maps.find { it.contains("libcsharp.so") && it.contains("r-xp") }
+                    ?: maps.find { it.contains("libcsharp.so") }
+                if (il2cppLine != null) actualLib = "libcsharp.so"
+            }
+            if (il2cppLine == null) {
+                // Find largest .so code region
+                addLine("   ⚠️ No known IL2CPP lib, finding largest .so...")
+                var bestSize = 0L
+                for (region in codeRegions) {
+                    if (!region.contains(".so")) continue
+                    val range = region.substringBefore(" ")
+                    val s = range.substringBefore("-").toLong(16)
+                    val e = range.substringAfter("-").toLong(16)
+                    if (e - s > bestSize && e - s < 500_000_000) {
+                        bestSize = e - s
+                        il2cppLine = region
+                        actualLib = region.substringAfterLast(" ").trim()
+                    }
                 }
             }
-            // Auto-detect package from filename
-            if (selectedPkg.isBlank() && apkPath.isNotEmpty()) {
-                when {
-                    apkPath.contains("legends", true) || apkPath.contains("mlbb", true) -> selectedPkg = "com.mobile.legends"
-                    apkPath.contains("freefire", true) || apkPath.contains("ff", true) -> selectedPkg = "com.dts.freefireth"
-                    apkPath.contains("pubg", true) -> selectedPkg = "com.tencent.ig"
-                    apkPath.contains("genshin", true) -> selectedPkg = "com.miHoYo.GenshinImpact"
-                    apkPath.contains("blood", true) -> selectedPkg = "com.proximabeta.mf.ussdk"
+            if (il2cppLine == null) {
+                addLine("❌ No IL2CPP library found in process!")
+                addLine("   Available .so files:")
+                codeRegions.filter { it.contains(".so") }.take(10).forEach {
+                    addLine("   → ${it.substringAfterLast(" ").trim()}")
+                }
+                addLine("   💡 Make sure the game is fully loaded (enter lobby/match)")
+                withContext(Dispatchers.Main) { isRunning = false; return@withContext }
+                return@withContext
+            }
+
+            val il2cppRange = il2cppLine.substringBefore(" ")
+            val il2cppStart = il2cppRange.substringBefore("-").toLong(16)
+            val il2cppEnd = il2cppRange.substringAfter("-").toLong(16)
+            val il2cppSize = il2cppEnd - il2cppStart
+            addLine("✅ $actualLib @ 0x${"%X".format(il2cppStart)} (${il2cppSize / 1024}KB)")
+            setProgress(0.2f)
+
+            // Step 5: Search for metadata
+            addLine("\n📦 Searching for global-metadata.dat...")
+            val magic = intArrayOf(0xAF, 0x1B, 0xF1, 0xFA)
+            var metaOffset = 0L
+            var metaFound = false
+            var metaLibName = ""
+
+            // Strategy 1: Near IL2CPP lib regions
+            addLine("   Strategy 1: Near $actualLib regions...")
+            for (region in maps.filter { it.contains(actualLib) }) {
+                val perms = region.substringAfter(" ").substringBefore(" ")
+                if (perms[0] != 'r') continue
+                val range = region.substringBefore(" ")
+                val start = range.substringBefore("-").toLong(16)
+                val end = range.substringAfter("-").toLong(16)
+                val size = (end - start).toInt().coerceAtMost(4194304)
+                if (size < 4) continue
+                // Read via Python
+                val tmpFile = File(context.cacheDir, "meta_scan_$start.bin")
+                if (readMemViaPython(pid, start, size.toLong(), tmpFile)) {
+                    val data = tmpFile.readBytes()
+                    for (i in 0 until data.size - 4) {
+                        if (data[i].toInt() and 0xFF == magic[0] &&
+                            data[i + 1].toInt() and 0xFF == magic[1] &&
+                            data[i + 2].toInt() and 0xFF == magic[2] &&
+                            data[i + 3].toInt() and 0xFF == magic[3]) {
+                            metaOffset = start + i
+                            metaFound = true
+                            metaLibName = actualLib
+                            addLine("   ✅ Found @ 0x${"%X".format(metaOffset)}")
+                            break
+                        }
+                    }
+                    tmpFile.delete()
+                }
+                if (metaFound) break
+            }
+
+            // Strategy 2: Search all readable regions (limited)
+            if (!metaFound) {
+                addLine("   Strategy 2: Scanning readable regions...")
+                var scanned = 0
+                for (region in readable) {
+                    val range = region.substringBefore(" ")
+                    val start = range.substringBefore("-").toLong(16)
+                    val end = range.substringAfter("-").toLong(16)
+                    val size = (end - start).toInt().coerceAtMost(2097152) // 2MB max
+                    if (size < 4) continue
+                    // Skip large regions (likely dalvik heap)
+                    if (size > 50_000_000) continue
+                    val tmpFile = File(context.cacheDir, "meta_scan_$start.bin")
+                    if (readMemViaPython(pid, start, size.toLong(), tmpFile)) {
+                        val data = tmpFile.readBytes()
+                        for (i in 0 until data.size - 4) {
+                            if (data[i].toInt() and 0xFF == magic[0] &&
+                                data[i + 1].toInt() and 0xFF == magic[1] &&
+                                data[i + 2].toInt() and 0xFF == magic[2] &&
+                                data[i + 3].toInt() and 0xFF == magic[3]) {
+                                metaOffset = start + i
+                                metaFound = true
+                                addLine("   ✅ Found @ 0x${"%X".format(metaOffset)}")
+                                break
+                            }
+                        }
+                        tmpFile.delete()
+                    }
+                    scanned++
+                    if (scanned % 50 == 0) addLine("   ...$scanned regions scanned...")
+                    if (metaFound || scanned > 500) break
                 }
             }
+
+            setProgress(0.4f)
+
+            // Step 6: Decision — Strategy A or B
+            addLine("")
+
+            // Dump libil2cpp.so raw
+            addLine("\n💾 Dumping $actualLib raw...")
+            val outDir = File("/sdcard/Download/OprekTool/dump")
+            outDir.mkdirs()
+            val libOutFile = File(outDir, "${actualLib.replace(".so", "")}_$pkg.bin")
+
+            // Find the full lib path from maps
+            val libFullPath = maps.find { it.contains(actualLib) }?.substringAfterLast(" ")?.trim() ?: ""
+
+            if (libFullPath.isNotEmpty() && File(libFullPath).exists()) {
+                // Direct file copy (faster)
+                try {
+                    val src = File(libFullPath)
+                    src.copyTo(libOutFile, overwrite = true)
+                    addLine("✅ Copied from filesystem: ${libOutFile.absolutePath}")
+                } catch (e: Exception) {
+                    // Fallback: memory dump
+                    addLine("   File copy failed, dumping from memory...")
+                    val ok = readMemViaPython(pid, il2cppStart, il2cppSize, libOutFile)
+                    addLine(if (ok) "✅ Dumped: ${libOutFile.absolutePath} (${libOutFile.length() / 1024}KB)"
+                            else "❌ Failed to dump $actualLib")
+                }
+            } else {
+                // Memory dump
+                val ok = readMemViaPython(pid, il2cppStart, il2cppSize, libOutFile)
+                addLine(if (ok) "✅ Dumped: ${libOutFile.absolutePath} (${libOutFile.length() / 1024}KB)"
+                        else "❌ Failed to dump $actualLib")
+            }
+            setProgress(0.6f)
+
+            // Dump metadata if found
+            val metaOutFile = File(outDir, "global-metadata_$pkg.dat")
+            if (metaFound) {
+                addLine("\n💾 Dumping metadata...")
+                val ok = readMemViaPython(pid, metaOffset, 16777216, metaOutFile) // 16MB
+                addLine(if (ok) "✅ Metadata: ${metaOutFile.absolutePath} (${metaOutFile.length() / 1024}KB)"
+                        else "❌ Failed to dump metadata")
+            }
+            setProgress(0.7f)
+
+            // Step 7: Try to parse (Strategy A)
+            if (metaFound) {
+                addLine("\n📖 Attempting metadata parse (Strategy A)...")
+                try {
+                    val metaData = metaOutFile.readBytes()
+                    if (isMetadataValid(metaData)) {
+                        addLine("✅ Valid metadata magic 0xFAB11BAF")
+                        // Parse string literal table offset
+                        if (metaData.size >= 64) {
+                            val version = java.nio.ByteBuffer.wrap(metaData, 4, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN).int
+                            addLine("   Metadata version: $version")
+
+                            // Extract string pool offset
+                            val stringLiteralOffset = java.nio.ByteBuffer.wrap(metaData, 24, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN).int.toLong() and 0xFFFFFFFFL
+                            val stringLiteralCount = java.nio.ByteBuffer.wrap(metaData, 28, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN).int
+                            addLine("   String literals: $stringLiteralCount entries @ 0x${"%X".format(stringLiteralOffset)}")
+
+                            // Try to extract some strings
+                            val libData = libOutFile.readBytes()
+                            val strings = mutableListOf<String>()
+                            var cur = StringBuilder()
+                            for (b in libData) {
+                                val c = b.toInt() and 0xFF
+                                if (c in 0x20..0x7E) cur.append(c.toChar())
+                                else {
+                                    if (cur.length >= 6) strings.add(cur.toString())
+                                    cur.clear()
+                                }
+                                if (strings.size >= 5000) break
+                            }
+
+                            // Generate dump.cs
+                            val dumpCs = StringBuilder()
+                            dumpCs.appendLine("// dump.cs - Generated by OprekTool AutoDump v7")
+                            dumpCs.appendLine("// Package: $pkg | Lib: $actualLib")
+                            dumpCs.appendLine("// Strategy: A (metadata parsed)")
+                            dumpCs.appendLine("// $actualLib: 0x${"%X".format(il2cppStart)} - 0x${"%X".format(il2cppEnd)} (${il2cppSize / 1024}KB)")
+                            dumpCs.appendLine("// Metadata: 0x${"%X".format(metaOffset)} (valid)")
+                            dumpCs.appendLine("// Date: $ts")
+                            dumpCs.appendLine("")
+                            dumpCs.appendLine("// === Extracted Strings (${strings.size}) ===")
+                            strings.take(2000).forEach { s -> dumpCs.appendLine("// $s") }
+                            if (strings.size > 2000) dumpCs.appendLine("// ... and ${strings.size - 2000} more strings")
+
+                            dumpCsContent = dumpCs.toString()
+                            val dumpCsFile = File(outDir, "dump_$pkg.cs")
+                            dumpCsFile.writeText(dumpCsContent)
+                            addLine("✅ dump.cs saved: ${dumpCsFile.absolutePath}")
+                        }
+                    } else {
+                        addLine("⚠️ Metadata magic invalid — encrypted at runtime")
+                        addLine("   Using Strategy B (raw dump)")
+                    }
+                } catch (e: Exception) {
+                    addLine("⚠️ Parse error: ${e.message}")
+                    addLine("   Using Strategy B (raw dump)")
+                }
+            }
+
+            setProgress(0.9f)
+
+            // Step 8: Summary
+            addLine("\n═══════════════════════════════════════════")
+            addLine("📊 DUMP SUMMARY")
+            addLine("═══════════════════════════════════════════")
+            addLine("Package: $pkg")
+            addLine("PID: $pid")
+            addLine("Library: $actualLib @ 0x${"%X".format(il2cppStart)}")
+            addLine("Library dump: ${libOutFile.absolutePath} (${if (libOutFile.exists()) "${libOutFile.length() / 1024}KB" else "FAILED"})")
+            if (metaFound) {
+                addLine("Metadata: 0x${"%X".format(metaOffset)} (${if (metaOutFile.exists()) "${metaOutFile.length() / 1024}KB" else "FAILED"})")
+            } else {
+                addLine("Metadata: ❌ ENCRYPTED (not in memory)")
+            }
+            addLine("")
+
+            if (metaFound && isMetadataValid(metaOutFile.readBytes())) {
+                addLine("✅ Strategy A: Structure parse → dump.cs")
+                addLine("   Open dump_$pkg.cs for type definitions")
+            } else {
+                addLine("📋 Strategy B: Raw dump for PC processing")
+                addLine("   1. Copy files from /sdcard/Download/OprekTool/dump/")
+                addLine("   2. Use Il2CppDumper on PC:")
+                addLine("      il2cppdumper ${actualLib.replace(".so", "")}_$pkg.bin global-metadata_$pkg.dat")
+            }
+            addLine("")
+            addLine("📁 Output directory: /sdcard/Download/OprekTool/dump/")
+            setProgress(1.0f)
+
+            withContext(Dispatchers.Main) { isRunning = false }
         }
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // UI
+    // ═══════════════════════════════════════════════════════════
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("🚀 Auto Dump v6", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                },
+                title = { Text("🎯 AutoDump v7", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
-                    if (output.isNotEmpty()) {
-                        IconButton(onClick = {
-                            val text = output.joinToString("\n")
-                            val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            cb.setPrimaryClip(ClipData.newPlainText("dump", text))
-                            Toast.makeText(context, "Copied ${output.size} lines!", Toast.LENGTH_SHORT).show()
-                        }) { Icon(Icons.Default.ContentCopy, "Copy", Modifier.size(20.dp)) }
-                        IconButton(onClick = {
-                            val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "OprekTool/dump")
-                            dir.mkdirs()
-                            if (dumpCsContent.isNotEmpty()) {
-                                File(dir, "dump.cs").writeText(dumpCsContent)
-                            }
-                            val outFile = File(dir, "${selectedPkg.replace(".", "_")}_dump_${System.currentTimeMillis()}.txt")
-                            outFile.writeText(output.joinToString("\n"))
-                            Toast.makeText(context, "Saved to ${dir.absolutePath}", Toast.LENGTH_LONG).show()
-                        }) { Icon(Icons.Default.Save, "Save", Modifier.size(20.dp)) }
-                    }
+                    IconButton(onClick = {
+                        val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        cb.setPrimaryClip(ClipData.newPlainText("dump", output.joinToString("\n")))
+                        Toast.makeText(context, "Copied!", Toast.LENGTH_SHORT).show()
+                    }) { Icon(Icons.Default.ContentCopy, "Copy") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
         },
         containerColor = DarkBg
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            // ===== COMPACT SETTINGS CARD =====
-            Card(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = DarkSurface),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(Modifier.padding(8.dp)) {
-                    // Mode selector - compact row
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        FilterChip(
-                            selected = dumpMode == 0,
-                            onClick = { dumpMode = 0 },
-                            label = { Text("📦 APK", fontSize = 10.sp) },
-                            modifier = Modifier.weight(1f),
-                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentGreen.copy(alpha = 0.3f))
-                        )
-                        FilterChip(
-                            selected = dumpMode == 1,
-                            onClick = { dumpMode = 1 },
-                            label = { Text("🏴 Root", fontSize = 10.sp) },
-                            modifier = Modifier.weight(1f),
-                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(alpha = 0.3f))
-                        )
-                    }
+        Column(Modifier.padding(padding).fillMaxSize().padding(8.dp)) {
+            // Game selector
+            Card(Modifier.fillMaxWidth().padding(bottom = 8.dp), colors = CardDefaults.cardColors(containerColor = DarkSurface), shape = RoundedCornerShape(8.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    Text("📱 Select Game", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 12.sp)
                     Spacer(Modifier.height(4.dp))
 
-                    if (dumpMode == 0) {
-                        // APK mode - compact
-                        OutlinedTextField(
-                            value = apkPath,
-                            onValueChange = {},
-                            label = { Text("APK/APKS file", fontSize = 10.sp) },
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            readOnly = true,
-                            trailingIcon = {
-                                IconButton(onClick = { apkPicker.launch(arrayOf("application/zip", "application/vnd.android.package-archive", "*/*")) }) {
-                                    Icon(Icons.Default.FolderOpen, "Browse", Modifier.size(18.dp))
-                                }
-                            },
-                            textStyle = LocalTextStyle.current.copy(color = TextPrimary, fontSize = 11.sp),
-                            singleLine = true
-                        )
+                    // Preset chips
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        gamePresets.forEachIndexed { idx, preset ->
+                            FilterChip(
+                                selected = selectedPreset == idx,
+                                onClick = { selectedPreset = idx },
+                                label = { Text(preset.name, fontSize = 9.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AccentGreen.copy(alpha = 0.2f),
+                                    selectedLabelColor = AccentGreen
+                                )
+                            )
+                        }
                     }
 
-                    // Package name - always show
-                    OutlinedTextField(
-                        value = selectedPkg,
-                        onValueChange = { selectedPkg = it },
-                        label = { Text("Package name", fontSize = 10.sp) },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        singleLine = true,
-                        textStyle = LocalTextStyle.current.copy(color = TextPrimary, fontSize = 11.sp),
-                        trailingIcon = {
-                            if (selectedPkg.isNotEmpty()) {
-                                IconButton(onClick = { selectedPkg = "" }) {
-                                    Icon(Icons.Default.Clear, "Clear", Modifier.size(16.dp))
-                                }
-                            }
-                        }
-                    )
-
-                    if (dumpMode == 1) {
-                        // Game chips - compact
+                    // Manual input
+                    if (selectedPreset == gamePresets.size - 1) {
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(manualPkg, { manualPkg = it }, label = { Text("Package name", fontSize = 10.sp) },
+                            modifier = Modifier.fillMaxWidth().height(50.dp), singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(color = TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace))
                         Spacer(Modifier.height(4.dp))
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            games.take(6).forEach { (pkg, name) ->
-                                FilterChip(
-                                    selected = selectedPkg == pkg,
-                                    onClick = { selectedPkg = pkg },
-                                    label = { Text(name, fontSize = 8.sp) },
-                                    modifier = Modifier.weight(1f),
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(alpha = 0.2f))
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(2.dp))
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            games.drop(6).forEach { (pkg, name) ->
-                                FilterChip(
-                                    selected = selectedPkg == pkg,
-                                    onClick = { selectedPkg = pkg },
-                                    label = { Text(name, fontSize = 8.sp) },
-                                    modifier = Modifier.weight(1f),
-                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(alpha = 0.2f))
-                                )
-                            }
-                        }
+                        OutlinedTextField(manualLib, { manualLib = it }, label = { Text("IL2CPP library (e.g. libil2cpp.so)", fontSize = 10.sp) },
+                            modifier = Modifier.fillMaxWidth().height(50.dp), singleLine = true,
+                            textStyle = LocalTextStyle.current.copy(color = TextPrimary, fontSize = 10.sp, fontFamily = FontFamily.Monospace))
+                    } else {
+                        Spacer(Modifier.height(4.dp))
+                        Text("${preset.pkg} → ${preset.il2cppLib}", fontSize = 9.sp, color = TextSecondary, fontFamily = FontFamily.Monospace)
+                        Text(preset.desc, fontSize = 9.sp, color = TextMuted)
                     }
 
-                    Spacer(Modifier.height(6.dp))
-                    // Dump button - compact
-                    Button(
-                        onClick = {
-                            if (dumpMode == 0 && apkUri == null) {
-                                addLine("[-] Select APK file first!")
-                                return@Button
-                            }
-                            if (selectedPkg.isBlank()) {
-                                addLine("[-] Enter package name!")
-                                return@Button
-                            }
-                            isRunning = true
-                            progress = 0f
-                            scope.launch(Dispatchers.IO) {
-                                if (dumpMode == 0) {
-                                    runApkDump(context, apkUri!!, selectedPkg, apkPath, ::addLine,
-                                        { p -> progress = p },
-                                        { cs -> dumpCsContent = cs },
-                                        { s -> status = s })
-                                } else {
-                                    runAutoDumpV6(selectedPkg, context, ::addLine,
-                                        { p -> progress = p },
-                                        { cs -> dumpCsContent = cs },
-                                        { s -> status = s })
-                                }
-                                isRunning = false
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth().height(40.dp),
-                        enabled = !isRunning,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isRunning) AccentRed else AccentGreen
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
+                    Spacer(Modifier.height(8.dp))
+
+                    // Dump button
+                    Button(onClick = { runDump() }, modifier = Modifier.fillMaxWidth().height(44.dp),
+                        enabled = !isRunning, colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
+                        shape = RoundedCornerShape(8.dp)) {
                         if (isRunning) {
-                            CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = Color.White)
-                            Spacer(Modifier.width(6.dp))
-                            Text("Dumping... ${"%.0f".format(progress * 100)}%", fontSize = 11.sp)
+                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Dumping...", fontSize = 12.sp)
                         } else {
-                            Icon(Icons.Default.PlayArrow, null, Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Dump", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Icon(Icons.Default.CloudDownload, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Start Dump", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
+                    // Progress bar
                     if (isRunning) {
-                        Spacer(Modifier.height(4.dp))
-                        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(3.dp), color = AccentCyan, trackColor = DarkBg)
+                        Spacer(Modifier.height(8.dp))
+                        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(6.dp),
+                            color = AccentGreen, trackColor = DarkBg)
+                        Text("${(progress * 100).toInt()}%", fontSize = 9.sp, color = AccentGreen)
                     }
                 }
             }
 
-            // ===== OUTPUT CARD =====
-            Card(
-                Modifier.fillMaxWidth().weight(1f).padding(horizontal = 8.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0D1117)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+            // Output
+            Card(Modifier.fillMaxWidth().weight(1f), colors = CardDefaults.cardColors(containerColor = Color(0xFF0D1117)),
+                shape = RoundedCornerShape(8.dp)) {
                 Column(Modifier.padding(8.dp)) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("📋 ${output.size} lines", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 11.sp)
-                        if (dumpCsContent.isNotEmpty()) Text("✅ dump.cs", color = AccentCyan, fontSize = 9.sp)
-                    }
+                    Text("📋 Output (${output.size} lines)", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 11.sp)
                     Spacer(Modifier.height(4.dp))
-                    if (output.isEmpty()) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("🚀", fontSize = 36.sp)
-                                Spacer(Modifier.height(4.dp))
-                                if (dumpMode == 0) {
-                                    Text("Select APK → Enter package → Dump", color = TextSecondary, fontSize = 11.sp)
-                                    Text("Supports .apk, .apks (split APK)", color = Color.Gray, fontSize = 9.sp)
-                                } else {
-                                    Text("Select game → Tap Dump", color = TextSecondary, fontSize = 11.sp)
-                                    Text("Root required for memory dump", color = Color.Gray, fontSize = 9.sp)
-                                }
+                    LazyColumn(Modifier.weight(1f)) {
+                        items(output) { line ->
+                            val color = when {
+                                line.startsWith("✅") -> AccentGreen
+                                line.startsWith("❌") -> AccentRed
+                                line.startsWith("⚠") -> AccentOrange
+                                line.startsWith("═") -> AccentCyan
+                                line.startsWith("📊") -> AccentCyan
+                                else -> TextPrimary
                             }
+                            Text(line, fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = color, lineHeight = 12.sp)
                         }
-                    } else {
-                        LazyColumn {
-                            items(output) { line ->
-                                val color = when {
-                                    line.startsWith("✅") || line.startsWith("🎉") -> AccentGreen
-                                    line.startsWith("❌") -> AccentRed
-                                    line.startsWith("⚠️") -> AccentOrange
-                                    line.startsWith("🎯") || line.startsWith("📦") || line.startsWith("🔍") -> AccentCyan
-                                    line.startsWith("📊") -> AccentPurple
-                                    line.startsWith("  →") -> Color(0xFF888888)
-                                    line.contains("namespace") || line.contains("class ") -> AccentCyan
-                                    line.contains("offset=") -> AccentOrange
-                                    else -> TextPrimary
-                                }
-                                Text(line, color = color, fontSize = 9.sp, fontFamily = FontFamily.Monospace, lineHeight = 12.sp)
-                            }
+                    }
+
+                    // Copy dump.cs button
+                    if (dumpCsContent.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Button(onClick = {
+                            val cb = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            cb.setPrimaryClip(ClipData.newPlainText("dumpcs", dumpCsContent))
+                            Toast.makeText(context, "dump.cs copied!", Toast.LENGTH_SHORT).show()
+                        }, colors = ButtonDefaults.buttonColors(containerColor = AccentCyan), modifier = Modifier.fillMaxWidth().height(36.dp),
+                            shape = RoundedCornerShape(6.dp)) {
+                            Text("📋 Copy dump.cs", fontSize = 10.sp)
                         }
                     }
                 }
             }
-
-            Text("© Panxcz & Freebuff | v6.0", color = TextSecondary, fontSize = 8.sp,
-                modifier = Modifier.fillMaxWidth().padding(2.dp), textAlign = TextAlign.Center)
         }
     }
-}
-
-// ========== APK DUMP ENGINE ==========
-private suspend fun runApkDump(
-    context: Context,
-    apkUri: Uri,
-    pkgHint: String,
-    apkName: String,
-    addLine: (String) -> Unit,
-    setProgress: (Float) -> Unit,
-    setDumpCs: (String) -> Unit,
-    setStatus: (String) -> Unit
-) = withContext(Dispatchers.IO) {
-
-    val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-
-    addLine("🚀 Auto Dump v6 - APK Extractor")
-    addLine("Time: $ts")
-    addLine("")
-
-    // 1. Copy APK to cache
-    addLine("📦 Copying APK to cache...")
-    setProgress(0.05f)
-    val cacheDir = File(context.cacheDir, "dumps")
-    cacheDir.mkdirs()
-    val cacheFile = File(cacheDir, "temp_apk.apk")
-    try {
-        context.contentResolver.openInputStream(apkUri)?.use { ins ->
-            FileOutputStream(cacheFile).use { out ->
-                ins.copyTo(out)
-            }
-        } ?: run {
-            addLine("❌ Cannot read APK file")
-            return@withContext
-        }
-        addLine("✅ APK: ${cacheFile.length() / 1024}KB")
-    } catch (e: Exception) {
-        addLine("❌ Failed: ${e.message}")
-        return@withContext
-    }
-
-    // 2. Determine if split APK
-    addLine("\n📦 Analyzing...")
-    setProgress(0.1f)
-    val isApks = cacheFile.name.endsWith(".apks", true) || cacheFile.name.endsWith(".apkm", true)
-    val pkg = pkgHint.ifEmpty { "unknown" }
-
-    try {
-        val zipFile = ZipFile(cacheFile)
-        val entries = zipFile.entries().toList()
-
-        if (isApks) {
-            addLine("📦 Split APK (${entries.size} entries)")
-            setProgress(0.15f)
-
-            // Find arm64 split
-            val arm64Split = entries.find { it.name.contains("arm64") && it.name.endsWith(".apk") }
-
-            if (arm64Split != null) {
-                val splitFile = File(cacheDir, "arm64_split.apk")
-                zipFile.getInputStream(arm64Split).use { input ->
-                    FileOutputStream(splitFile).use { output -> input.copyTo(output) }
-                }
-
-                val splitZip = ZipFile(splitFile)
-                val splitEntries = splitZip.entries().toList()
-
-                // List all .so files
-                val allSo = splitEntries.filter { it.name.endsWith(".so") }
-                addLine("   .so files: ${allSo.size}")
-                allSo.forEach { addLine("   → ${it.name.substringAfterLast("/")} (${it.size / 1024}KB)") }
-
-                // Find libil2cpp.so
-                val il2cppEntry = splitEntries.find { it.name.contains("libil2cpp.so") }
-                if (il2cppEntry != null) {
-                    addLine("\n🎯 libil2cpp.so: ${il2cppEntry.size / 1024}KB")
-                    setProgress(0.25f)
-
-                    val il2cppFile = File(cacheDir, "libil2cpp.so")
-                    splitZip.getInputStream(il2cppEntry).use { input ->
-                        FileOutputStream(il2cppFile).use { output -> input.copyTo(output) }
-                    }
-
-                    val il2cppBytes = il2cppFile.readBytes()
-                    val dumpCs = StringBuilder()
-                    dumpCs.append("// dump.cs - Generated by OprekTool AutoDump v6\n")
-                    dumpCs.append("// Package: $pkg\n")
-                    dumpCs.append("// APK: $apkName\n")
-                    dumpCs.append("// Date: $ts\n\n")
-
-                    // Parse ELF
-                    val elfResult = parseElfHeaderFull(il2cppBytes, addLine)
-                    dumpCs.append(elfResult)
-                    setProgress(0.4f)
-
-                    // Extract strings
-                    addLine("\n📝 Extracting strings...")
-                    val allStrings = extractStringsFromBinary(il2cppBytes, 4)
-                    addLine("   Total: ${allStrings.size}")
-
-                    val categories = categorizeStrings(allStrings)
-                    dumpCs.append(buildDumpCsContent(categories, allStrings.size))
-                    setDumpCs(dumpCs.toString())
-
-                    // Save
-                    val saveDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "OprekTool/dump/$pkg")
-                    saveDir.mkdirs()
-                    val csFile = File(saveDir, "dump.cs")
-                    csFile.writeText(dumpCs.toString())
-                    addLine("\n✅ dump.cs: ${csFile.absolutePath}")
-                    addLine("   (${dumpCs.lines().size} lines)")
-
-                    // Summary
-                    addLine("\n📊 Categories:")
-                    addLine("   Game: ${categories.game.size} | Types: ${categories.types.size}")
-                    addLine("   Methods: ${categories.methods.size} | NS: ${categories.namespaces.size}")
-                    addLine("   Unity: ${categories.unity.size} | Network: ${categories.network.size}")
-                } else {
-                    addLine("❌ libil2cpp.so not found in split!")
-                }
-
-                // Check metadata
-                val metaEntry = splitEntries.find { it.name.contains("global-metadata") }
-                if (metaEntry != null) {
-                    if (metaEntry.size > 0) {
-                        addLine("\n📦 global-metadata.dat: ${metaEntry.size} bytes")
-                        val metaFile = File(cacheDir, "global-metadata.dat")
-                        splitZip.getInputStream(metaEntry).use { input ->
-                            FileOutputStream(metaFile).use { output -> input.copyTo(output) }
-                        }
-                        val metaBytes = metaFile.readBytes()
-                        if (metaBytes.size >= 4) {
-                            val magic = ByteBuffer.wrap(metaBytes, 0, 4).order(ByteOrder.LITTLE_ENDIAN).int
-                            if (magic == -83918337) {
-                                addLine("   ✅ Valid metadata! Parsing...")
-                                parseMetadataFull(metaBytes, addLine, setDumpCs)
-                            } else {
-                                addLine("   ⚠️ Invalid magic (encrypted)")
-                            }
-                        }
-                    } else {
-                        addLine("   ⚠️ Empty (encrypted/downloaded at runtime)")
-                    }
-                } else {
-                    addLine("   ⚠️ Not in APK (downloaded at runtime)")
-                }
-
-                splitZip.close()
-            }
-            zipFile.close()
-        } else {
-            // Regular APK
-            addLine("📦 Regular APK (${entries.size} entries)")
-            val soEntries = entries.filter { it.name.endsWith(".so") }
-            val il2cppEntry = entries.find { it.name.contains("libil2cpp.so") }
-            val metaEntry = entries.find { it.name.contains("global-metadata") }
-
-            addLine("   .so: ${soEntries.size}")
-
-            if (il2cppEntry != null) {
-                addLine("🎯 libil2cpp.so: ${il2cppEntry.size / 1024}KB")
-                val il2cppFile = File(cacheDir, "libil2cpp.so")
-                zipFile.getInputStream(il2cppEntry).use { input ->
-                    FileOutputStream(il2cppFile).use { output -> input.copyTo(output) }
-                }
-                val il2cppBytes = il2cppFile.readBytes()
-
-                val dumpCs = StringBuilder()
-                dumpCs.append("// dump.cs - Generated by OprekTool AutoDump v6\n")
-                dumpCs.append("// Package: $pkg\n")
-                dumpCs.append("// Date: $ts\n\n")
-
-                dumpCs.append(parseElfHeaderFull(il2cppBytes, addLine))
-
-                val allStrings = extractStringsFromBinary(il2cppBytes, 4)
-                addLine("\n📝 Strings: ${allStrings.size}")
-                val categories = categorizeStrings(allStrings)
-                dumpCs.append(buildDumpCsContent(categories, allStrings.size))
-                setDumpCs(dumpCs.toString())
-
-                val saveDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "OprekTool/dump/$pkg")
-                saveDir.mkdirs()
-                val csFile = File(saveDir, "dump.cs")
-                csFile.writeText(dumpCs.toString())
-                addLine("✅ dump.cs: ${csFile.absolutePath}")
-            }
-
-            if (metaEntry != null && metaEntry.size > 0) {
-                addLine("📦 global-metadata.dat: ${metaEntry.size} bytes")
-                val metaFile = File(cacheDir, "global-metadata.dat")
-                zipFile.getInputStream(metaEntry).use { input ->
-                    FileOutputStream(metaFile).use { output -> input.copyTo(output) }
-                }
-                val metaBytes = metaFile.readBytes()
-                if (metaBytes.size >= 4) {
-                    val magic = ByteBuffer.wrap(metaBytes, 0, 4).order(ByteOrder.LITTLE_ENDIAN).int
-                    if (magic == -83918337) {
-                        addLine("   ✅ Valid!")
-                        parseMetadataFull(metaBytes, addLine, setDumpCs)
-                    } else {
-                        addLine("   ⚠️ Encrypted")
-                    }
-                }
-            } else {
-                addLine("⚠️ global-metadata.dat: not found/empty (encrypted)")
-            }
-
-            zipFile.close()
-        }
-    } catch (e: Exception) {
-        addLine("❌ Error: ${e.message}")
-    }
-
-    // Cleanup
-    cacheFile.delete()
-    File(cacheDir, "arm64_split.apk").delete()
-    File(cacheDir, "libil2cpp.so").delete()
-    File(cacheDir, "global-metadata.dat").delete()
-
-    setProgress(1.0f)
-    addLine("\n🎉 Done!")
-    setStatus("Complete")
-}
-
-// ========== ROOT DUMP ENGINE V6 ==========
-private suspend fun runAutoDumpV6(
-    pkg: String,
-    context: Context,
-    addLine: (String) -> Unit,
-    setProgress: (Float) -> Unit,
-    setDumpCs: (String) -> Unit,
-    setStatus: (String) -> Unit
-) = withContext(Dispatchers.IO) {
-
-    val ts = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-
-    addLine("🚀 Auto Dump v6 - Root Memory")
-    addLine("Package: $pkg | Time: $ts")
-    addLine("")
-
-    // Root check
-    addLine("🔍 Checking root...")
-    val rootOk = suShell("id").contains("uid=0")
-    if (!rootOk) {
-        addLine("❌ No root! Use APK mode or run with root.")
-        return@withContext
-    }
-    addLine("✅ Root OK")
-    setProgress(0.05f)
-
-    // Find PID
-    val pidOut = suShell("pidof $pkg")
-    val pid = pidOut.trim().split("\\s+".toRegex()).firstOrNull { it.all { c -> c.isDigit() } }
-    if (pid == null) {
-        addLine("❌ Process not found. Launch $pkg first!")
-        return@withContext
-    }
-    addLine("✅ PID: $pid")
-    setProgress(0.1f)
-
-    // Parse maps
-    addLine("\n📋 Memory maps...")
-    val mapsRaw = suShell("cat /proc/$pid/maps")
-    val maps = mapsRaw.lines().filter { it.isNotBlank() }
-    val allReadable = maps.filter { it.substringAfter(" ").substringBefore(" ")[0] == 'r' }
-    val codeRegions = maps.filter { it.substringAfter(" ").substringBefore(" ").contains("x") && (it.contains(".so") || it.contains(".oat")) }
-    addLine("   Total: ${maps.size} | Readable: ${allReadable.size}")
-    setProgress(0.15f)
-
-    // Find IL2CPP library (libil2cpp.so → libunity.so → libcsharp.so → any .so with IL2CPP)
-    addLine("\n🎯 Finding IL2CPP library...")
-    var il2cppLine = maps.find { it.contains("libil2cpp.so") && it.contains("r-xp") }
-        ?: maps.find { it.contains("libil2cpp.so") }
-    var il2cppLibName = "libil2cpp.so"
-    
-    if (il2cppLine == null) {
-        // MLBB uses libunity.so for IL2CPP runtime
-        addLine("   ⚠️ libil2cpp.so not found, trying libunity.so...")
-        il2cppLine = maps.find { it.contains("libunity.so") && it.contains("r-xp") }
-            ?: maps.find { it.contains("libunity.so") }
-        il2cppLibName = "libunity.so"
-    }
-    if (il2cppLine == null) {
-        // Some games use libcsharp.so
-        addLine("   ⚠️ libunity.so not found, trying libcsharp.so...")
-        il2cppLine = maps.find { it.contains("libcsharp.so") && it.contains("r-xp") }
-            ?: maps.find { it.contains("libcsharp.so") }
-        il2cppLibName = "libcsharp.so"
-    }
-    if (il2cppLine == null) {
-        // Last resort: find largest .so code region
-        addLine("   ⚠️ No known IL2CPP lib, finding largest .so...")
-        var bestSize = 0L
-        for (region in codeRegions) {
-            val range = region.substringBefore(" ")
-            val s = range.substringBefore("-").toLong(16)
-            val e = range.substringAfter("-").toLong(16)
-            val sz = e - s
-            if (sz > bestSize && sz < 500_000_000) {
-                bestSize = sz
-                il2cppLine = region
-                il2cppLibName = region.substringAfterLast(" ").trim()
-            }
-        }
-    }
-    if (il2cppLine == null) {
-        addLine("❌ No IL2CPP library found!")
-        addLine("   Available .so files:")
-        codeRegions.take(10).forEach { addLine("   → ${it.substringAfterLast(" ").trim()}") }
-        addLine("   💡 Make sure the game is fully loaded (enter lobby/match)")
-        return@withContext
-    }
-
-    val il2cppRange = il2cppLine.substringBefore(" ")
-    val il2cppStart = il2cppRange.substringBefore("-").toLong(16)
-    val il2cppEnd = il2cppRange.substringAfter("-").toLong(16)
-    val il2cppSize = il2cppEnd - il2cppStart
-    addLine("✅ 0x${"%X".format(il2cppStart)} (${il2cppSize / 1024}KB)")
-    setProgress(0.2f)
-
-    // Find libcsharp.so
-    val csharpLine = maps.find { it.contains("libcsharp.so") && it.contains("r-xp") }
-    if (csharpLine != null) {
-        val csharpRange = csharpLine.substringBefore(" ")
-        val cs = csharpRange.substringBefore("-").toLong(16)
-        val ce = csharpRange.substringAfter("-").toLong(16)
-        addLine("✅ libcsharp.so: 0x${"%X".format(cs)} (${(ce - cs) / 1024}KB)")
-    }
-
-    // Search metadata
-    addLine("\n📦 Searching metadata...")
-    val magic = intArrayOf(0xAF, 0x1B, 0xF1, 0xFA)
-    var metaOffset = 0L
-    var metaFound = false
-
-    // Strategy 1: Near IL2CPP lib
-    addLine("   Strategy 1: Near $il2cppLibName...")
-    for (region in maps.filter { it.contains(il2cppLibName) }) {
-        val perms = region.substringAfter(" ").substringBefore(" ")
-        if (perms[0] != 'r') continue
-        val range = region.substringBefore(" ")
-        val start = range.substringBefore("-").toLong(16)
-        val end = range.substringAfter("-").toLong(16)
-        val size = (end - start).toInt().coerceAtMost(4194304)
-        if (size < 4) continue
-        val data = readMemChunked(pid, start, size) ?: continue
-        val found = findMagic(data, magic)
-        if (found >= 0) {
-            metaOffset = start + found
-            metaFound = true
-            addLine("   ✅ Found @ 0x${"%X".format(metaOffset)}")
-            break
-        }
-    }
-
-    // Strategy 2: All readable
-    if (!metaFound) {
-        addLine("   Strategy 2: Scanning all readable...")
-        var scanned = 0
-        for (region in allReadable) {
-            val range = region.substringBefore(" ")
-            val start = range.substringBefore("-").toLong(16)
-            val end = range.substringAfter("-").toLong(16)
-            val size = (end - start).toInt().coerceAtMost(4194304)
-            if (size < 4) continue
-            val data = readMemChunked(pid, start, size) ?: continue
-            val found = findMagic(data, magic)
-            if (found >= 0) {
-                metaOffset = start + found
-                metaFound = true
-                addLine("   ✅ Found @ 0x${"%X".format(metaOffset)}")
-                break
-            }
-            scanned++
-            if (scanned % 100 == 0) addLine("   ...$scanned regions...")
-        }
-    }
-
-    if (!metaFound) {
-        addLine("   ⚠️ Metadata ENCRYPTED (not in memory)")
-        addLine("   → Enter lobby/match first, or use APK mode")
-    }
-    setProgress(0.4f)
-
-    // Build dump.cs
-    val dumpCs = StringBuilder()
-    dumpCs.append("// dump.cs - Generated by OprekTool AutoDump v6 (Root)\n")
-    dumpCs.append("// Package: $pkg | PID: $pid\n")
-    dumpCs.append("// $il2cppLibName: 0x${"%X".format(il2cppStart)} - 0x${"%X".format(il2cppEnd)} (${il2cppSize / 1024}KB)\n")
-    dumpCs.append("// Metadata: ${if (metaFound) "0x${"%X".format(metaOffset)}" else "ENCRYPTED"}\n")
-    dumpCs.append("// Date: $ts\n\n")
-
-    // Read ELF header
-    val elfData = readMemChunked(pid, il2cppStart, 4096.coerceAtMost(il2cppSize.toInt()))
-    var is64bit = true
-    if (elfData != null && elfData.size >= 20 && elfData[0] == 0x7F.toByte() && elfData[1] == 'E'.code.toByte()) {
-        is64bit = elfData[4] == 2.toByte()
-        dumpCs.append("// ELF: ${if (is64bit) "64-bit" else "32-bit"}\n")
-        addLine("\n📖 ELF: ${if (is64bit) "64-bit" else "32-bit"}")
-    }
-
-    // Parse metadata
-    if (metaFound) {
-        val metaData = readMemChunked(pid, metaOffset, 256)
-        if (metaData != null && metaData.size >= 24) {
-            val bb = ByteBuffer.wrap(metaData).order(ByteOrder.LITTLE_ENDIAN)
-            val magicFound = bb.getInt(0)
-            val version = bb.getInt(4)
-            if (magicFound == -83918337 && version in 24..29) {
-                addLine("   ✅ v$version")
-                parseMetadataFull(metaData, addLine, setDumpCs)
-            }
-        }
-    }
-    setProgress(0.6f)
-
-    // Extract strings
-    addLine("\n📝 Extracting strings...")
-    val allStrings = mutableSetOf<String>()
-    var bytesRead = 0L
-    while (bytesRead < il2cppSize) {
-        val toRead = 1048576.coerceAtMost((il2cppSize - bytesRead).toInt())
-        val data = readMemChunked(pid, il2cppStart + bytesRead, toRead)
-        if (data == null || data.isEmpty()) break
-        allStrings.addAll(extractStringsFromBinary(data, 5))
-        bytesRead += toRead
-    }
-
-    // Also from libcsharp.so
-    val csharpLine2 = maps.find { it.contains("libcsharp.so") && it.contains("r-xp") }
-    if (csharpLine2 != null) {
-        val csharpRange = csharpLine2.substringBefore(" ")
-        val csStart = csharpRange.substringBefore("-").toLong(16)
-        val csEnd = csharpRange.substringAfter("-").toLong(16)
-        val csSize = csEnd - csStart
-        addLine("   Also scanning libcsharp.so...")
-        bytesRead = 0L
-        while (bytesRead < csSize) {
-            val toRead = 1048576.coerceAtMost((csSize - bytesRead).toInt())
-            val data = readMemChunked(pid, csStart + bytesRead, toRead)
-            if (data == null || data.isEmpty()) break
-            allStrings.addAll(extractStringsFromBinary(data, 5))
-            bytesRead += toRead
-        }
-    }
-
-    addLine("   ✅ ${allStrings.size} strings")
-    val categories = categorizeStrings(allStrings)
-    dumpCs.append(buildDumpCsContent(categories, allStrings.size))
-    setProgress(0.8f)
-
-    // Dump IL2CPP regions
-    addLine("\n💾 Dumping regions...")
-    val saveDir = File(context.getExternalFilesDir(null), "dump/$pkg")
-    saveDir.mkdirs()
-    var dumpCount = 0
-    for (region in maps.filter { it.contains("libil2cpp.so") }) {
-        val range = region.substringBefore(" ")
-        val perms = region.substringAfter(" ").substringBefore(" ")
-        val start = range.substringBefore("-").toLong(16)
-        val end = range.substringAfter("-").toLong(16)
-        val size = (end - start).toInt().coerceAtMost(524288)
-        if (size <= 0) continue
-        val data = readMemChunked(pid, start, size)
-        if (data != null && data.isNotEmpty()) {
-            val tag = if (perms.contains("x")) "code" else if (perms.contains("w")) "data" else "ro"
-            File(saveDir, "il2cpp_${tag}_0x${"%X".format(start)}.bin").writeBytes(data)
-            dumpCount++
-        }
-        delay(5)
-    }
-    addLine("   ✅ $dumpCount regions dumped")
-
-    // Save dump.cs
-    setDumpCs(dumpCs.toString())
-    val csFile = File(saveDir, "dump.cs")
-    csFile.writeText(dumpCs.toString())
-    addLine("\n✅ dump.cs: ${csFile.absolutePath}")
-
-    setProgress(1.0f)
-    addLine("\n🎉 Done! ${allStrings.size} strings, $dumpCount regions")
-    setStatus("Complete: ${allStrings.size} strings")
-}
-
-// ========== ELF PARSER ==========
-private fun parseElfHeaderFull(data: ByteArray, addLine: (String) -> Unit): String {
-    if (data.size < 16 || data[0] != 0x7F.toByte() || data[1] != 'E'.code.toByte()) {
-        return "// Invalid ELF\n"
-    }
-
-    val is64 = data[4] == 2.toByte()
-    val isLE = data[5] == 1.toByte()
-    val bb = ByteBuffer.wrap(data).order(if (isLE) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-
-    val sb = StringBuilder()
-    sb.append("// ELF: ${if (is64) "ELF64" else "ELF32"} ${if (isLE) "LE" else "BE"}\n")
-
-    if (is64) {
-        val entry = bb.getLong(24)
-        val phoff = bb.getLong(32)
-        val shoff = bb.getLong(40)
-        val phnum = bb.getShort(56).toInt() and 0xFFFF
-        val shnum = bb.getShort(60).toInt() and 0xFFFF
-        sb.append("// Entry: 0x${"%016X".format(entry)} | PH: $phnum | SH: $shnum\n")
-        addLine("   ELF64: Entry=0x${"%X".format(entry)} PH=$phnum SH=$shnum")
-    } else {
-        val entry = bb.getInt(24).toLong() and 0xFFFFFFFF
-        val phnum = bb.getShort(44).toInt() and 0xFFFF
-        val shnum = bb.getShort(48).toInt() and 0xFFFF
-        sb.append("// Entry: 0x${"%08X".format(entry)} | PH: $phnum | SH: $shnum\n")
-        addLine("   ELF32: Entry=0x${"%X".format(entry)} PH=$phnum SH=$shnum")
-    }
-
-    return sb.toString()
-}
-
-// ========== METADATA PARSER ==========
-private fun parseMetadataFull(
-    metaData: ByteArray,
-    addLine: (String) -> Unit,
-    setDumpCs: (String) -> Unit
-) {
-    if (metaData.size < 128) return
-
-    val bb = ByteBuffer.wrap(metaData).order(ByteOrder.LITTLE_ENDIAN)
-    val version = bb.getInt(4)
-
-    addLine("   📊 IL2CPP Metadata v$version")
-
-    if (version in 24..29 && metaData.size >= 128) {
-        val typeDefOffset = bb.getInt(if (version >= 29) 44 else 24)
-        val typeDefCount = bb.getInt(if (version >= 29) 48 else 28)
-        val methodDefOffset = bb.getInt(if (version >= 29) 52 else 32)
-        val methodDefCount = bb.getInt(if (version >= 29) 56 else 36)
-        val fieldDefOffset = bb.getInt(if (version >= 29) 60 else 40)
-        val fieldDefCount = bb.getInt(if (version >= 29) 64 else 44)
-
-        addLine("   TypeDef: $typeDefCount | MethodDef: $methodDefCount | FieldDef: $fieldDefCount")
-    }
-}
-
-// ========== STRING CATEGORIZER ==========
-private data class StringCategories(
-    val game: List<String>,
-    val types: List<String>,
-    val methods: List<String>,
-    val namespaces: List<String>,
-    val unity: List<String>,
-    val network: List<String>,
-    val il2cppApi: List<String>,
-    val other: List<String>
-)
-
-private fun categorizeStrings(allStrings: Set<String>): StringCategories {
-    val gameKw = listOf("Player", "Weapon", "Damage", "Health", "Score", "Enemy", "Bullet",
-        "Aim", "Shoot", "Kill", "ESP", "Battle", "Entity", "Monster", "Hero", "Skill",
-        "Camp", "Death", "Gun", "Knife", "Grenade", "Team", "Rank", "Match")
-    val unityKw = listOf("UnityEngine", "Mono.", "System.", "Unity.", "MonoBehaviour",
-        "GameObject", "Transform", "Rigidbody", "Collider", "Animator", "Camera")
-    val netKw = listOf("http", "api", "token", "auth", "login", "session", "key",
-        "secret", "supabase", "firebase", "cloudflare", "workers.dev", "convex", "telegram")
-    val ilKw = listOf("il2cpp_", "mono_", "il2cpp_class", "il2cpp_method", "il2cpp_field")
-
-    val game = allStrings.filter { s -> gameKw.any { k -> s.contains(k, ignoreCase = true) } }.sorted()
-    val types = allStrings.filter { it.startsWith("L") && it.contains("/") && it.endsWith(";") }.sorted()
-    val methods = allStrings.filter { it.contains("(") && it.contains("->") && (it.contains("V") || it.contains("I") || it.contains("Z")) }.sorted()
-    val namespaces = allStrings.filter { it.contains("::") && !it.contains("(") }.sorted()
-    val unity = allStrings.filter { s -> unityKw.any { k -> s.contains(k, ignoreCase = true) } }.sorted()
-    val network = allStrings.filter { s -> netKw.any { k -> s.contains(k, ignoreCase = true) } }.sorted()
-    val il2cppApi = allStrings.filter { s -> ilKw.any { k -> s.startsWith(k) } }.sorted()
-    val used = (game + types + methods + namespaces + unity + network + il2cppApi).toSet()
-    val other = allStrings.filter { it !in used }.sorted()
-
-    return StringCategories(game, types, methods, namespaces, unity, network, il2cppApi, other)
-}
-
-private fun buildDumpCsContent(c: StringCategories, total: Int): String {
-    val sb = StringBuilder()
-    sb.append("\n// === Strings ($total total) ===\n\n")
-
-    if (c.game.isNotEmpty()) {
-        sb.append("// === Game Structures (${c.game.size}) ===\n")
-        c.game.take(5000).forEach { sb.append("// $it\n") }
-        sb.append("\n")
-    }
-    if (c.types.isNotEmpty()) {
-        sb.append("// === Type Descriptors (${c.types.size}) ===\n")
-        c.types.take(5000).forEach { sb.append("// $it\n") }
-        sb.append("\n")
-    }
-    if (c.methods.isNotEmpty()) {
-        sb.append("// === Method Signatures (${c.methods.size}) ===\n")
-        c.methods.take(5000).forEach { sb.append("// $it\n") }
-        sb.append("\n")
-    }
-    if (c.namespaces.isNotEmpty()) {
-        sb.append("// === Namespaces (${c.namespaces.size}) ===\n")
-        c.namespaces.take(2000).forEach { sb.append("// $it\n") }
-        sb.append("\n")
-    }
-    if (c.unity.isNotEmpty()) {
-        sb.append("// === Unity Engine (${c.unity.size}) ===\n")
-        c.unity.take(1000).forEach { sb.append("// $it\n") }
-        sb.append("\n")
-    }
-    if (c.network.isNotEmpty()) {
-        sb.append("// === Network/Auth (${c.network.size}) ===\n")
-        c.network.take(1000).forEach { sb.append("// $it\n") }
-        sb.append("\n")
-    }
-    if (c.il2cppApi.isNotEmpty()) {
-        sb.append("// === IL2CPP API (${c.il2cppApi.size}) ===\n")
-        c.il2cppApi.forEach { sb.append("// $it\n") }
-        sb.append("\n")
-    }
-    if (c.other.isNotEmpty()) {
-        sb.append("// === Other (${c.other.size}) ===\n")
-        c.other.take(10000).forEach { sb.append("// $it\n") }
-    }
-    return sb.toString()
-}
-
-// ========== UTILITIES ==========
-private fun readMemChunked(pid: String, addr: Long, size: Int): ByteArray? {
-    if (size <= 0 || addr < 0) return null
-    return try {
-        val cmd = "python3 -c \"import sys;f=open('/proc/$pid/mem','rb');f.seek($addr);d=f.read($size);f.close();sys.stdout.buffer.write(d)\""
-        val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
-        val data = p.inputStream.readBytes()
-        p.waitFor()
-        if (data.isNotEmpty()) data else null
-    } catch (_: Exception) {
-        try {
-            val cmd = "dd if=/proc/$pid/mem bs=4096 count=$((($size + 4095) / 4096)) skip=$(($addr / 4096)) 2>/dev/null"
-            val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
-            val data = p.inputStream.readBytes()
-            p.waitFor()
-            val alignOffset = (addr % 4096).toInt()
-            if (data.size > alignOffset) {
-                data.copyOfRange(alignOffset, (alignOffset + size).coerceAtMost(data.size))
-            } else null
-        } catch (_: Exception) { null }
-    }
-}
-
-private fun findMagic(data: ByteArray, magic: IntArray): Int {
-    if (data.size < magic.size) return -1
-    for (i in 0..(data.size - magic.size)) {
-        if ((data[i].toInt() and 0xFF) == magic[0] &&
-            (data[i + 1].toInt() and 0xFF) == magic[1] &&
-            (data[i + 2].toInt() and 0xFF) == magic[2] &&
-            (data[i + 3].toInt() and 0xFF) == magic[3]) {
-            return i
-        }
-    }
-    return -1
-}
-
-private fun extractStringsFromBinary(data: ByteArray, minLen: Int): Set<String> {
-    val result = mutableSetOf<String>()
-    val sb = StringBuilder()
-    for (b in data) {
-        val c = b.toInt() and 0xFF
-        if (c in 0x20..0x7E) {
-            sb.append(c.toChar())
-        } else {
-            if (sb.length >= minLen) {
-                val s = sb.toString()
-                if (s.any { it.isLetter() }) result.add(s)
-            }
-            sb.clear()
-        }
-    }
-    return result
-}
-
-private fun suShell(cmd: String): String {
-    return try {
-        val p = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
-        val out = p.inputStream.bufferedReader().readText()
-        p.waitFor()
-        out
-    } catch (_: Exception) { "" }
 }
