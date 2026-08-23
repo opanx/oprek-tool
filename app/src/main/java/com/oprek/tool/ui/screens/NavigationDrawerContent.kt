@@ -113,7 +113,7 @@ fun AppNavigationDrawer(
                 ) {
                     Text("⚡ OprekTool", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = AccentGreen)
                     Text("Reverse Engineering Toolkit", fontSize = 11.sp, color = TextSecondary)
-                    Text("v0.9.0 • © Panxcz & Freebuff", fontSize = 9.sp, color = TextMuted)
+                    Text("v0.9.1 • © Panxcz & Freebuff", fontSize = 9.sp, color = TextMuted)
                 }
 
                 LazyColumn(Modifier.fillMaxSize()) {

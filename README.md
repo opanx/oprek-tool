@@ -1,6 +1,6 @@
 # 🔧 OprekTool — Android Reverse Engineering Toolkit
 
-> **v0.9.0** | Build status: ✅ Passing | APKs: Signed + Consistent Key
+> **v0.9.1** | Build status: ✅ Passing | APKs: Signed + Consistent Key
 
 **An honest Android reverse engineering toolkit** — not a magic wand, but a solid set of tools for on-device binary analysis.
 
@@ -12,14 +12,20 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 - Root memory dump for offline PC processing
 - Good enough for quick triage, not deep RE work
 
-## 📱 What's New in v0.9.0
+## 📱 What's New
 
+### v0.9.1 (Latest)
+- **APKTool Suite**: Decode APK → extract resources, manifest, DEX, native libs
+- **AutoDump v7**: Fixed nullable types, improved MLBB support
+- **Navigation Drawer**: Added APKTool Suite entry
+
+### v0.9.0
 - **AutoDump v7**: Unified dump pipeline with Strategy A (parse) + Strategy B (raw dump)
 - **Malware Detector**: 15 threat categories including phone brick/wipe detection
 - **Navigation Drawer**: Categorized tools with hamburger menu
 - **Text Input Fix**: All text fields now visible on dark theme
 - **Consistent Signing**: Same APK key every build (no uninstall needed)
-- **30+ Tools**: Full reverse engineering toolkit on your phone
+- **40+ Tools**: Full reverse engineering toolkit on your phone
 
 ## 📱 Features
 
