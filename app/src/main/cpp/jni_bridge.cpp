@@ -111,8 +111,8 @@ Java_com_oprek_tool_core_NativeLib_elfGetInfo(JNIEnv *env, jclass, jbyteArray da
         info.is_64 ? "ELF64" : "ELF32",
         info.is_le ? "Little Endian" : "Big Endian",
         arch_str, (unsigned)machine,
-        (unsigned long)info.entry, (unsigned)info.phnum, (unsigned long)info.phoff,
-        (unsigned)info.shnum, (unsigned long)info.shoff, (unsigned)info.shstrndx, (unsigned long)info.file_size);
+        (unsigned long long)info.entry, (unsigned)info.phnum, (unsigned long long)info.phoff,
+        (unsigned)info.shnum, (unsigned long long)info.shoff, (unsigned)info.shstrndx, (unsigned long long)info.file_size);
     return env->NewStringUTF(buf);
 }
 
