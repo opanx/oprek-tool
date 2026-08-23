@@ -142,7 +142,7 @@ fun ToolCard(tool: ToolLink, onClick: () -> Unit) {
                 Text(tool.name, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = tool.color)
                 Text(tool.desc, fontSize = 11.sp, color = TextSecondary)
             }
-            Icon(Icons.Default.OpenInNew, "Open", tint = tool.color, modifier = Modifier.size(20.dp))
+            Icon(Icons.AutoMirrored.Filled.OpenInNew, "Open", tint = tool.color, modifier = Modifier.size(20.dp))
         }
     }
 }
