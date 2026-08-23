@@ -242,7 +242,8 @@ except Exception as e:
                 withContext(Dispatchers.Main) { isRunning = false }
             }
 
-            val il2cppRange = il2cppLine.substringBefore(" ")
+            val safeLine = il2cppLine ?: return@launch
+            val il2cppRange = safeLine.substringBefore(" ")
             val il2cppStart = il2cppRange.substringBefore("-").toLong(16)
             val il2cppEnd = il2cppRange.substringAfter("-").toLong(16)
             val il2cppSize = il2cppEnd - il2cppStart
