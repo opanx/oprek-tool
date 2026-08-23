@@ -154,7 +154,10 @@ private fun decodeResources(context: Context, uri: android.net.Uri, mode: String
                         result.add("[+] Size: ${resBytes.size} bytes")
                         // Parse res table header
                         if (resBytes.size >= 12) {
-                            val pkgCount = android.util.BinaryPrimitives.readInt32(resBytes, 8)
+                            val pkgCount = (resBytes[8].toInt() and 0xFF) or
+                                ((resBytes[9].toInt() and 0xFF) shl 8) or
+                                ((resBytes[10].toInt() and 0xFF) shl 16) or
+                                ((resBytes[11].toInt() and 0xFF) shl 24)
                             result.add("[+] Package count: $pkgCount")
                         }
                         // Extract string pool from arsc

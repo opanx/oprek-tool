@@ -1,8 +1,8 @@
 package com.oprek.tool.ui.screens
 
 import android.content.Context
-import androidx.activity.compose.rememberLauncherForActivityResult
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +24,7 @@ import com.oprek.tool.ui.theme.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.jar.JarFile
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,7 +104,7 @@ fun PermissionAnalyzerScreen(navController: NavController) {
     }
 }
 
-private fun dangerousPermissions = mapOf(
+private val dangerousPermissions = mapOf(
     "android.permission.READ_PHONE_STATE" to "🔴 Reads IMEI, phone number, call state",
     "android.permission.READ_PHONE_NUMBERS" to "🔴 Reads phone numbers",
     "android.permission.CALL_PHONE" to "🔴 Makes phone calls without user action",
@@ -135,12 +136,9 @@ private fun dangerousPermissions = mapOf(
     "android.permission.BLUETOOTH" to "🟡 Bluetooth access",
     "android.permission.BLUETOOTH_SCAN" to "🟡 Scan Bluetooth devices",
     "android.permission.BLUETOOTH_CONNECT" to "🟡 Connect to Bluetooth devices",
-    "android.permission.UWB_RANGING" to "🟡 UWB ranging",
     "android.permission.INTERNET" to "🟢 Internet access",
     "android.permission.ACCESS_NETWORK_STATE" to "🟢 Check network state",
     "android.permission.ACCESS_WIFI_STATE" to "🟢 Check WiFi state",
-    "android.permission.CHANGE_WIFI_STATE" to "🟡 Change WiFi state",
-    "android.permission.ACCESS_WIFI_NETWORK_INFO" to "🟡 WiFi network info",
     "android.permission.WAKE_LOCK" to "🟢 Keep device awake",
     "android.permission.RECEIVE_BOOT_COMPLETED" to "🟡 Auto-start on boot",
     "android.permission.SYSTEM_ALERT_WINDOW" to "🔴 Draw over other apps",
@@ -156,10 +154,7 @@ private fun dangerousPermissions = mapOf(
     "android.permission.MOUNT_UNMOUNT_FILESYSTEMS" to "🔴 Mount/unmount filesystems",
     "android.permission.REBOOT" to "🔴 Reboot device",
     "android.permission.SHUTDOWN" to "🔴 Shutdown device",
-    "android.permission.DEVICE_POWER" to "🔴 Control device power",
-    "com.google.android.gms.permission.ACTIVITY_RECOGNITION" to "🟡 Google activity recognition",
-    "android.permission.USE_BIOMETRIC" to "🟢 Biometric authentication",
-    "android.permission.USE_FINGERPRINT" to "🟢 Fingerprint authentication",
+    "android.permission.DEVICE_POWER" to "🔴 Control device power"
 )
 
 private fun analyzePermissions(context: Context, uri: Uri): List<String> {
@@ -180,11 +175,11 @@ private fun analyzePermissions(context: Context, uri: Uri): List<String> {
             return listOf("[-] AndroidManifest.xml not found")
         }
 
-        // Read binary manifest and extract permission strings
-        val manifestBytes = jarFile.getInputStream(manifestEntry).readBytes()
+        val manifestStream = jarFile.getInputStream(manifestEntry)
+        val manifestBytes = manifestStream.readBytes()
+        manifestStream.close()
         jarFile.close()
 
-        // Extract UTF-16LE strings from binary XML
         val permissions = mutableListOf<String>()
         val text = String(manifestBytes, Charsets.UTF_16LE)
         val regex = Regex("""android\.permission\.\w+""")
@@ -193,7 +188,6 @@ private fun analyzePermissions(context: Context, uri: Uri): List<String> {
             if (perm !in permissions) permissions.add(perm)
         }
 
-        // Also extract custom permissions
         val customRegex = Regex("""[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2,}\.[A-Z][A-Z_]+""")
         customRegex.findAll(text).forEach { match ->
             val perm = match.value
@@ -202,24 +196,12 @@ private fun analyzePermissions(context: Context, uri: Uri): List<String> {
             }
         }
 
-        // Also try standard string extraction
-        val stringBytes = manifestBytes
-        var i = 0
-        while (i < stringBytes.size - 1) {
-            if (stringBytes[i] == 0x00.toByte() && i + 1 < stringBytes.size) {
-                i++; continue
-            }
-            // Look for permission pattern in UTF-8
-            i++
-        }
-
         result.add("[+] APK Permissions Analysis")
         result.add("[+] Total permissions found: ${permissions.size}")
         result.add("")
 
-        // Categorize
         val dangerous = permissions.filter { p -> dangerousPermissions.containsKey(p) }
-        val unknown = permissions.filter { p -> p.startsWith("android.permission.") && p !in dangerousPermissions }
+        val unknown = permissions.filter { p -> p.startsWith("android.permission.") && !dangerousPermissions.containsKey(p) }
         val custom = permissions.filter { p -> !p.startsWith("android.permission.") }
 
         result.add("[+] 🔴 Dangerous/Sensitive Permissions: ${dangerous.size}")
@@ -241,7 +223,6 @@ private fun analyzePermissions(context: Context, uri: Uri): List<String> {
             custom.forEach { result.add("    $it") }
         }
 
-        // Risk score
         result.add("")
         val riskScore = when {
             dangerous.size >= 10 -> "🔴 CRITICAL (${dangerous.size} dangerous permissions)"
@@ -252,7 +233,6 @@ private fun analyzePermissions(context: Context, uri: Uri): List<String> {
         }
         result.add("[+] Risk Assessment: $riskScore")
 
-        // Specific warnings
         result.add("")
         if (permissions.contains("android.permission.BIND_ACCESSIBILITY_SERVICE")) {
             result.add("[!] ⚠️ ACCESSIBILITY SERVICE - Can control entire screen!")
@@ -262,9 +242,6 @@ private fun analyzePermissions(context: Context, uri: Uri): List<String> {
         }
         if (permissions.contains("android.permission.MANAGE_EXTERNAL_STORAGE")) {
             result.add("[!] ⚠️ ALL FILES ACCESS - Full storage access!")
-        }
-        if (permissions.contains("android.permission.REQUEST_INSTALL_PACKAGES")) {
-            result.add("[!] ⚠️ INSTALL PACKAGES - Can install APKs silently!")
         }
         if (permissions.contains("android.permission.RECEIVE_BOOT_COMPLETED")) {
             result.add("[~] Auto-start on boot (persistence mechanism)")

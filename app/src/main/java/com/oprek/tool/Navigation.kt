@@ -106,5 +106,8 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("apkmisc") { ApkMergerScreen(navController) }
         composable("nativehook") { NativeHookGeneratorScreen(navController) }
         composable("memscan") { MemoryScannerScreen(navController) }
+        composable("apktools") { ApkToolsScreen(navController) }
+        composable("apkbuilder") { ApkBuilderScreen(navController) }
+        composable("jnibuilder") { JniBuilderScreen(navController) }
     }
 }

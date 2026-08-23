@@ -5,7 +5,9 @@ import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -208,7 +210,7 @@ private fun generateSslBypass(method: Int): List<String> = when (method) {
         "",
         "    // Bypass OkHttpClient builder",
         "    try {",
-        "        var Builder = Java.use('okhttp3.OkHttpClient$Builder');",
+        "        var Builder = Java.use('okhttp3.OkHttpClient\$Builder');",
         "        Builder.sslSocketFactory.overload('javax.net.ssl.SSLSocketFactory', 'javax.net.ssl.X509TrustManager').implementation = function(factory, tm) {",
         "            console.log('[+] Bypassing OkHttpClient SSL');",
         "            this.sslSocketFactory(factory, tm);",
@@ -250,7 +252,7 @@ private fun generateSslBypass(method: Int): List<String> = when (method) {
         "    var SSLContext = Java.use('javax.net.ssl.SSLContext');",
         "    SSLContext.init.overload('[Ljavax.net.ssl.KeyManager;', '[Ljavax.net.ssl.TrustManager;', 'java.security.SecureRandom').implementation = function(km, tm, sr) {",
         "        console.log('[+] SSLContext bypassed');",
-        "        this.init(km, [TrustManager.$new()], sr);",
+        "        this.init(km, [TrustManager.\$new()], sr);",
         "    };",
         "    console.log('[*] Java SSL bypass ready');",
         "});"
@@ -303,7 +305,7 @@ private fun generateSslBypass(method: Int): List<String> = when (method) {
         "    });",
         "",
         "    var ctx = SSLContext.getInstance('TLS');",
-        "    ctx.init(null, [TrustManager.$new()], null);",
+        "    ctx.init(null, [TrustManager.\$new()], null);",
         "    console.log('[*] Flutter SSL bypass ready');",
         "});"
     )

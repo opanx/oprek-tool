@@ -152,7 +152,7 @@ private fun scanSignatures(context: Context, uri: android.net.Uri, mode: String)
             for (s in strings) {
                 var idx = 0
                 while (idx < data.size - s.length) {
-                    if (data.sliceArray(idx until idx + s.size).toString(Charsets.US_ASCII) == s) {
+                    if (data.sliceArray(idx until idx + s.length).toString(Charsets.US_ASCII) == s) {
                         result.add("[!] Found '$s' @ 0x${idx.toString(16)}")
                         break
                     }
