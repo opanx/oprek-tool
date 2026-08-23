@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.oprek.tool.ui.screens
 
 import androidx.compose.foundation.background
