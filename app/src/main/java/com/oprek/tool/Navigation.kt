@@ -95,5 +95,16 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("malwaredetect") { MalwareDetectorScreen(navController) }
         composable("upx") { UpxUnpackerScreen(navController) }
         composable("autoleak") { AutoLeakSourceScreen(navController) }
+        // === v0.9.0 NEW SCREENS ===
+        composable("certanalysis") { CertificateAnalyzerScreen(navController) }
+        composable("permanalysis") { PermissionAnalyzerScreen(navController) }
+        composable("sslpinning") { SslPinningBypassScreen(navController) }
+        composable("scripts") { GhidraScriptScreen(navController) }
+        composable("sigscan") { SignatureScannerScreen(navController) }
+        composable("vulnscan") { VulnerabilityScannerScreen(navController) }
+        composable("resdecode") { ResourceDecoderScreen(navController) }
+        composable("apkmisc") { ApkMergerScreen(navController) }
+        composable("nativehook") { NativeHookGeneratorScreen(navController) }
+        composable("memscan") { MemoryScannerScreen(navController) }
     }
 }

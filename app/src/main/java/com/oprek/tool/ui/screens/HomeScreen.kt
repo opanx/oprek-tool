@@ -176,6 +176,17 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("🛡️ Malware Detector", "Reboot/wipe/spyware detect + NOP", Icons.Default.Shield, AccentRed, "malwaredetect"),
                 ToolItem("📦 UPX Unpacker", "Detect & unpack UPX packed ELF", Icons.Default.Unarchive, AccentOrange, "upx"),
                 ToolItem("🔓 Auto Leak Source", "Extract URLs, tokens, secrets, SQL", Icons.Default.Warning, AccentRed, "autoleak"),
+                // === v0.9.0 NEW RE/MODDING TOOLS ===
+                ToolItem("🔐 Cert Analyzer", "Analyze APK signing certs", Icons.Outlined.Security, AccentGreen, "certanalysis"),
+                ToolItem("🛡️ Permission Scanner", "Risk analysis for permissions", Icons.Outlined.Shield, AccentRed, "permanalysis"),
+                ToolItem("🔒 SSL Pinning Bypass", "Frida SSL unpin scripts", Icons.Outlined.LockOpen, AccentCyan, "sslpinning"),
+                ToolItem("🐍 Script Generator", "Ghidra/IDA/r2/Frida scripts", Icons.Outlined.Code, AccentPurple, "scripts"),
+                ToolItem("🔍 Signature Scanner", "Crypto/anti-debug patterns", Icons.Outlined.Search, AccentOrange, "sigscan"),
+                ToolItem("🛡️ Vuln Scanner", "Security vulnerability scan", Icons.Outlined.BugReport, AccentRed, "vulnscan"),
+                ToolItem("📦 Resource Decoder", "Decode binary XML/arsc", Icons.Outlined.Description, AccentCyan, "resdecode"),
+                ToolItem("📦 APK Tools", "Extract/info/list APK contents", Icons.Outlined.Apps, AccentOrange, "apkmisc"),
+                ToolItem("🔗 Native Hook Gen", "Frida/Dobby/PLT/inline hooks", Icons.Outlined.Link, AccentGreen, "nativehook"),
+                ToolItem("🔬 Memory Scanner", "Scan process memory (root)", Icons.Outlined.Memory, AccentPurple, "memscan"),
             )
 
             LazyVerticalGrid(
