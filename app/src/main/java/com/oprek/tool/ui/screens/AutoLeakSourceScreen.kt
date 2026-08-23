@@ -705,14 +705,18 @@ fun AutoLeakSourceScreen(navController: NavController) {
                             Toast.makeText(context, "Copied ${leaks.size} items!", Toast.LENGTH_SHORT).show()
                         }) { Icon(Icons.Default.ContentCopy, "Copy") }
                         IconButton(onClick = {
-                            val outDir = java.io.File("/sdcard/Download/OprekTool/leak")
-                            outDir.mkdirs()
-                            val md = StringBuilder("# Leak Report
-
-")
-                            leaks.forEach { l -> md.appendLine("- [" + l.severity + "] **" + l.category + "**: " + l.value) }
-                            java.io.File(outDir, "leaks.md").writeText(md.toString())
-                            Toast.makeText(context, "Exported to /sdcard/Download/OprekTool/leak/", Toast.LENGTH_LONG).show()
+                            try {
+                                val outDir = java.io.File("/sdcard/Download/OprekTool/leak")
+                                outDir.mkdirs()
+                                val md = StringBuilder("# Leak Report\n\n")
+                                for (l in leaks) {
+                                    md.appendLine("- [" + l.severity + "] " + l.category + ": " + l.value)
+                                }
+                                java.io.File(outDir, "leaks.md").writeText(md.toString())
+                                Toast.makeText(context, "Exported to /sdcard/Download/OprekTool/leak/", android.widget.Toast.LENGTH_LONG).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Export failed: " + e.message, android.widget.Toast.LENGTH_SHORT).show()
+                            }
                         }) { Icon(Icons.Default.Save, "Export") }
                     }
                 },
