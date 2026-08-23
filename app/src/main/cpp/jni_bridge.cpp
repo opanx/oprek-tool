@@ -103,7 +103,7 @@ Java_com_oprek_tool_core_NativeLib_elfGetInfo(JNIEnv *env, jclass, jbyteArray da
     snprintf(buf, sizeof(buf),
         "Arch: %s %s\n"
         "Machine: %s (0x%04X)\n"
-        "Entry: 0x%016lX\n"
+        "Entry: 0x%016" PRIX64 "\n"
         "Program Headers: %u @ 0x%lX\n"
         "Section Headers: %u @ 0x%lX\n"
         "Section StrTab idx: %u\n"
@@ -207,13 +207,13 @@ Java_com_oprek_tool_core_NativeLib_disassemble(JNIEnv *env, jclass,
             // Pad hex bytes to consistent width
             while (hex_bytes.length() < 24) hex_bytes += " ";
 
-            snprintf(line, sizeof(line), "0x%016lX:  %s  %s %s\n",
+            snprintf(line, sizeof(line), "0x%016" PRIX64 ":  %s  %s %s\n",
                 insn->address, hex_bytes.c_str(), insn->mnemonic, insn->op_str);
             result += line;
             printed++;
         } else {
             // Unknown instruction - show raw bytes
-            snprintf(line, sizeof(line), "0x%016lX:  %02X %02X %02X %02X    .byte 0x%02X,0x%02X,0x%02X,0x%02X\n",
+            snprintf(line, sizeof(line), "0x%016" PRIX64 ":  %02X %02X %02X %02X    .byte 0x%02X,0x%02X,0x%02X,0x%02X\n",
                 addr,
                 code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3],
                 code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3]);
@@ -284,13 +284,13 @@ Java_com_oprek_tool_core_NativeLib_disassembleFunction(JNIEnv *env, jclass,
                           (strcmp(insn->mnemonic, "bx") == 0) ||
                           (strcmp(insn->mnemonic, "pop") == 0);
 
-            snprintf(line, sizeof(line), "%s0x%016lX:  %s  %s %s%s\n",
+            snprintf(line, sizeof(line), "%s0x%016" PRIX64 ":  %s  %s %s%s\n",
                 is_ret ? "*" : " ",
                 insn->address, hex_bytes.c_str(), insn->mnemonic, insn->op_str,
                 is_ret ? "  ; <- return" : "");
             result += line;
         } else {
-            snprintf(line, sizeof(line), "  0x%016lX:  %02X %02X %02X %02X    .byte\n",
+            snprintf(line, sizeof(line), "  0x%016" PRIX64 ":  %02X %02X %02X %02X    .byte\n",
                 addr, code_ptr[0], code_ptr[1], code_ptr[2], code_ptr[3]);
             result += line;
             code_ptr += 4;
