@@ -111,5 +111,6 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("batchrenamer") { BatchRenamerScreen(navController) }
         composable("permremover") { PermissionRemoverScreen(navController) }
         composable("sopatch") { SoPatchScreen(navController) }
+        composable("apktasksuite") { ApkToolSuiteScreen(navController) }
     }
 }

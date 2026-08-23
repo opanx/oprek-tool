@@ -71,6 +71,7 @@ val toolCategories = listOf(
         NavToolItem("APK Tools", "apkmisc", Icons.Default.Build),
         NavToolItem("Batch Renamer", "batchrenamer", Icons.Default.Edit),
         NavToolItem("Permission Remover", "permremover", Icons.Default.RemoveCircle),
+        NavToolItem("APKTool Suite", "apktasksuite", Icons.Default.FolderZip),
     ), AccentRed),
     NavToolCategory("🛡️ Security", Icons.Default.Shield, listOf(
         NavToolItem("Certificate Analyzer", "certanalysis", Icons.Default.Verified),

@@ -179,13 +179,15 @@ except Exception as e:
 
             // Step 2: Find PID
             addLine("\n🎯 Finding PID...")
-            val pid = findPid(pkg)
-            if (pid == null) {
+            val pidRaw = findPid(pkg)
+            if (pidRaw == null) {
                 addLine("❌ Process not found: $pkg")
                 addLine("   💡 Make sure the game is running!")
                 addLine("   💡 Open the game, enter lobby/match, then try again")
                 withContext(Dispatchers.Main) { isRunning = false }
             }
+            val pid = pidRaw ?: 0
+            if (pid == 0) { withContext(Dispatchers.Main) { isRunning = false }; return@launch }
             addLine("✅ PID: $pid")
             setProgress(0.1f)
 
