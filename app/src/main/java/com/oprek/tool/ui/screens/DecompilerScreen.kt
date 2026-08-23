@@ -217,6 +217,58 @@ fun DecompilerScreen(navController: NavController) {
                 else { Icon(Icons.Default.Code, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Decompile", fontWeight = FontWeight.Bold) }
             }
 
+            // Batch decompile button
+            if (symbols.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                var batchRunning by remember { mutableStateOf(false) }
+                var batchProgress by remember { mutableStateOf("") }
+                Button(onClick = {
+                    batchRunning = true
+                    scope.launch(Dispatchers.Default) {
+                        try {
+                            val file = SharedFileState.findFile(context)
+                            if (file == null) { result = "No file loaded."; batchRunning = false; return@launch }
+                            val readSize = minOf(file.length(), 500000L).toInt()
+                            val data = StreamingIO.readRange(file, 0, readSize)
+                            val arch = when (archIndex) { 0 -> 0; 1 -> 1; 2 -> 2; else -> 1 }
+                            val mode = when (archIndex) { 0 -> 0; 1 -> 2; 2 -> 4; else -> 2 }
+                            val batch = StringBuilder()
+                            val totalFuncs = symbols.size
+                            for ((idx, sym) in symbols.withIndex()) {
+                                val symName = sym.split(" @").first().trim()
+                                withContext(Dispatchers.Main) { batchProgress = "Batch [${idx+1}/$totalFuncs]: $symName" }
+                                try {
+                                    val d = NativeLib.disassemble(data, 0, arch, mode, 2000)
+                                    val pseudo = DecompilerEngine.generatePseudoC(d, symName, showAddresses)
+                                    batch.appendLine("// === $symName ===")
+                                    batch.appendLine(pseudo)
+                                    batch.appendLine()
+                                } catch (_: Exception) {}
+                            }
+                            result = batch.toString()
+                            lineCount = result.lines().size
+                            blockCount = result.lines().count { it.contains("Block 0x") }
+                            withContext(Dispatchers.Main) { batchProgress = "" }
+                        } catch (e: Exception) {
+                            result = "Batch error: ${e.message}"
+                        }
+                        batchRunning = false
+                    }
+                }, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                    shape = RoundedCornerShape(12.dp), enabled = !batchRunning && !isLoading && hasNative) {
+                    if (batchRunning) {
+                        CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
+                        Spacer(Modifier.width(8.dp))
+                        Text(batchProgress, fontSize = 11.sp)
+                    } else {
+                        Icon(Icons.Default.Code, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Batch Decompile All (${symbols.size})", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
             Spacer(Modifier.height(12.dp))
 
             // Stats
