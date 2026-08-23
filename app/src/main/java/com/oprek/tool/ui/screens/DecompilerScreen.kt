@@ -215,40 +215,6 @@ fun DecompilerScreen(navController: NavController) {
                 shape = RoundedCornerShape(12.dp), enabled = !isLoading && hasNative) {
                 if (isLoading) CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp)
                 else { Icon(Icons.Default.Code, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Decompile", fontWeight = FontWeight.Bold) }
-
-            // Batch decompile
-            if (symbols.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = {
-                    isLoading = true
-                    scope.launch(Dispatchers.IO) {
-                        try {
-                            val readSize = minOf(file.length(), 500000L).toInt()
-                            val fileData = StreamingIO.readRange(file, 0, readSize)
-                            val arch = when (archIndex) { 0 -> 0; 1 -> 1; 2 -> 2; else -> 1 }
-                            val mode = when (archIndex) { 0 -> 0; 1 -> 2; 2 -> 4; else -> 2 }
-                            val allOut = StringBuilder()
-                            allOut.appendLine("// Batch decompile - " + symbols.size + " functions\n")
-                            for (sym in symbols.take(100)) {
-                                try {
-                                    val disasm = NativeLib.disassemble(fileData, sym.offset.toInt(), arch, mode, 200)
-                                    if (disasm.isNotEmpty()) {
-                                        allOut.appendLine("// === " + sym.name + " ===")
-                                        allOut.appendLine(DecompilerEngine.generatePseudoC(disasm, sym.name, false))
-                                        allOut.appendLine("")
-                                    }
-                                } catch (_: Exception) {}
-                            }
-                            withContext(Dispatchers.Main) { result = allOut.toString(); isLoading = false }
-                        } catch (e: Exception) {
-                            withContext(Dispatchers.Main) { result = "Error: " + e.message; isLoading = false }
-                        }
-                    }
-                }, modifier = Modifier.fillMaxWidth().height(40.dp), enabled = !isLoading, shape = RoundedCornerShape(8.dp)) {
-                    Icon(Icons.Default.BatchPrediction, null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Batch (" + symbols.size + ")", fontSize = 11.sp)
-                }
             }
 
             Spacer(Modifier.height(12.dp))
