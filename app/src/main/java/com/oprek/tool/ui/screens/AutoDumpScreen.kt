@@ -1048,7 +1048,6 @@ except Exception as e:
             addLine("Package: $pkg | PID: $pid")
             addLine("Library: $actualLib @ 0x${"%X".format(il2cppStart)}")
             addLine("  → ${libOutFile.absolutePath} (${if (libOutFile.exists()) "${libOutFile.length() / 1024}KB" else "FAILED"})")
-            val fullDumpFile = File(outDir, "full_memory_${pkg}.bin")
             if (fullDumpFile.exists()) {
                 addLine("Full Dump: ${fullDumpFile.absolutePath} (${fullDumpFile.length() / 1024}KB)")
             }
