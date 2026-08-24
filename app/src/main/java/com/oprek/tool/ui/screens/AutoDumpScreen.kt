@@ -958,6 +958,7 @@ except Exception as e:
                 }
             }
             addLine("   Extracted ${extraStrings.size} strings from binary")
+            addLine("   First 5: ${extraStrings.take(5).joinToString(", ") { "0x${"%08X".format(it.first)} ${it.second.take(20)}" }}")
 
             // Try Strategy A: Parse metadata
             var strategyA = false
