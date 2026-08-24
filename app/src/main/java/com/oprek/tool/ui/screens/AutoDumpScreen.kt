@@ -362,7 +362,7 @@ private class Il2CppMetadataParser(private val data: ByteArray) {
         ts: String,
         version: Int,
         strategyA: Boolean,
-        extraStrings: List<String> = emptyList()
+        extraStrings: List<Pair<Long, String>> = emptyList()
     ): String {
         val r = lastResult
         val sb = StringBuilder()
