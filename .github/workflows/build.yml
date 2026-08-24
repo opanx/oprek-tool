@@ -10,17 +10,17 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process -Xmx4g"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Free disk space + setup env
-        env:
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process -Xmx4g"
+      - name: Free disk space
         run: |
           sudo rm -rf /usr/local/lib/android/sdk/ndk
           sudo rm -rf /usr/local/lib/android/sdk/build-tools/34.0.0
@@ -42,14 +42,13 @@ jobs:
 
       - name: Setup signing keystore
         run: |
-          # ALWAYS use the committed keystore (consistent signing key)
           if [ -f release.keystore ]; then
-            echo "✅ Using committed release.keystore (consistent key)"
+            echo "Using committed release.keystore"
           elif [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
             echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release.keystore
-            echo "✅ Using stored keystore from secrets"
+            echo "Using stored keystore from secrets"
           else
-            echo "❌ No keystore found! This should not happen."
+            echo "ERROR: No keystore found"
             exit 1
           fi
           keytool -list -keystore release.keystore -storepass oprektool2024 2>&1 | head -5
@@ -57,16 +56,12 @@ jobs:
       - name: Build Debug APK (SIGNED)
         run: |
           cp release.keystore app/
-          ./gradlew assembleDebug --no-daemon --no-build-cache --stacktrace
-        env:
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process"
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Build Release APK (SIGNED)
         run: |
           cp release.keystore app/
-          ./gradlew assembleRelease --no-daemon --no-build-cache --stacktrace
-        env:
-          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process"
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Get version
         id: version
@@ -77,18 +72,13 @@ jobs:
       - name: Prepare final APKs
         run: |
           VERSION=${{ steps.version.outputs.version }}
-          # Debug APK (already signed by Gradle)
           DEBUG=$(find . -name "*debug*.apk" -type f | head -1)
           if [ -n "$DEBUG" ]; then
             cp "$DEBUG" "OprekTool-v${VERSION}-debug.apk"
           fi
-          # Release APK (signed manually)
-          RELEASE=$(find . -name "OprekTool-v${VERSION}-release.apk" -type f | head -1)
-          if [ -z "$RELEASE" ]; then
-            RELEASE=$(find . -name "*release*.apk" -type f | head -1)
-            if [ -n "$RELEASE" ]; then
-              cp "$RELEASE" "OprekTool-v${VERSION}-release.apk"
-            fi
+          RELEASE=$(find . -name "*release*.apk" -type f | head -1)
+          if [ -n "$RELEASE" ]; then
+            cp "$RELEASE" "OprekTool-v${VERSION}-release.apk"
           fi
           echo "=== Final APKs ==="
           ls -la *.apk 2>/dev/null || echo "No APKs found"
@@ -101,39 +91,39 @@ jobs:
           retention-days: 30
 
       - name: Upload ALL to Releases (SIGNED)
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: "OprekTool v${{ steps.version.outputs.version }} (Signed)"
           body: |
-            ## 🔧 OprekTool v${{ steps.version.outputs.version }}
-            
-            ### 📥 Downloads (ALL SIGNED)
-            - **OprekTool-v${{ steps.version.outputs.version }}-debug.apk** — Debug build (signed)
-            - **OprekTool-v${{ steps.version.outputs.version }}-release.apk** — Release build (signed)
-            
-            ### ✨ What's New
-            - Decompiler v6 (maximum accuracy)
-            - Real scripting engine (JavaScript)
-            - 80+ tools for reverse engineering
-            - ALL APKs signed (no unsigned builds)
-            - Python scripting support
-            - APK Signer tool
-            - Native Lib Analyzer
-            
-            ### 🔧 Installation
-            1. Download the APK (either debug or release)
+            ## OprekTool v${{ steps.version.outputs.version }}
+
+            ### Downloads
+            - **OprekTool-v${{ steps.version.outputs.version }}-debug.apk** - Debug build (signed)
+            - **OprekTool-v${{ steps.version.outputs.version }}-release.apk** - Release build (signed)
+
+            ### Features
+            - AutoDump v8 — Real IL2CPP metadata parser (TypeDef/MethodDef/FieldDef)
+            - MalwareDetector v2 — Auto-deobfuscation + 15 threat categories
+            - APKTool Suite — Decode APK, extract resources, manifest, DEX
+            - Auto Leak Source — 9-phase binary leak scanner
+            - Decompiler — Pseudo-C with batch decompile
+            - 80+ reverse engineering tools
+            - Navigation Drawer with categorized tools
+            - Consistent signing key (no uninstall needed)
+            - Zero build warnings
+
+            ### Installation
+            1. Download the APK (debug or release)
             2. Enable "Install from unknown sources" if needed
             3. Install and open
-            
-            ### 📚 Resources
+
+            ### Resources
             - [README](https://github.com/opanx/oprek-tool#readme)
-            - [Indonesian README](https://github.com/opanx/oprek-tool/blob/main/README_ID.md)
             - [Bug Reports](https://github.com/opanx/oprek-tool/issues)
-            
-            **© Panxcz & Freebuff**
-          files: |
-            *.apk
+
+            (c) Panxcz & Freebuff
+          files: "*.apk"
           draft: false
           prerelease: false
           make_latest: true
