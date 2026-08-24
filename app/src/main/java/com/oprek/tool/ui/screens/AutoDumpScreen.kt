@@ -837,6 +837,46 @@ except Exception as e:
 
             if (cancelled) { withContext(Dispatchers.Main) { isRunning = false; canCancel = false }; return@launch }
 
+            // Step 6b: Full memory dump — dump ALL regions near libil2cpp.so
+            addLine("\n💾 Full memory dump — all readable regions near $actualLib...")
+            val fullDumpFile = File(outDir, "full_memory_${pkg}.bin")
+            val libRegions = maps.filter { it.contains(actualLib) }
+            var totalDumped = 0L
+            var regionCount = 0
+            for (region in libRegions) {
+                val perms = region.substringAfter(" ").substringBefore(" ")
+                if (perms.isEmpty() || perms[0] != 'r') continue
+                val range = region.substringBefore(" ")
+                val rangeParts = range.split("-")
+                if (rangeParts.size != 2) continue
+                val start = rangeParts[0].toLongOrNull(16) ?: continue
+                val end = rangeParts[1].toLongOrNull(16) ?: continue
+                val size = end - start
+                if (size < 4 || size > 200_000_000) continue
+                // Append each region to full dump file
+                val tmpRegion = File(context.cacheDir, "region_${start}.bin")
+                if (readMemViaPython(pid, start, size, tmpRegion)) {
+                    try {
+                        val regionData = tmpRegion.readBytes()
+                        java.io.FileOutputStream(fullDumpFile, true).use { fos ->
+                            fos.write(regionData)
+                        }
+                        totalDumped += regionData.size
+                        regionCount++
+                    } catch (_: Exception) {}
+                    tmpRegion.delete()
+                }
+                if (regionCount % 10 == 0) addLine("   ...$regionCount regions (${totalDumped / 1024}KB)...")
+            }
+            if (totalDumped > 0) {
+                addLine("✅ Full memory dump: ${fullDumpFile.absolutePath} (${totalDumped / 1024}KB from $regionCount regions)")
+            } else {
+                addLine("   ⚠️ No regions dumped")
+            }
+            setProgress(0.65f)
+
+            if (cancelled) { withContext(Dispatchers.Main) { isRunning = false; canCancel = false }; return@launch }
+
             // Step 7: Dump metadata
             val metaOutFile = File(outDir, "global-metadata_$pkg.dat")
             if (metaFound) {
@@ -847,7 +887,49 @@ except Exception as e:
                 if (ok) addLine("✅ Metadata: ${metaOutFile.absolutePath} (${metaOutFile.length() / 1024}KB)")
                 else addLine("❌ Failed to dump metadata")
             } else {
-                addLine("\n⚠️ Skipping metadata dump (not found)")
+                // Metadata NOT found in memory — try extracting from APK
+                addLine("\n📦 Metadata encrypted in memory — trying APK extraction...")
+                val apkPath = suShell("pm path $pkg").trim().removePrefix("package:")
+                if (apkPath.isNotEmpty() && File(apkPath).exists()) {
+                    addLine("   APK: $apkPath")
+                    try {
+                        val apkZip = java.util.zip.ZipFile(apkPath)
+                        // Find global-metadata.dat in APK
+                        val metaEntry = apkZip.getEntry("assets/bin/Data/StreamingAssets/global-metadata.dat")
+                            ?: apkZip.getEntry("assets/global-metadata.dat")
+                            ?: apkZip.getEntry("global-metadata.dat")
+                        if (metaEntry != null) {
+                            val metaInput = apkZip.getInputStream(metaEntry)
+                            val metaBytes = metaInput.readBytes()
+                            metaInput.close()
+                            if (metaBytes.size > 64) {
+                                metaOutFile.writeBytes(metaBytes)
+                                metaFound = true
+                                addLine("   ✅ Found in APK: ${metaEntry.name} (${metaBytes.size / 1024}KB)")
+                                if (isMetadataValid(metaBytes)) {
+                                    addLine("   ✅ Valid magic 0xFAB11BAF — can parse!")
+                                } else {
+                                    addLine("   ⚠️ Magic invalid — still encrypted in APK too")
+                                }
+                            }
+                        } else {
+                            addLine("   ❌ No global-metadata.dat in APK assets")
+                            // List APK assets for debugging
+                            val assetEntries = apkZip.entries().asSequence()
+                                .filter { it.name.startsWith("assets/") && it.name.endsWith(".dat") }
+                                .take(10).toList()
+                            if (assetEntries.isNotEmpty()) {
+                                addLine("   Found .dat files in assets:")
+                                assetEntries.forEach { addLine("     → ${it.name} (${it.size / 1024}KB)") }
+                            }
+                        }
+                        apkZip.close()
+                    } catch (e: Exception) {
+                        addLine("   ❌ APK extraction failed: ${e.message}")
+                    }
+                } else {
+                    addLine("   ❌ APK not found (need root to read)")
+                }
             }
             setProgress(0.7f)
 
@@ -966,10 +1048,14 @@ except Exception as e:
             addLine("Package: $pkg | PID: $pid")
             addLine("Library: $actualLib @ 0x${"%X".format(il2cppStart)}")
             addLine("  → ${libOutFile.absolutePath} (${if (libOutFile.exists()) "${libOutFile.length() / 1024}KB" else "FAILED"})")
+            val fullDumpFile = File(outDir, "full_memory_${pkg}.bin")
+            if (fullDumpFile.exists()) {
+                addLine("Full Dump: ${fullDumpFile.absolutePath} (${fullDumpFile.length() / 1024}KB)")
+            }
             if (metaFound && metaOutFile.exists()) {
                 addLine("Metadata: 0x${"%X".format(metaOffset)} → ${metaOutFile.absolutePath} (${metaOutFile.length() / 1024}KB)")
             } else {
-                addLine("Metadata: ❌ ENCRYPTED / NOT IN MEMORY")
+                addLine("Metadata: ⚠️ Encrypted — extracted from APK if available")
             }
             addLine("")
             if (strategyA) {
