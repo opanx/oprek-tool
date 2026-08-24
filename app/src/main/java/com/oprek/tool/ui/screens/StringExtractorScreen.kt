@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import com.oprek.tool.MainViewModel
 import com.oprek.tool.core.StringPair
 import com.oprek.tool.ui.theme.*
+import androidx.compose.ui.graphics.Color
 import java.io.File
 
 /**
@@ -130,7 +131,7 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
             OutlinedTextField(value = filterQuery, onValueChange = { filterQuery = it },
                 placeholder = { Text("Search strings...") }, modifier = Modifier.fillMaxWidth().padding(8.dp),
                 singleLine = true, leadingIcon = { Icon(Icons.Default.Search, null, tint = AccentCyan) },
-                colors = darkTextFieldColors())
+                colors = TextFieldDefaults.colors(focusedContainerColor = DarkSurface, unfocusedContainerColor = DarkSurface, focusedIndicatorColor = AccentGreen, unfocusedIndicatorColor = TextMuted, cursorColor = AccentGreen))
 
             // Type filter chips — 2 rows for 9 types
             Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
