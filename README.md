@@ -1,6 +1,6 @@
 # 🔧 OprekTool — Android Reverse Engineering Toolkit
 
-> **v0.9.3** | Build status: ✅ Passing | APKs: Signed + Consistent Key
+> **v0.9.4** | Build status: ✅ Passing | APKs: Signed + Consistent Key
 
 **An honest Android reverse engineering toolkit** — not a magic wand, but a solid set of tools for on-device binary analysis.
 
@@ -14,19 +14,25 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 
 ## 📱 What's New
 
-### v0.9.3 (Latest)
+### v0.9.4 (Latest)
+- **AutoDump v8 — Real IL2CPP Metadata Parser**: TypeDef/MethodDef/FieldDef structure parse for valid metadata
+- **Strategy A**: Valid 0xFAB11BAF magic → parse TypeDef/MethodDef/FieldDef → dump.cs with full hierarchy
+- **Strategy B**: Encrypted/missing metadata → raw dump lib + meta for PC Il2CppDumper
+- **3-phase metadata search**: Near IL2CPP lib → dalvik regions → all readable (500 max)
+- **10 game presets**: MLBB, FF, FF MAX, PUBG, Genshin, BloodStrike, CODM, Brawl Stars, Standoff 2 + Manual
+- **Cancel button**: Stop long dumps mid-operation
+- **String extraction**: 10K strings from lib binary for quick analysis
 - **FIXED: Consistent signing key** — Both debug & release use same keystore. No uninstall needed!
 - **Batch Decompiler**: Decompile all symbols at once with progress
-- **GhidraScriptScreen**: Fixed Frida `$init`/`$new` escape issues
 - **Zero warnings**: All deprecated icon/API warnings resolved
 
 ### v0.9.1
 - **APKTool Suite**: Decode APK → extract resources, manifest, DEX, native libs
-- **AutoDump v7**: Fixed nullable types, improved MLBB support
+- **AutoDump v8**: Fixed nullable types, improved MLBB support
 - **Navigation Drawer**: Added APKTool Suite entry
 
 ### v0.9.0
-- **AutoDump v7**: Unified dump pipeline with Strategy A (parse) + Strategy B (raw dump)
+- **AutoDump v8**: Unified dump pipeline with Strategy A (parse) + Strategy B (raw dump)
 - **Malware Detector**: 15 threat categories including phone brick/wipe detection
 - **Navigation Drawer**: Categorized tools with hamburger menu
 - **Text Input Fix**: All text fields now visible on dark theme
@@ -35,15 +41,18 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 
 ## 📱 Features
 
-### 🎯 AutoDump v7 — IL2CPP Dumper
+### 🎯 AutoDump v8 — Real IL2CPP Dumper
 | Feature | Detail |
 |---------|--------|
-| **Strategy A** | Valid metadata → parse TypeDef/MethodDef/FieldDef → dump.cs |
-| **Strategy B** | Encrypted metadata → raw dump lib + meta for PC Il2CppDumper |
-| **Game Presets** | MLBB, FF, FF MAX, PUBG, Genshin, BloodStrike, CODM + manual |
-| **Root Flow** | Multi su paths, ps -A fallback, seek-based memory reader |
-| **Dual Output** | dump.cs (if parsed) + raw .bin files for PC processing |
-| **Honest Status** | Clear messages: no root / game not running / metadata encrypted |
+| **Strategy A** | Valid 0xFAB11BAF magic → real TypeDef/MethodDef/FieldDef parse → dump.cs |
+| **Strategy B** | Encrypted/missing metadata → raw dump lib + meta for PC Il2CppDumper |
+| **Metadata Search** | 3-phase: near lib → dalvik regions → all readable (500 max) |
+| **Game Presets** | MLBB, FF, FF MAX, PUBG, Genshin, BloodStrike, CODM, Brawl Stars, Standoff 2 + manual |
+| **Root Flow** | Multi su paths, ps -A fallback, seek-based Python memory reader |
+| **Dual Output** | dump.cs (real TypeDef/MethodDef/FieldDef) + raw .bin for PC processing |
+| **Cancel** | Stop long dumps mid-operation |
+| **String Extract** | 10K strings from lib binary |
+| **Honest Status** | Clear: no root / not running / metadata encrypted / found |
 
 ### 🔍 Analysis Tools
 | Tool | What It Does | Accuracy |
