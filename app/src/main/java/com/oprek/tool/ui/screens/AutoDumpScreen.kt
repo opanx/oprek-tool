@@ -376,45 +376,87 @@ private class Il2CppMetadataParser(private val data: ByteArray) {
         sb.appendLine("")
 
         if (strategyA) {
+            val rTypeDefs = r?.typeDefinitions ?: emptyList()
+            val rMethodDefs = r?.methodDefinitions ?: emptyList()
+            val rFieldDefs = r?.fieldDefinitions ?: emptyList()
+            val typeDefOff = r?.typeDefOffset ?: 0
+            val methodDefOff = r?.methodDefOffset ?: 0
+            val fieldDefOff = r?.fieldDefOffset ?: 0
+
             // Emit TypeDefinitions
             sb.appendLine("// ============================================================")
-            sb.appendLine("// TypeDefinitions (${r?.typeDefCount ?: 0})")
+            sb.appendLine("// TypeDefinitions (${rTypeDefs.size}) @ 0x${"%X".format(typeDefOff)}")
             sb.appendLine("// ============================================================")
             sb.appendLine("")
-            for ((idx, td) in (r?.typeDefinitions ?: emptyList()).withIndex()) {
+            for ((idx, td) in rTypeDefs.withIndex()) {
+                val tdOffset = typeDefOff + idx * 72  // 72 bytes per TypeDef
                 val name = r?.strings?.get(td.nameIndex) ?: "Type_$idx"
                 val ns = r?.strings?.get(td.namespaceIndex) ?: ""
                 val fqn = if (ns.isNotEmpty()) "$ns.$name" else name
-                val parentName = r?.strings?.get(r?.typeDefinitions?.getOrNull(td.parentIndex.toInt())?.nameIndex ?: -1) ?: "System.Object"
-                sb.appendLine("// TypeDef #$idx (0x${"%X".format(td.nameIndex)})")
+                val parentName = r?.strings?.get(rTypeDefs.getOrNull(td.parentIndex.toInt())?.nameIndex ?: -1) ?: "System.Object"
+                sb.appendLine("// ─── TypeDef #$idx @ 0x${"%X".format(tdOffset)} (name@0x${"%X".format(td.nameIndex)}) ───")
                 sb.appendLine("public class $fqn : $parentName {")
-                sb.appendLine("    // Flags: 0x${"%X".format(td.flags)}")
-                sb.appendLine("    // Methods: ${td.methodCount} | Fields: ${td.fieldCount} | Events: ${td.eventCount} | Properties: ${td.propertyCount}")
-                sb.appendLine("    // NestedTypes: ${td.nestedTypeCount} | Interfaces: ${td.interfaceCount}")
-                sb.appendLine("}")
+                sb.appendLine("    // Flags: 0x${"%X".format(td.flags)} | byvalType: ${td.byvalTypeIndex} | parent: ${td.parentIndex}")
+                sb.appendLine("    // Methods: ${td.methodCount} (start#${td.methodStart}) | Fields: ${td.fieldCount} (start#${td.fieldStart})")
+                sb.appendLine("    // Events: ${td.eventCount} | Properties: ${td.propertyCount}")
+                sb.appendLine("    // NestedTypes: ${td.nestedTypeCount} | Interfaces: ${td.interfaceCount} | VTable: ${td.vtableCount}")
+                sb.appendLine("")
 
-                // Emit methods for this type
+                // Emit methods for this type with hex offset
                 for (mi in td.methodStart until td.methodStart + td.methodCount) {
-                    if (mi < 0 || mi >= (r?.methodDefinitions?.size ?: 0)) continue
-                    val md = r!!.methodDefinitions[mi]
+                    if (mi < 0 || mi >= rMethodDefs.size) continue
+                    val md = rMethodDefs[mi]
+                    val mdOffset = methodDefOff + mi * 40  // 40 bytes per MethodDef
                     val mName = r?.strings?.get(md.nameIndex) ?: "Method_$mi"
+                    val retName = r?.strings?.get(md.return_type) ?: "void"
                     val mToken = "0x${"%X".format(md.token)}"
-                    sb.appendLine("    // Method #$mi $mToken")
-                    sb.appendLine("    // void $mName(params ${md.parameterCount} args)")
-                    sb.appendLine("    // MethodIndex: ${md.methodIndex} | InvokerIndex: ${md.invokerIndex}")
+                    sb.appendLine("    // Method #$mi @ 0x${"%X".format(mdOffset)} | token=$mToken | name@0x${"%X".format(md.nameIndex)}")
+                    sb.appendLine("    // $retName $mName(params ${md.parameterCount})")
+                    sb.appendLine("    // declaringType: ${md.declaringType} | methodIndex: ${md.methodIndex} | invokerIndex: ${md.invokerIndex}")
                     sb.appendLine("")
                 }
 
-                // Emit fields for this type
+                // Emit fields for this type with hex offset
                 for (fi in td.fieldStart until td.fieldStart + td.fieldCount) {
-                    if (fi < 0 || fi >= (r?.fieldDefinitions?.size ?: 0)) continue
-                    val fd = r!!.fieldDefinitions[fi]
+                    if (fi < 0 || fi >= rFieldDefs.size) continue
+                    val fd = rFieldDefs[fi]
+                    val fdOffset = fieldDefOff + fi * 12  // 12 bytes per FieldDef
                     val fName = r?.strings?.get(fd.nameIndex) ?: "Field_$fi"
                     val fToken = "0x${"%X".format(fd.token)}"
-                    sb.appendLine("    // Field #$fi $fToken $fName (typeIndex: ${fd.typeIndex})")
+                    sb.appendLine("    // Field #$fi @ 0x${"%X".format(fdOffset)} | token=$fToken | name@0x${"%X".format(fd.nameIndex)} type=${fd.typeIndex}")
+                    sb.appendLine("    // $fName")
                 }
+                sb.appendLine("}")
                 sb.appendLine("")
             }
+
+            // Emit MethodDefinitions index (flat list with offsets)
+            sb.appendLine("// ============================================================")
+            sb.appendLine("// MethodDefinitions Index (${rMethodDefs.size}) @ 0x${"%X".format(methodDefOff)}")
+            sb.appendLine("// ============================================================")
+            sb.appendLine("")
+            for ((idx, md) in rMethodDefs.take(2000).withIndex()) {
+                val mdOffset = methodDefOff + idx * 40
+                val mName = r?.strings?.get(md.nameIndex) ?: "?"
+                val mToken = "0x${"%X".format(md.token)}"
+                sb.appendLine("// Method #$idx @ 0x${"%X".format(mdOffset)} | $mToken | $mName (type=${md.declaringType}, params=${md.parameterCount}, idx=${md.methodIndex})")
+            }
+            if (rMethodDefs.size > 2000) sb.appendLine("// ... and ${rMethodDefs.size - 2000} more methods")
+            sb.appendLine("")
+
+            // Emit FieldDefinitions index (flat list with offsets)
+            sb.appendLine("// ============================================================")
+            sb.appendLine("// FieldDefinitions Index (${rFieldDefs.size}) @ 0x${"%X".format(fieldDefOff)}")
+            sb.appendLine("// ============================================================")
+            sb.appendLine("")
+            for ((idx, fd) in rFieldDefs.take(5000).withIndex()) {
+                val fdOffset = fieldDefOff + idx * 12
+                val fName = r?.strings?.get(fd.nameIndex) ?: "?"
+                val fToken = "0x${"%X".format(fd.token)}"
+                sb.appendLine("// Field #$idx @ 0x${"%X".format(fdOffset)} | $fToken | $fName (type=${fd.typeIndex})")
+            }
+            if (rFieldDefs.size > 5000) sb.appendLine("// ... and ${rFieldDefs.size - 5000} more fields")
+            sb.appendLine("")
 
             // Emit extracted strings
             if (extraStrings.isNotEmpty()) {
@@ -1058,30 +1100,76 @@ except Exception as e:
                 }
             }
 
-            // Output
+            // Output — Collapsible sections
+            var showTypeDefs by remember { mutableStateOf(true) }
+            var showMethods by remember { mutableStateOf(false) }
+            var showFields by remember { mutableStateOf(false) }
+            var showStrings by remember { mutableStateOf(false) }
+            var showLog by remember { mutableStateOf(true) }
+
+            // Categorize output lines
+            val typeDefLines = output.filter { it.contains("TypeDef #") || it.contains("public class") }
+            val methodLines = output.filter { it.contains("Method #") || (it.contains("void ") && it.contains("params")) }
+            val fieldLines = output.filter { it.contains("Field #") }
+            val stringLines = output.filter { it.length > 6 && !it.startsWith("✅") && !it.startsWith("❌") && !it.startsWith("⚠") && !it.startsWith("═") && !it.startsWith("📊") && !it.contains("TypeDef") && !it.contains("Method") && !it.contains("Field") && !it.startsWith("// ─") && !it.contains("public class") && !it.contains("@ 0x") && !it.contains("index:") }
+            val logLines = output.filter { !typeDefLines.contains(it) && !methodLines.contains(it) && !fieldLines.contains(it) && !stringLines.contains(it) }
+
             Card(
                 Modifier.fillMaxWidth().weight(1f),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF0D1117)),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Column(Modifier.padding(8.dp)) {
+                Column(Modifier.padding(8.dp).fillMaxSize()) {
                     Text("📋 Output (${output.size} lines)", fontWeight = FontWeight.Bold, color = AccentGreen, fontSize = 11.sp)
                     Spacer(Modifier.height(4.dp))
+
+                    // Collapsible filter chips
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        FilterChip(selected = showLog, onClick = { showLog = !showLog },
+                            label = { Text("📋 Log (${logLines.size})", fontSize = 8.sp) },
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentGreen.copy(alpha = 0.2f), selectedLabelColor = AccentGreen))
+                        FilterChip(selected = showTypeDefs, onClick = { showTypeDefs = !showTypeDefs },
+                            label = { Text("🏷 TypeDefs (${typeDefLines.size})", fontSize = 8.sp) },
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentCyan.copy(alpha = 0.2f), selectedLabelColor = AccentCyan))
+                        FilterChip(selected = showMethods, onClick = { showMethods = !showMethods },
+                            label = { Text("⚙ Methods (${methodLines.size})", fontSize = 8.sp) },
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentOrange.copy(alpha = 0.2f), selectedLabelColor = AccentOrange))
+                        FilterChip(selected = showFields, onClick = { showFields = !showFields },
+                            label = { Text("📂 Fields (${fieldLines.size})", fontSize = 8.sp) },
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AccentPurple.copy(alpha = 0.2f), selectedLabelColor = AccentPurple))
+                        FilterChip(selected = showStrings, onClick = { showStrings = !showStrings },
+                            label = { Text("🔤 Strings (${stringLines.size})", fontSize = 8.sp) },
+                            colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF9C27B0).copy(alpha = 0.2f), selectedLabelColor = Color(0xFF9C27B0)))
+                    }
+                    Spacer(Modifier.height(4.dp))
+
+                    // Merged visible output
+                    val visibleLines = mutableListOf<String>()
+                    if (showLog) visibleLines.addAll(logLines)
+                    if (showTypeDefs) visibleLines.addAll(typeDefLines)
+                    if (showMethods) visibleLines.addAll(methodLines)
+                    if (showFields) visibleLines.addAll(fieldLines)
+                    if (showStrings) visibleLines.addAll(stringLines)
+
                     LazyColumn(Modifier.weight(1f)) {
-                        items(output) { line ->
+                        items(visibleLines) { line ->
                             val color = when {
                                 line.startsWith("✅") -> AccentGreen
                                 line.startsWith("❌") -> AccentRed
                                 line.startsWith("⚠") -> AccentOrange
                                 line.startsWith("═") -> AccentCyan
                                 line.startsWith("📊") -> AccentCyan
+                                line.contains("TypeDef #") -> AccentCyan
+                                line.contains("Method #") -> AccentOrange
+                                line.contains("Field #") -> AccentPurple
+                                line.contains("public class") -> AccentCyan
+                                line.startsWith("//") -> TextMuted
                                 else -> TextPrimary
                             }
                             Text(line, fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = color, lineHeight = 12.sp)
                         }
                     }
 
-                    // Copy dump.cs button
                     if (dumpCsContent.isNotEmpty()) {
                         Spacer(Modifier.height(4.dp))
                         Button(
