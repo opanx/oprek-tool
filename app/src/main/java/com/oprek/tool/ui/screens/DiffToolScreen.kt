@@ -48,7 +48,7 @@ fun DiffToolScreen(navController: NavController) {
             val name = FileUtils.getFileName(context, it)
             val tmp = FileUtils.getTempFile(context, "diff1_$name")
             FileUtils.copyUriToFile(context, it, tmp)
-            file1Name = name; file1Data = tmp.readBytes()
+            file1Name = name; file1Data = try { tmp.readBytes() } catch (e: Exception) { byteArrayOf() }
         }
     }
     val pick2 = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -56,7 +56,7 @@ fun DiffToolScreen(navController: NavController) {
             val name = FileUtils.getFileName(context, it)
             val tmp = FileUtils.getTempFile(context, "diff2_$name")
             FileUtils.copyUriToFile(context, it, tmp)
-            file2Name = name; file2Data = tmp.readBytes()
+            file2Name = name; file2Data = try { tmp.readBytes() } catch (e: Exception) { byteArrayOf() }
         }
     }
 

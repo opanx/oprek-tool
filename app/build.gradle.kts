@@ -24,8 +24,8 @@ android {
         applicationId = "com.oprek.tool"
         minSdk = 26
         targetSdk = 35
-        versionCode = 67
-        versionName = "0.9.4"
+        versionCode = 68
+        versionName = "0.9.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }

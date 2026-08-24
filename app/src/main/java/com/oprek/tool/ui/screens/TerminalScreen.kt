@@ -49,6 +49,16 @@ fun TerminalScreen(navController: NavController) {
     val history = remember { mutableStateListOf<String>() }
     var historyIdx by remember { mutableIntStateOf(-1) }
 
+
+    // Safe file read helper
+    fun safeReadBytes(file: java.io.File): ByteArray? = try {
+        file.readBytes()
+    } catch (e: Exception) { null }
+    
+    fun safeReadText(file: java.io.File): String? = try {
+        file.readText()
+    } catch (e: Exception) { null }
+    
     fun addLine(text: String, isCmd: Boolean = false, isError: Boolean = false) {
         lines.add(TerminalLine(text, isCmd, isError))
     }
@@ -128,7 +138,7 @@ fun TerminalScreen(navController: NavController) {
                             if (!f.exists()) addLine("File not found: ${path}", isError = true)
                             else {
                                 addLine("$path: ${f.length()} bytes, ${if (f.isDirectory) "directory" else "file"}")
-                                val bytes = f.readBytes().take(16).joinToString(" ") { "%02X".format(it) }
+                                val bytes = (safeReadBytes(f) ?: byteArrayOf()).take(16).joinToString(" ") { "%02X".format(it) }
                                 addLine("Magic: $bytes")
                             }
                         }
@@ -144,7 +154,7 @@ fun TerminalScreen(navController: NavController) {
                             withContext(Dispatchers.Main) { addLine("File not found: ${path}", isError = true) }
                             return@withContext
                         }
-                        val data = f.readBytes().take(2048)
+                        val data = (safeReadBytes(f) ?: byteArrayOf()).take(2048)
                         for (i in data.indices step 16) {
                             val hex = data.drop(i).take(16).joinToString(" ") { "%02X".format(it) }
                             val asc = data.drop(i).take(16).map { if (it.toInt() in 0x20..0x7E) it.toInt().toChar() else '.' }.joinToString("")
@@ -163,7 +173,7 @@ fun TerminalScreen(navController: NavController) {
                             withContext(Dispatchers.Main) { addLine("File not found: ${path}", isError = true) }
                             return@withContext
                         }
-                        val data = f.readBytes()
+                        val data = safeReadBytes(f) ?: byteArrayOf()
                         val sb = StringBuilder()
                         var cur = StringBuilder()
                         for (b in data) {
@@ -223,7 +233,7 @@ fun TerminalScreen(navController: NavController) {
                         if (path.isEmpty()) { withContext(Dispatchers.Main) { addLine("Usage: wc <path>", isError = true) }; return@withContext }
                         val f = java.io.File(path)
                         if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: $path", isError = true) }; return@withContext }
-                        val text = f.readText()
+                        val text = safeReadText(f) ?: ""
                         val lines3 = text.lines().size
                         val words = text.split("\\s+".toRegex()).filter { it.isNotEmpty() }.size
                         val bytes = f.length()
@@ -302,7 +312,7 @@ fun TerminalScreen(navController: NavController) {
                         if (!f.exists()) { withContext(Dispatchers.Main) { addLine("File not found: ${parts[1]}", isError = true) }; return@withContext }
                         val old = parts[2]
                         val new = parts[3]
-                        val text2 = f.readText()
+                        val text2 = safeReadText(f) ?: ""
                         val count2 = text2.split(old).size - 1
                         f.writeText(text2.replace(old, new))
                         withContext(Dispatchers.Main) { addLine("Replaced $count2 occurrences of '$old' with '$new'") }
