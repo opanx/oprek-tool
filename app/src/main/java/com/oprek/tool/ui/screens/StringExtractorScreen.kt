@@ -131,7 +131,7 @@ fun StringExtractorScreen(navController: NavController, vm: MainViewModel) {
             OutlinedTextField(value = filterQuery, onValueChange = { filterQuery = it },
                 placeholder = { Text("Search strings...") }, modifier = Modifier.fillMaxWidth().padding(8.dp),
                 singleLine = true, leadingIcon = { Icon(Icons.Default.Search, null, tint = AccentCyan) },
-                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen, unfocusedBorderColor = TextMuted, cursorColor = AccentGreen)
+                colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AccentGreen, unfocusedBorderColor = TextMuted, cursorColor = AccentGreen))
 
             // Type filter chips — 2 rows for 9 types
             Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
