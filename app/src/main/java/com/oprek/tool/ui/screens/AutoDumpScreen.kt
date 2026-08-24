@@ -871,7 +871,7 @@ except Exception as e:
                             val dumpCsFile = File(outDir, "dump_$pkg.cs")
                             dumpCsFile.writeText(dumpCsContent)
                             addLine("✅ dump.cs saved: ${dumpCsFile.absolutePath}")
-                            addLine("   ${result.typeDefs.size} types, ${result.methodDefinitions.size} methods, ${result.fieldDefinitions.size} fields")
+                            addLine("   ${result.typeDefinitions.size} types, ${result.methodDefinitions.size} methods, ${result.fieldDefinitions.size} fields")
                         } else {
                             addLine("⚠️ Failed to parse metadata structure — may be corrupted")
                             addLine("   Falling back to Strategy B (raw dump)")
