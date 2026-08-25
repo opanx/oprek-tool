@@ -2,8 +2,12 @@ package com.oprek.tool.ui.screens
 
 import android.content.Context
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -48,6 +52,8 @@ data class SymbolEntry(
     val info: Int, val shndx: Int, val sectionName: String
 )
 
+data class Quad<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
 data class RelocEntry(
     val offset: Long, val info: Long, val addend: Long,
     val type: Int, val symbolName: String
@@ -87,7 +93,7 @@ fun BinaryPatcherScreen(navController: NavController) {
                 filePath = path
                 fileName = File(path).name
                 scope.launch(Dispatchers.IO) {
-                    val result = parseElf(File(path))
+                    val result = parseElfFull(File(path))
                     withContext(Dispatchers.Main) {
                         data = result.first
                         sections = result.second
@@ -464,16 +470,16 @@ fun OutputTab(output: List<String>) {
 }
 
 // ─── ELF Parser ───
-private fun parseElf(file: File): Triple<ByteArray, List<SectionEntry>, Pair<List<SymbolEntry>, List<RelocEntry>>> {
+private fun parseElfFull(file: File): Quad<ByteArray, List<SectionEntry>, List<SymbolEntry>, List<RelocEntry>> {
     // Returns: (data, sections, (symbols, relocs))
     val data = file.readBytes()
-    if (data.size < 52) return Triple(data, emptyList(), Pair(emptyList(), emptyList()))
+    if (data.size < 52) return Quad(data, emptyList(), emptyList(), emptyList())
 
     val buf = ByteBuffer.wrap(data)
     buf.order(ByteOrder.LITTLE_ENDIAN)
 
     val isElf = data[0] == 0x7F.toByte() && data[1] == 'E'.code.toByte() && data[2] == 'L'.code.toByte() && data[3] == 'F'.code.toByte()
-    if (!isElf) return Triple(data, emptyList(), Pair(emptyList(), emptyList()))
+    if (!isElf) return Quad(data, emptyList(), emptyList(), emptyList())
 
     val is64 = data[4] == 2.toByte()
     val sections = mutableListOf<SectionEntry>()
@@ -481,7 +487,7 @@ private fun parseElf(file: File): Triple<ByteArray, List<SectionEntry>, Pair<Lis
     val relocs = mutableListOf<RelocEntry>()
 
     if (is64) {
-        if (data.size < 64) return Triple(data, emptyList(), Pair(emptyList(), emptyList()))
+        if (data.size < 64) return Quad(data, emptyList(), emptyList(), emptyList())
         val shOff = buf.getLong(40)
         val shNum = buf.getShort(60).toInt() and 0xFFFF
         val shEntSize = buf.getShort(58).toInt() and 0xFFFF
@@ -621,7 +627,7 @@ private fun parseElf(file: File): Triple<ByteArray, List<SectionEntry>, Pair<Lis
         }
     }
 
-    return Triple(data, sections, Pair(symbols, relocs))
+    return Quad(data, sections, symbols, relocs)
 }
 
 // ─── Patch Functions ───
@@ -632,13 +638,7 @@ private fun patchNop(data: ByteArray, path: String, target: String, count: Int):
 
     // Resolve offset from hex or symbol name
     val offset = try {
-        if (target.startsWith("0x") || target.startsWith("0X")) {
-            target.removePrefix("0x").removePrefix("0X").toLong(16)
-        } else {
-            // Try to find as section name
-            val sec = sections.find { it.name == target }
-            if (sec != null) sec.offset else return listOf("[-] Unknown target: $target")
-        }
+        target.removePrefix("0x").removePrefix("0X").toLong(16)
     } catch (e: Exception) { return listOf("[-] Invalid offset: $target") }
 
     if (offset + count > data.size) return listOf("[-] Exceeds file size")
