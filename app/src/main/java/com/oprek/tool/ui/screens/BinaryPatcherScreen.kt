@@ -630,6 +630,18 @@ private fun parseElfFull(file: File): Quad<ByteArray, List<SectionEntry>, List<S
     return Quad(data, sections, symbols, relocs)
 }
 
+// ─── Helper Functions ───
+private fun indexOfArray(data: ByteArray, pattern: ByteArray, startOffset: Int): Int {
+    if (pattern.isEmpty() || startOffset < 0) return -1
+    outer@ for (i in startOffset until data.size - pattern.size + 1) {
+        for (j in pattern.indices) {
+            if (data[i + j] != pattern[j]) continue@outer
+        }
+        return i
+    }
+    return -1
+}
+
 // ─── Patch Functions ───
 private fun patchNop(data: ByteArray, path: String, target: String, count: Int): List<String> {
     val result = mutableListOf<String>()

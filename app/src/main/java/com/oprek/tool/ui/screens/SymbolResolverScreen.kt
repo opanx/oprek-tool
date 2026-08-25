@@ -163,7 +163,7 @@ fun SymbolResolverScreen(navController: NavController) {
                             when (sym.binding) {
                                 "GLOBAL" -> Icons.Default.Public
                                 "LOCAL" -> Icons.Default.Person
-                                "WEAK" -> Icons.Default.Weakness
+                                "WEAK" -> Icons.Default.FavoriteBorder
                                 else -> Icons.Default.HelpOutline
                             },
                             null,
@@ -185,6 +185,17 @@ fun SymbolResolverScreen(navController: NavController) {
             }
         }
     }
+}
+
+private fun indexOfArray(data: ByteArray, pattern: ByteArray, startOffset: Int): Int {
+    if (pattern.isEmpty() || startOffset < 0) return -1
+    outer@ for (i in startOffset until data.size - pattern.size + 1) {
+        for (j in pattern.indices) {
+            if (data[i + j] != pattern[j]) continue@outer
+        }
+        return i
+    }
+    return -1
 }
 
 private fun resolveSymbols(data: ByteArray): List<ResolvedSymbol> {
@@ -326,7 +337,7 @@ private fun resolveSymbols(data: ByteArray): List<ResolvedSymbol> {
         }
     }
 
-    return result.sortedByDescending { it.binding == "GLOBAL" }.thenBy { it.name }
+    return result.sortedByDescending { it.binding == "GLOBAL" }.sortedBy { it.name }
 }
 
 private fun getPathFromUri(context: Context, uri: Uri): String? {
