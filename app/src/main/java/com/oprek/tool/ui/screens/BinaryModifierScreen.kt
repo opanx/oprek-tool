@@ -234,7 +234,7 @@ private fun nopRegion(ctx: Context, path: String, offsetHex: String, countHex: S
 
     // Detect architecture
     val nop = if (data.size > 4 && data[4] == 2.toByte()) { // ELF64
-        byteArrayOf(0x1F, 0x20, 0x03, 0xD5) // ARM64 NOP
+        byteArrayOf(0x1F.toByte(), 0x20.toByte(), 0x03.toByte(), 0xD5.toByte()) // ARM64 NOP
     } else {
         byteArrayOf(0x00, 0x00, 0x00, 0x00) // ARM/x86 NOP
     }
@@ -329,7 +329,7 @@ private fun viewSections(ctx: Context, path: String): List<String> {
                 val shSize = buf.getLong(off + 32)
 
                 val name = if (shName in 0 until strSize) {
-                    val end = data.indexOf(0, strOff + shName)
+                    val end = java.util.Arrays.copyOfRange(data, strOff + shName, data.size).indexOf(0.toByte()) + strOff + shName
                     if (end > strOff + shName) String(data, strOff + shName, end - strOff - shName) else "str_$shName"
                 } else "str_$shName"
 

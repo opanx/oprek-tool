@@ -121,7 +121,7 @@ fun ResourceScannerScreen(navController: NavController) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(output) { line ->
                         Text(line, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                            color = when { line.startsWith("[+]") -> AccentGreen; line.startsWith("[-]") -> AccentRed; line.startsWith("[!]") -> AccentOrange; line.contains("ZIP") -> AccentCyan; line.contains("DEX") -> AccentPurple; line.contains("SO") -> AccentRed; line.contains("PNG") -> AccentOrange; else -> Color(0xFF90EE90) },
+                            color = when { line.startsWith("[+]") -> AccentGreen; line.startsWith("[-]") -> AccentRed; line.startsWith("[!]") -> AccentOrange; line.contains("ZIP") -> AccentCyan; line.contains("DEX") -> AccentPurple; line.contains("SO") -> AccentRed; line.contains("PNG") -> AccentOrange; else -> Color(0xFF90EE90.toByte()) },
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp))
                     }
                 }
@@ -170,18 +170,18 @@ private fun scanEmbeddedFiles(ctx: Context, path: String): List<String> {
         byteArrayOf(0x7F, 0x45, 0x4C, 0x46) to "ELF",
         byteArrayOf(0x64, 0x65, 0x78, 0x0A) to "DEX",
         byteArrayOf(0x64, 0x65, 0x79, 0x0A) to "ODEX",
-        byteArrayOf(0x89, 0x50, 0x4E, 0x47) to "PNG",
+        byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47) to "PNG",
         byteArrayOf(0x47, 0x49, 0x46, 0x38) to "GIF",
-        byteArrayOf(0xFF, 0xD8, 0xFF, 0xE0) to "JPEG",
+        byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte()) to "JPEG",
         byteArrayOf(0x52, 0x61, 0x72, 0x21) to "RAR",
-        byteArrayOf(0x37, 0x7A, 0xBC, 0xAF) to "7Z",
-        byteArrayOf(0x1F, 0x8B, 0x08, 0x00) to "GZIP",
-        byteArrayOf(0xFD, 0x37, 0x7A, 0x58) to "XZ",
+        byteArrayOf(0x37, 0x7A, 0xBC.toByte(), 0xAF.toByte()) to "7Z",
+        byteArrayOf(0x1F, 0x8B.toByte(), 0x08, 0x00) to "GZIP",
+        byteArrayOf(0xFD.toByte(), 0x37, 0x7A, 0x58) to "XZ",
         byteArrayOf(0x42, 0x5A, 0x68) to "BZIP2",
         byteArrayOf(0x4D, 0x5A) to "PE/EXE",
-        byteArrayOf(0xCA, 0xFE, 0xBA, 0xBE) to "Mach-O (fat)",
-        byteArrayOf(0xFE, 0xED, 0xFA, 0xCE) to "Mach-O 32",
-        byteArrayOf(0xFE, 0xED, 0xFA, 0xCF) to "Mach-O 64",
+        byteArrayOf(0xCA.toByte(), 0xFE.toByte(), 0xBA.toByte(), 0xBE.toByte()) to "Mach-O (fat)",
+        byteArrayOf(0xFE.toByte(), 0xED.toByte(), 0xFA.toByte(), 0xCE.toByte()) to "Mach-O 32",
+        byteArrayOf(0xFE.toByte(), 0xED.toByte(), 0xFA.toByte(), 0xCF.toByte()) to "Mach-O 64",
         byteArrayOf(0x58, 0x41, 0x52, 0x21) to "XAR",
         byteArrayOf(0x4C, 0x01) to "COFF",
         byteArrayOf(0x62, 0x73, 0x68, 0x72) to "BASH script",
@@ -191,7 +191,7 @@ private fun scanEmbeddedFiles(ctx: Context, path: String): List<String> {
         byteArrayOf(0x4F, 0x67, 0x67, 0x53) to "OGG",
         byteArrayOf(0x66, 0x4C, 0x61, 0x43) to "FLAC",
         byteArrayOf(0x49, 0x44, 0x33) to "MP3 (ID3)",
-        byteArrayOf(0xFF, 0xFB) to "MP3",
+        byteArrayOf(0xFF.toByte(), 0xFB.toByte()) to "MP3",
         byteArrayOf(0x00, 0x00, 0x01, 0x00) to "ICO",
         byteArrayOf(0x00, 0x00, 0x02, 0x00) to "CUR",
     )
