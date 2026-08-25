@@ -155,7 +155,7 @@ fun OfrakIntegrationScreen(navController: NavController) {
                 Modifier.fillMaxWidth().height(200.dp).padding(horizontal = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                items(patches.chunked(2)) { row ->
+                items(presets.chunked(2)) { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
                         row.forEach { (label, cmd, desc) ->
                             Card(
