@@ -314,7 +314,7 @@ private fun viewSections(ctx: Context, path: String): List<String> {
 
         if (eShOff > 0 && eShNum > 0 && eShOff + eShNum * eShEntSize <= data.size) {
             // Read string table
-            val strShOff = eShOff + eShStrndx * eShEntSize
+            val strShOff = (eShOff + eShStrndx * eShEntSize).toInt()
             val strOff = buf.getLong(strShOff + 24).toInt()
             val strSize = buf.getLong(strShOff + 32).toInt()
 

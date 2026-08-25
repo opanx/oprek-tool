@@ -121,7 +121,7 @@ fun ResourceScannerScreen(navController: NavController) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(output) { line ->
                         Text(line, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
-                            color = when { line.startsWith("[+]") -> AccentGreen; line.startsWith("[-]") -> AccentRed; line.startsWith("[!]") -> AccentOrange; line.contains("ZIP") -> AccentCyan; line.contains("DEX") -> AccentPurple; line.contains("SO") -> AccentRed; line.contains("PNG") -> AccentOrange; else -> Color(0xFF90EE90.toByte()) },
+                            color = when { line.startsWith("[+]") -> AccentGreen; line.startsWith("[-]") -> AccentRed; line.startsWith("[!]") -> AccentOrange; line.contains("ZIP") -> AccentCyan; line.contains("DEX") -> AccentPurple; line.contains("SO") -> AccentRed; line.contains("PNG") -> AccentOrange; else -> Color(0xFF90EE90.toInt()) },
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp))
                     }
                 }
