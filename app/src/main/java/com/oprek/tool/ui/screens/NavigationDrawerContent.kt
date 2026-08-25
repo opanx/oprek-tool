@@ -47,6 +47,9 @@ val toolCategories = listOf(
         NavToolItem("Binary Diff", "bindiff", Icons.Default.Compare),
         NavToolItem("Entropy Map", "entmap", Icons.Default.Analytics),
         NavToolItem("Symbol Resolver", "symres", Icons.Default.DataObject),
+        NavToolItem("OFRAK Integration", "ofrak", Icons.Default.Terminal),
+        NavToolItem(".deb Analyzer", "deb", Icons.Default.Archive),
+        NavToolItem("Firmware Analyzer", "firmware", Icons.Default.Memory),
     ), AccentCyan),
     NavToolCategory("🎯 Auto Dump", Icons.Default.Storage, listOf(
         NavToolItem("Auto Dump (IL2CPP)", "autodump", Icons.Default.CloudDownload),

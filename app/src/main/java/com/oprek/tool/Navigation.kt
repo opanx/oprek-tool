@@ -120,5 +120,9 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("bindiff") { BinaryDiffScreen(navController) }
         composable("entmap") { EntropyMapScreen(navController) }
         composable("symres") { SymbolResolverScreen(navController) }
+        // === v0.12.0 OFRAK INTEGRATION SCREENS ===
+        composable("ofrak") { OfrakIntegrationScreen(navController) }
+        composable("deb") { DebPackageScreen(navController) }
+        composable("firmware") { FirmwareAnalyzerScreen(navController) }
     }
 }

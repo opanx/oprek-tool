@@ -217,6 +217,10 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("🔀 Binary Diff", "Compare original vs patched", Icons.Outlined.Compare, AccentCyan, "bindiff"),
                 ToolItem("🗺️ Entropy Map", "Visual entropy heatmap + packer detect", Icons.Outlined.Analytics, AccentOrange, "entmap"),
                 ToolItem("🏷️ Symbol Resolver", "Find & resolve ELF symbols", Icons.Outlined.DataObject, AccentPurple, "symres"),
+                // === v0.12.0 OFRAK INTEGRATION TOOLS ===
+                ToolItem("⚡ OFRAK Integration", "Run OFRAK commands from app", Icons.Outlined.Terminal, AccentGreen, "ofrak"),
+                ToolItem("📦 .deb Analyzer", "Extract/modify/repack .deb packages", Icons.Outlined.Archive, AccentOrange, "deb"),
+                ToolItem("🔧 Firmware Analyzer", "Extract embedded firmware files", Icons.Outlined.Memory, AccentRed, "firmware"),
             )
 
             LazyVerticalGrid(
