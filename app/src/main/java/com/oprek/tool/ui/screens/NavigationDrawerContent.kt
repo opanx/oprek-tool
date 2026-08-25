@@ -43,6 +43,10 @@ val toolCategories = listOf(
         NavToolItem("Binary Modifier", "binmod", Icons.Default.Build),
         NavToolItem("Multi-Arch Analyzer", "multiarch", Icons.Default.Memory),
         NavToolItem("Resource Scanner", "resscan", Icons.Default.Search),
+        NavToolItem("Binary Patcher", "binpatch", Icons.Default.Build),
+        NavToolItem("Binary Diff", "bindiff", Icons.Default.Compare),
+        NavToolItem("Entropy Map", "entmap", Icons.Default.Analytics),
+        NavToolItem("Symbol Resolver", "symres", Icons.Default.DataObject),
     ), AccentCyan),
     NavToolCategory("🎯 Auto Dump", Icons.Default.Storage, listOf(
         NavToolItem("Auto Dump (IL2CPP)", "autodump", Icons.Default.CloudDownload),

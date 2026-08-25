@@ -116,5 +116,9 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("binmod") { BinaryModifierScreen(navController) }
         composable("multiarch") { MultiArchAnalyzerScreen(navController) }
         composable("resscan") { ResourceScannerScreen(navController) }
+        composable("binpatch") { BinaryPatcherScreen(navController) }
+        composable("bindiff") { BinaryDiffScreen(navController) }
+        composable("entmap") { EntropyMapScreen(navController) }
+        composable("symres") { SymbolResolverScreen(navController) }
     }
 }

@@ -213,6 +213,10 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("🔧 Binary Modifier", "Patch bytes, modify sections, repack ELF", Icons.Outlined.Build, AccentRed, "binmod"),
                 ToolItem("🏗️ Multi-Arch Analyzer", "ARM/ARM64/x86/MIPS/PPC analysis", Icons.Outlined.Memory, AccentPurple, "multiarch"),
                 ToolItem("📦 Resource Scanner", "Find embedded files in ELF/DEX/APK", Icons.Outlined.Search, AccentOrange, "resscan"),
+                ToolItem("🔧 Binary Patcher", "Semantic patching (symbols/sections/relocs)", Icons.Outlined.Build, AccentPurple, "binpatch"),
+                ToolItem("🔀 Binary Diff", "Compare original vs patched", Icons.Outlined.Compare, AccentCyan, "bindiff"),
+                ToolItem("🗺️ Entropy Map", "Visual entropy heatmap + packer detect", Icons.Outlined.Analytics, AccentOrange, "entmap"),
+                ToolItem("🏷️ Symbol Resolver", "Find & resolve ELF symbols", Icons.Outlined.DataObject, AccentPurple, "symres"),
             )
 
             LazyVerticalGrid(
