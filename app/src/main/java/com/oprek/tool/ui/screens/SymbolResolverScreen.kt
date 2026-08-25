@@ -187,6 +187,11 @@ fun SymbolResolverScreen(navController: NavController) {
     }
 }
 
+private fun findNullByte(data: ByteArray, startOffset: Int): Int {
+    for (i in startOffset until data.size) { if (data[i].toInt() == 0) return i }
+    return -1
+}
+
 private fun indexOfArray(data: ByteArray, pattern: ByteArray, startOffset: Int): Int {
     if (pattern.isEmpty() || startOffset < 0) return -1
     outer@ for (i in startOffset until data.size - pattern.size + 1) {
@@ -224,7 +229,7 @@ private fun resolveSymbols(data: ByteArray): List<ResolvedSymbol> {
 
         fun readStr(idx: Int): String {
             if (idx < 0 || idx >= strSize || strOffset + idx >= data.size.toLong()) return ""
-            val end = data.indexOf(0, (strOffset + idx).toInt())
+            val end = findNullByte(data, (strOffset + idx).toInt())
             return if (end > 0) String(data, (strOffset + idx).toInt(), end - (strOffset + idx).toInt()) else ""
         }
 
@@ -244,7 +249,7 @@ private fun resolveSymbols(data: ByteArray): List<ResolvedSymbol> {
 
                 fun readSymStr(idx: Int): String {
                     if (idx < 0 || idx >= symStrSize || symStrOffset + idx >= data.size.toLong()) return ""
-                    val end = data.indexOf(0, (symStrOffset + idx).toInt())
+                    val end = findNullByte(data, (symStrOffset + idx).toInt())
                     return if (end > 0) String(data, (symStrOffset + idx).toInt(), end - (symStrOffset + idx).toInt()) else ""
                 }
 
@@ -310,7 +315,7 @@ private fun resolveSymbols(data: ByteArray): List<ResolvedSymbol> {
 
                 fun readSymStr(idx: Int): String {
                     if (idx < 0 || idx >= symStrSize || symStrOffset + idx >= data.size.toLong()) return ""
-                    val end = data.indexOf(0, (symStrOffset + idx).toInt())
+                    val end = findNullByte(data, (symStrOffset + idx).toInt())
                     return if (end > 0) String(data, (symStrOffset + idx).toInt(), end - (symStrOffset + idx).toInt()) else ""
                 }
 

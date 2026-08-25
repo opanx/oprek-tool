@@ -510,7 +510,7 @@ private fun parseElfFull(file: File): Quad<ByteArray, List<SectionEntry>, List<S
                 val size = buf.getLong(off + 32)
 
                 val name = if (nameIdx in 0 until strSize && strOffset + nameIdx < data.size.toLong()) {
-                    val end = data.indexOf(0, (strOffset + nameIdx).toInt())
+                    val end = findNullByte(data, (strOffset + nameIdx).toInt())
                     if (end > 0) String(data, (strOffset + nameIdx).toInt(), end - (strOffset + nameIdx).toInt()) else "str_$nameIdx"
                 } else "str_$nameIdx"
 
@@ -535,7 +535,7 @@ private fun parseElfFull(file: File): Quad<ByteArray, List<SectionEntry>, List<S
                         val sSize = buf.getLong(sOff + 16)
 
                         val sNameStr = if (sName in 0 until symStrSize && symStrOffset + sName < data.size.toLong()) {
-                            val end = data.indexOf(0, (symStrOffset + sName).toInt())
+                            val end = findNullByte(data, (symStrOffset + sName).toInt())
                             if (end > 0) String(data, (symStrOffset + sName).toInt(), end - (symStrOffset + sName).toInt()) else ""
                         } else ""
 
@@ -590,7 +590,7 @@ private fun parseElfFull(file: File): Quad<ByteArray, List<SectionEntry>, List<S
                 val size = buf.getInt(off + 20).toLong() and 0xFFFFFFFFL
 
                 val name = if (nameIdx in 0 until strSize && strOffset + nameIdx < data.size.toLong()) {
-                    val end = data.indexOf(0, (strOffset + nameIdx).toInt())
+                    val end = findNullByte(data, (strOffset + nameIdx).toInt())
                     if (end > 0) String(data, (strOffset + nameIdx).toInt(), end - (strOffset + nameIdx).toInt()) else "str_$nameIdx"
                 } else "str_$nameIdx"
 
@@ -614,7 +614,7 @@ private fun parseElfFull(file: File): Quad<ByteArray, List<SectionEntry>, List<S
                         val sShndx = buf.getShort(sOff + 14).toInt() and 0xFFFF
 
                         val sNameStr = if (sName in 0 until symStrSize && symStrOffset + sName < data.size.toLong()) {
-                            val end = data.indexOf(0, (symStrOffset + sName).toInt())
+                            val end = findNullByte(data, (symStrOffset + sName).toInt())
                             if (end > 0) String(data, (symStrOffset + sName).toInt(), end - (symStrOffset + sName).toInt()) else ""
                         } else ""
 
@@ -631,6 +631,12 @@ private fun parseElfFull(file: File): Quad<ByteArray, List<SectionEntry>, List<S
 }
 
 // ─── Helper Functions ───
+private fun findNullByte(data: ByteArray, startOffset: Int): Int {
+    for (i in startOffset until data.size) { if (data[i].toInt() == 0) return i }
+    return -1
+}
+
+
 private fun indexOfArray(data: ByteArray, pattern: ByteArray, startOffset: Int): Int {
     if (pattern.isEmpty() || startOffset < 0) return -1
     outer@ for (i in startOffset until data.size - pattern.size + 1) {
