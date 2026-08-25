@@ -247,44 +247,38 @@ private fun scanFirmware(path: String): Pair<List<FirmwareChunk>, Double> {
     val chunks = mutableListOf<FirmwareChunk>()
 
     // Magic signatures to search for
-    val signatures = listOf(
-        // Compressed filesystems
-        longArrayOf(0x68737173, 0x71736868) to "Squashfs filesystem (little-endian)",
-        longArrayOf(0x73717368, 0x68737171) to "Squashfs filesystem (big-endian)",
-        longArrayOf(0x00000000, 0x00000000) to "JFFS2 filesystem", // Needs more context
-        longArrayOf(0x31190000, 0x00000000) to "UBI volume header",
-        longArrayOf(0x2D7C2701, 0x00000000) to "Cramfs filesystem",
-        // File systems
-        longArrayOf(0x53EF0100, 0x00000000) to "ext2/ext3/ext4 filesystem",
-        longArrayOf(0x9FA01AFC, 0x00000000) to "Reiser filesystem",
-        // Boot
-        longArrayOf(0x4D5A9000, 0x00000000) to "Linux kernel (zImage/raw)",
-        longArrayOf(0x27051956, 0x00000000) to "uImage header",
-        longArrayOf(0xD00DFEED, 0x00000000) to "FIT (Flattened Image Tree)",
-        // Compressed
-        byteArrayOf(0x1F.toByte(), 0x8B.toByte(), 0x08, 0x00) to "gzip compressed data",
-        byteArrayOf(0xFD.toByte(), 0x37, 0x7A, 0x58) to "XZ compressed data",
-        byteArrayOf(0x5D.toByte(), 0x00, 0x00, 0x00) to "LZMA compressed data",
-        byteArrayOf(0x42.toByte(), 0x5A, 0x68) to "bzip2 compressed data",
-        byteArrayOf(0x28.toByte(), 0xB5, 0x2F, 0xFD) to "Zstandard compressed data",
-        // Archives
-        byteArrayOf(0x37.toByte(), 0x7A, 0xBC, 0xAF) to "7-zip archive",
-        byteArrayOf(0x50.toByte(), 0x4B, 0x03, 0x04) to "ZIP archive",
-        byteArrayOf(0x52.toByte(), 0x61, 0x72, 0x21) to "RAR archive",
-        // Executables
-        byteArrayOf(0x7F.toByte(), 0x45, 0x4C, 0x46) to "ELF executable",
-        byteArrayOf(0x4D.toByte(), 0x5A) to "PE executable",
-        byteArrayOf(0xCA.toByte(), 0xFE, 0xBA, 0xBE) to "Mach-O (fat binary)",
-        byteArrayOf(0xFE.toByte(), 0xED, 0xFA, 0xCE) to "Mach-O 32-bit",
-        byteArrayOf(0xFE.toByte(), 0xED, 0xFA, 0xCF) to "Mach-O 64-bit",
+    // Magic signatures to search for (all byteArrayOf)
+    val signatures: List<Pair<ByteArray, String>> = listOf(
+        byteArrayOf(0x68, 0x73, 0x71, 0x73) to "Squashfs filesystem (little-endian)",
+        byteArrayOf(0x73, 0x71, 0x73, 0x68) to "Squashfs filesystem (big-endian)",
+        byteArrayOf(0x31, 0x19, 0x00, 0x00) to "UBI volume header",
+        byteArrayOf(0x2D, 0x7C, 0x27, 0x01) to "Cramfs filesystem",
+        byteArrayOf(0x53, 0xEF, 0x01, 0x00) to "ext2/ext3/ext4 filesystem",
+        byteArrayOf(0x9F, 0xA0, 0x1A, 0xFC) to "Reiser filesystem",
+        byteArrayOf(0x27, 0x05, 0x19, 0x56) to "uImage header",
+        byteArrayOf(0xD0, 0x0D, 0xFE, 0xED) to "FIT (Flattened Image Tree)",
+        byteArrayOf(0x1F, 0x8B, 0x08, 0x00) to "gzip compressed data",
+        byteArrayOf(0xFD, 0x37, 0x7A, 0x58) to "XZ compressed data",
+        byteArrayOf(0x5D, 0x00, 0x00, 0x00) to "LZMA compressed data",
+        byteArrayOf(0x42, 0x5A, 0x68) to "bzip2 compressed data",
+        byteArrayOf(0x28, (0xB5).toByte(), 0x2F, (0xFD).toByte()) to "Zstandard compressed data",
+        byteArrayOf(0x37, 0x7A, (0xBC).toByte(), (0xAF).toByte()) to "7-zip archive",
+        byteArrayOf(0x50, 0x4B, 0x03, 0x04) to "ZIP archive",
+        byteArrayOf(0x52, 0x61, 0x72, 0x21) to "RAR archive",
+        byteArrayOf(0x7F, 0x45, 0x4C, 0x46) to "ELF executable",
+        byteArrayOf(0x4D, 0x5A) to "PE executable",
+        byteArrayOf((0xCA).toByte(), (0xFE).toByte(), (0xBA).toByte(), (0xBE).toByte()) to "Mach-O (fat binary)",
+        byteArrayOf((0xFE).toByte(), (0xED).toByte(), (0xFA).toByte(), (0xCE).toByte()) to "Mach-O 32-bit",
+        byteArrayOf((0xFE).toByte(), (0xED).toByte(), (0xFA).toByte(), (0xCF).toByte()) to "Mach-O 64-bit",
     )
+
 
     for (i in 0 until data.size - 4) {
         for ((magic, desc) in signatures) {
             if (i + magic.size <= data.size) {
                 var match = true
                 for (j in magic.indices) {
-                    if (data[i + j] != magic[j].toByte()) {
+                    if (data[i + j] != magic[j]) {
                         match = false
                         break
                     }
@@ -400,7 +394,7 @@ private fun carveStrings(path: String): List<String> {
     var startOffset = 0L
 
     for (i in data.indices) {
-        val c = data[i].toInt() and 0xFF
+        val c = data[i].toInt() and 0xFF.toByte()
         if (c in 0x20..0x7E) {
             if (current.isEmpty()) startOffset = i.toLong()
             current.append(c.toChar())
@@ -448,8 +442,8 @@ private fun findElfEnd(data: ByteArray, start: Int): Int {
         if (start + 64 > data.size) return data.size
         val buf = java.nio.ByteBuffer.wrap(data).order(java.nio.ByteOrder.LITTLE_ENDIAN)
         val phOff = buf.getLong(start + 32).toInt()
-        val phNum = buf.getShort(start + 56).toInt() and 0xFFFF
-        val phEntSize = buf.getShort(start + 54).toInt() and 0xFFFF
+        val phNum = buf.getShort(start + 56).toInt() and 0xFFFF.toByte()
+        val phEntSize = buf.getShort(start + 54).toInt() and 0xFFFF.toByte()
         var maxEnd = start + 64
         for (i in 0 until phNum) {
             val off = phOff + i * phEntSize
@@ -465,8 +459,8 @@ private fun findElfEnd(data: ByteArray, start: Int): Int {
         if (start + 52 > data.size) return data.size
         val buf = java.nio.ByteBuffer.wrap(data).order(java.nio.ByteOrder.LITTLE_ENDIAN)
         val phOff = buf.getInt(start + 28)
-        val phNum = buf.getShort(start + 44).toInt() and 0xFFFF
-        val phEntSize = buf.getShort(start + 42).toInt() and 0xFFFF
+        val phNum = buf.getShort(start + 44).toInt() and 0xFFFF.toByte()
+        val phEntSize = buf.getShort(start + 42).toInt() and 0xFFFF.toByte()
         var maxEnd = start + 52
         for (i in 0 until phNum) {
             val off = phOff + i * phEntSize
@@ -484,7 +478,7 @@ private fun findElfEnd(data: ByteArray, start: Int): Int {
 private fun shannonEntropy(data: ByteArray): Double {
     if (data.isEmpty()) return 0.0
     val freq = IntArray(256)
-    for (b in data) freq[b.toInt() and 0xFF]++
+    for (b in data) freq[b.toInt() and 0xFF.toByte()]++
     var entropy = 0.0
     for (f in freq) {
         if (f > 0) {
