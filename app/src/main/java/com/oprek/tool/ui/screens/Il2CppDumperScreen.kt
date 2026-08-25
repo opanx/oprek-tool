@@ -569,7 +569,7 @@ private fun parseElfHeader(bytes: ByteArray, is64: Boolean): List<String> {
 }
 
 // ============================================================
-// global-metadata.dat parser
+// global-metadata.dat parser (enhanced with header generation)
 // ============================================================
 private fun analyzeGlobalMetadata(bytes: ByteArray, filterPublic: Boolean): List<String> {
     val result = mutableListOf<String>()
@@ -611,17 +611,23 @@ private fun analyzeGlobalMetadata(bytes: ByteArray, filterPublic: Boolean): List
             result.add("")
             result.add("=== Type Definitions (${typeDefCount}) ===")
 
-            // Each TypeDef is typically 16 or 20 bytes depending on version
+            // Collect data for header generation
+            data class TypeDefInfo(val name: String, val ns: String, val kind: String, val visibility: String, val fieldStart: Int, val methodStart: Int)
+            data class MethodInfo(val name: String, val ownerType: String)
+            data class FieldInfo(val name: String, val ownerType: String)
+
+            val typeDefs = mutableListOf<TypeDefInfo>()
+            val methods = mutableListOf<MethodInfo>()
+            val fields = mutableListOf<FieldInfo>()
+
             val typeDefSize = if (version >= 24) 20 else 16
-            for (i in 0 until minOf(typeDefCount, 200)) {
+            for (i in 0 until minOf(typeDefCount, 2000)) {
                 val off = typeDefOffset + i * typeDefSize
                 if (off + typeDefSize > bytes.size) break
 
                 val nameIndex = buf.getInt(off).toLong() and 0xFFFFFFFFL
                 val namespaceIndex = buf.getInt(off + 4).toLong() and 0xFFFFFFFFL
                 val bitfield = buf.getInt(off + 8)
-                val parentIndex = buf.getShort(off + 12).toInt() and 0xFFFF
-                val ifacesCount = buf.getShort(off + 14).toInt() and 0xFFFF
                 val fieldStart = buf.getShort(off + 16).toInt() and 0xFFFF
                 val methodStart = buf.getShort(off + 18).toInt() and 0xFFFF
 
@@ -631,7 +637,7 @@ private fun analyzeGlobalMetadata(bytes: ByteArray, filterPublic: Boolean): List
                 val visibility = when (bitfield and 7) {
                     1 -> "public"
                     2 -> "internal"
-                    3 -> "internal" // protected
+                    3 -> "internal"
                     else -> ""
                 }
 
@@ -643,38 +649,63 @@ private fun analyzeGlobalMetadata(bytes: ByteArray, filterPublic: Boolean): List
                 }
 
                 if (filterPublic && visibility != "public") continue
+                typeDefs.add(TypeDefInfo(typeName, nsName, typeKind, visibility, fieldStart, methodStart))
                 val ns = if (nsName.isNotEmpty()) "$nsName." else ""
                 result.add("  [$typeKind] $ns$typeName  // fields: $fieldStart, methods: $methodStart")
             }
 
+            // Parse methods
             result.add("")
             result.add("=== Method Definitions (${methodDefCount}) ===")
             val methodDefSize = 12
-            for (i in 0 until minOf(methodDefCount, 500)) {
+            for (i in 0 until minOf(methodDefCount, 5000)) {
                 val off = methodDefOffset + i * methodDefSize
                 if (off + methodDefSize > bytes.size) break
 
                 val nameIndex = buf.getInt(off).toLong() and 0xFFFFFFFFL
-                val bitfield = buf.getInt(off + 4)
-                val methodIndex = buf.getShort(off + 8).toInt() and 0xFFFF
-
                 val methodName = getStringFromTable(bytes, nameIndex, stringLiteralOffset, stringLiteralCount)
-                result.add("  Method[$methodIndex]: $methodName")
+                methods.add(MethodInfo(methodName, ""))
+                result.add("  Method[$i]: $methodName")
             }
 
+            // Parse fields
             result.add("")
             result.add("=== Field Definitions (${fieldCount}) ===")
             val fieldSize = 12
-            for (i in 0 until minOf(fieldCount, 300)) {
+            for (i in 0 until minOf(fieldCount, 3000)) {
                 val off = fieldOffset + i * fieldSize
                 if (off + fieldSize > bytes.size) break
 
                 val nameIndex = buf.getInt(off).toLong() and 0xFFFFFFFFL
-                val bitfield = buf.getInt(off + 4)
-                val fieldIndex = buf.getShort(off + 8).toInt() and 0xFFFF
-
                 val fieldName = getStringFromTable(bytes, nameIndex, stringLiteralOffset, stringLiteralCount)
-                result.add("  Field[$fieldIndex]: $fieldName")
+                fields.add(FieldInfo(fieldName, ""))
+                result.add("  Field[$i]: $fieldName")
+            }
+
+            // Generate header files
+            result.add("")
+            result.add("=== Generated Headers ===")
+            result.add("// --- il2cpp.h ---")
+            result.add("#pragma once")
+            result.add("#include <cstdint>")
+            result.add("")
+            for (td in typeDefs) {
+                val ns = if (td.ns.isNotEmpty()) "${td.ns}::" else ""
+                result.add("// ${td.kind} $ns${td.name}")
+                result.add("struct ${td.name.replace(".", "_")};")
+            }
+            result.add("")
+            result.add("// --- game.h ---")
+            for (td in typeDefs) {
+                if (td.kind == "class" || td.kind == "struct") {
+                    result.add("class ${td.name.replace(".", "_")};")
+                }
+            }
+            result.add("")
+            result.add("// --- main.h ---")
+            result.add("#pragma once")
+            for (td in typeDefs) {
+                result.add("// ${td.name} (${td.kind})")
             }
         }
     } else {
