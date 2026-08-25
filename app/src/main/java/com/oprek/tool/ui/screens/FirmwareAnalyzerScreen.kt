@@ -394,7 +394,7 @@ private fun carveStrings(path: String): List<String> {
     var startOffset = 0L
 
     for (i in data.indices) {
-        val c = data[i].toInt() and 0xFF.toByte()
+        val c = data[i].toInt() and 0xFF
         if (c in 0x20..0x7E) {
             if (current.isEmpty()) startOffset = i.toLong()
             current.append(c.toChar())
@@ -442,8 +442,8 @@ private fun findElfEnd(data: ByteArray, start: Int): Int {
         if (start + 64 > data.size) return data.size
         val buf = java.nio.ByteBuffer.wrap(data).order(java.nio.ByteOrder.LITTLE_ENDIAN)
         val phOff = buf.getLong(start + 32).toInt()
-        val phNum = buf.getShort(start + 56).toInt() and 0xFFFF.toByte()
-        val phEntSize = buf.getShort(start + 54).toInt() and 0xFFFF.toByte()
+        val phNum = buf.getShort(start + 56).toInt() and 0xFFFF
+        val phEntSize = buf.getShort(start + 54).toInt() and 0xFFFF
         var maxEnd = start + 64
         for (i in 0 until phNum) {
             val off = phOff + i * phEntSize
@@ -459,8 +459,8 @@ private fun findElfEnd(data: ByteArray, start: Int): Int {
         if (start + 52 > data.size) return data.size
         val buf = java.nio.ByteBuffer.wrap(data).order(java.nio.ByteOrder.LITTLE_ENDIAN)
         val phOff = buf.getInt(start + 28)
-        val phNum = buf.getShort(start + 44).toInt() and 0xFFFF.toByte()
-        val phEntSize = buf.getShort(start + 42).toInt() and 0xFFFF.toByte()
+        val phNum = buf.getShort(start + 44).toInt() and 0xFFFF
+        val phEntSize = buf.getShort(start + 42).toInt() and 0xFFFF
         var maxEnd = start + 52
         for (i in 0 until phNum) {
             val off = phOff + i * phEntSize
@@ -478,7 +478,7 @@ private fun findElfEnd(data: ByteArray, start: Int): Int {
 private fun shannonEntropy(data: ByteArray): Double {
     if (data.isEmpty()) return 0.0
     val freq = IntArray(256)
-    for (b in data) freq[b.toInt() and 0xFF.toByte()]++
+    for (b in data) freq[b.toInt() and 0xFF]++
     var entropy = 0.0
     for (f in freq) {
         if (f > 0) {
