@@ -112,5 +112,9 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("permremover") { PermissionRemoverScreen(navController) }
         composable("sopatch") { SoPatchScreen(navController) }
         composable("apktasksuite") { ApkToolSuiteScreen(navController) }
+        // === v0.10.0 OFRAK-LIKE SCREENS ===
+        composable("binmod") { BinaryModifierScreen(navController) }
+        composable("multiarch") { MultiArchAnalyzerScreen(navController) }
+        composable("resscan") { ResourceScannerScreen(navController) }
     }
 }

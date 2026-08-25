@@ -40,6 +40,9 @@ val toolCategories = listOf(
         NavToolItem("Signature Scanner", "sigscan", Icons.Default.Fingerprint),
         NavToolItem("Vulnerability Scanner", "vulnscan", Icons.Default.BugReport),
         NavToolItem("Hex Viewer", "hex", Icons.Default.GridOn),
+        NavToolItem("Binary Modifier", "binmod", Icons.Default.Build),
+        NavToolItem("Multi-Arch Analyzer", "multiarch", Icons.Default.Memory),
+        NavToolItem("Resource Scanner", "resscan", Icons.Default.Search),
     ), AccentCyan),
     NavToolCategory("🎯 Auto Dump", Icons.Default.Storage, listOf(
         NavToolItem("Auto Dump (IL2CPP)", "autodump", Icons.Default.CloudDownload),

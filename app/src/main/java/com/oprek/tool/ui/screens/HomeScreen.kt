@@ -209,6 +209,10 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("📦 APK Tools", "Extract/info/list APK contents", Icons.Outlined.Apps, AccentOrange, "apkmisc"),
                 ToolItem("🔗 Native Hook Gen", "Frida/Dobby/PLT/inline hooks", Icons.Outlined.Link, AccentGreen, "nativehook"),
                 ToolItem("🔬 Memory Scanner", "Scan process memory (root)", Icons.Outlined.Memory, AccentPurple, "memscan"),
+                // === v0.10.0 OFRAK-LIKE TOOLS ===
+                ToolItem("🔧 Binary Modifier", "Patch bytes, modify sections, repack ELF", Icons.Outlined.Build, AccentRed, "binmod"),
+                ToolItem("🏗️ Multi-Arch Analyzer", "ARM/ARM64/x86/MIPS/PPC analysis", Icons.Outlined.Memory, AccentPurple, "multiarch"),
+                ToolItem("📦 Resource Scanner", "Find embedded files in ELF/DEX/APK", Icons.Outlined.Search, AccentOrange, "resscan"),
             )
 
             LazyVerticalGrid(
