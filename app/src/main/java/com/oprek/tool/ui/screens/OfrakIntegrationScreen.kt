@@ -170,8 +170,8 @@ fun OfrakIntegrationScreen(navController: NavController) {
                 when (selectedTab) {
                     0 -> ResourceTreeTab(tree!!, expandedNodes, { expandedNodes = it }, output, scope, targetFile) { output = it }
                     1 -> SectionsTab(sections, targetFile, scope) { output = it }
-                    2 -> ActionsTab(targetFile, tree, sections, scope) { output = it; isProcessing = it }
-                    3 -> LogTab(output)
+                    2 -> OfrakActionsTab(targetFile, tree, sections, scope) { output = it }
+                    3 -> OfrakLogTab(output)
                 }
             } else if (!isProcessing) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -376,7 +376,7 @@ fun SectionsTab(sections: List<ElfSection>, targetFile: String?, scope: kotlinx.
 /* ─────────────────────────── Actions Tab ─────────────────────────── */
 
 @Composable
-fun ActionsTab(targetFile: String?, tree: ResourceNode?, sections: List<ElfSection>, scope: kotlinx.coroutines.CoroutineScope, onStatusChange: (List<String>) -> Unit) {
+fun OfrakActionsTab(targetFile: String?, tree: ResourceNode?, sections: List<ElfSection>, scope: kotlinx.coroutines.CoroutineScope, onStatusChange: (List<String>) -> Unit) {
     val context = LocalContext.current
     LazyColumn(Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
@@ -484,7 +484,7 @@ fun ActionCard(title: String, desc: String, color: Color, onClick: () -> Unit) {
 }
 
 @Composable
-fun LogTab(output: List<String>) {
+fun OfrakLogTab(output: List<String>) {
     LazyColumn(Modifier.fillMaxSize().padding(8.dp)) {
         items(output) { line ->
             Text(
@@ -528,7 +528,7 @@ private fun analyzeRecursive(path: String, depth: Int, maxDepth: Int): ResourceN
                 // Check for embedded .zip, .dex, etc. inside ELF
                 val embedded = findEmbeddedResources(data)
                 for (e in embedded) {
-                    children.add(analyzeRecursive(e.path, depth + 1, maxDepth))
+                    children.add(analyzeRecursive(e.extractedPath ?: File("/tmp/${e.name}").absolutePath, depth + 1, maxDepth))
                 }
             }
         }
@@ -585,35 +585,35 @@ private fun analyzeRecursive(path: String, depth: Int, maxDepth: Int): ResourceN
 /** Detect binary format from magic bytes */
 private fun detectFormat(magic: ByteArray, fullData: ByteArray): String {
     if (magic.size >= 4) {
-        if (magic[0] == 0x7F.toByte() && magic[1] == 0x45 && magic[2] == 0x4C && magic[3] == 0x46) return "ELF"
-        if (magic[0] == 0x50 && magic[1] == 0x4B && magic[2] == 0x03 && magic[3] == 0x04) return "ZIP"
-        if (magic[0] == 0x50 && magic[1] == 0x4B && magic[2] == 0x05 && magic[3] == 0x06) return "ZIP"
-        if (magic[0] == 0x64 && magic[1] == 0x65 && magic[2] == 0x78 && magic[3] == 0x0A) return "DEX"
-        if (magic[0] == 0x21 && magic[1] == 0x3C && magic[2] == 0x61 && magic[3] == 0x72) return "AR"
-        if (magic[0] == 0x1F && magic[1] == 0x8B.toByte()) return "GZIP"
-        if (magic[0] == 0xFD.toByte() && magic[1] == 0x37 && magic[2] == 0x7A && magic[3] == 0x58) return "XZ"
-        if (magic[0] == 0x5D && magic[1] == 0x00 && magic[2] == 0x00 && magic[3] == 0x00) return "LZMA"
-        if (magic[0] == 0x42 && magic[1] == 0x5A && magic[2] == 0x68) return "BZIP2"
-        if (magic[0] == 0x37 && magic[1] == 0x7A && magic[2] == 0xBC.toByte() && magic[3] == 0xAF.toByte()) return "7Z"
-        if (magic[0] == 0x52 && magic[1] == 0x61 && magic[2] == 0x72 && magic[3] == 0x21) return "RAR"
-        if (magic.size >= 2 && magic[0] == 0x27 && magic[1] == 0x05) return "UIMAGE"
-        if (magic[0] == 0xD0.toByte() && magic[1] == 0x0D && magic[2] == 0xFE.toByte() && magic[3] == 0xED.toByte()) return "FIT"
-        if (magic[0] == 0x28 && magic[1] == 0xB5.toByte() && magic[2] == 0x2F && magic[3] == 0xFD.toByte()) return "ZSTD"
+        val m0 = magic[0].toInt() and 0xFF
+        val m1 = magic[1].toInt() and 0xFF
+        val m2 = magic[2].toInt() and 0xFF
+        val m3 = magic[3].toInt() and 0xFF
+        if (m0 == 0x7F && m1 == 0x45 && m2 == 0x4C && m3 == 0x46) return "ELF"
+        if (m0 == 0x50 && m1 == 0x4B && m2 == 0x03 && m3 == 0x04) return "ZIP"
+        if (m0 == 0x50 && m1 == 0x4B && m2 == 0x05 && m3 == 0x06) return "ZIP"
+        if (m0 == 0x64 && m1 == 0x65 && m2 == 0x78 && m3 == 0x0A) return "DEX"
+        if (m0 == 0x21 && m1 == 0x3C && m2 == 0x61 && m3 == 0x72) return "AR"
+        if (m0 == 0x1F && m1 == 0x8B) return "GZIP"
+        if (m0 == 0xFD && m1 == 0x37 && m2 == 0x7A && m3 == 0x58) return "XZ"
+        if (m0 == 0x5D && m1 == 0x00 && m2 == 0x00 && m3 == 0x00) return "LZMA"
+        if (m0 == 0x42 && m1 == 0x5A && m2 == 0x68) return "BZIP2"
+        if (m0 == 0x37 && m1 == 0x7A && m2 == 0xBC && m3 == 0xAF) return "7Z"
+        if (m0 == 0x52 && m1 == 0x61 && m2 == 0x72 && m3 == 0x21) return "RAR"
+        if (magic.size >= 2 && m0 == 0x27 && m1 == 0x05) return "UIMAGE"
+        if (m0 == 0xD0 && m1 == 0x0D && m2 == 0xFE && m3 == 0xED) return "FIT"
+        if (m0 == 0x28 && m1 == 0xB5 && m2 == 0x2F && m3 == 0xFD) return "ZSTD"
+        if (m0 == 0xFE && m1 == 0xED && m2 == 0xFA) return "MACHO"
+        if (m0 == 0xCE && m1 == 0xFA && m2 == 0xED) return "MACHO"
+        if (m0 == 0xCA && m1 == 0xFE && m2 == 0xBA && m3 == 0xBE) return "MACHO-FAT"
     }
     // Check if it's a TAR (check at offset 257 for "ustar")
-    if (fullData.size > 263 && fullData[257] == 0x75 && fullData[258] == 0x73 && fullData[259] == 0x74) return "TAR"
-
-    // Check for Mach-O
-    if (magic.size >= 4) {
-        val v0 = magic[0].toInt() and 0xFF
-        val v1 = magic[1].toInt() and 0xFF
-        val v2 = magic[2].toInt() and 0xFF
-        val v3 = magic[3].toInt() and 0xFF
-        if (v0 == 0xFE && v1 == 0xED && v2 == 0xFA) return "MACHO"
-        if (v0 == 0xCE && v1 == 0xFA && v2 == 0xED) return "MACHO"
-        if (v0 == 0xCA && v1 == 0xFE && v2 == 0xBA && v3 == 0xBE) return "MACHO-FAT"
+    if (fullData.size > 263) {
+        val t0 = fullData[257].toInt() and 0xFF
+        val t1 = fullData[258].toInt() and 0xFF
+        val t2 = fullData[259].toInt() and 0xFF
+        if (t0 == 0x75 && t1 == 0x73 && t2 == 0x74) return "TAR"
     }
-
     return "UNKNOWN"
 }
 

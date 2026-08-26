@@ -126,8 +126,8 @@ fun DebPackageScreen(navController: NavController) {
                 when (selectedTab) {
                     0 -> FileTreeTab(entries)
                     1 -> ControlTab(controlInfo)
-                    2 -> ActionsTab(targetFile, entries, output, { output = it }, isProcessing, { isProcessing = it }, scope)
-                    3 -> LogTab(output)
+                    2 -> DebActionsTab(targetFile, entries, output, { output = it }, isProcessing, { isProcessing = it }, scope)
+                    3 -> DebLogTab(output)
                 }
             } else if (!isProcessing) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -198,7 +198,7 @@ fun ControlTab(controlInfo: Map<String, String>) {
 }
 
 @Composable
-fun ActionsTab(
+fun DebActionsTab(
     targetFile: String?, entries: List<DebEntry>,
     output: List<String>, onOutputChange: (List<String>) -> Unit,
     isProcessing: Boolean, onProcessingChange: (Boolean) -> Unit,
@@ -306,7 +306,7 @@ fun ActionsTab(
 }
 
 @Composable
-fun LogTab(output: List<String>) {
+fun DebLogTab(output: List<String>) {
     LazyColumn(Modifier.fillMaxSize().padding(8.dp)) {
         items(output) { line ->
             Text(
