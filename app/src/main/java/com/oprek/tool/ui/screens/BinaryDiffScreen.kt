@@ -132,7 +132,7 @@ fun BinaryDiffScreen(navController: NavController) {
                 if (isProcessing) {
                     CircularProgressIndicator(Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
                 } else {
-                    Icon(Icons.AutoMirrored.Default.CompareArrows, null)
+                    @Suppress("DEPRECATION") Icon(Icons.Default.CompareArrows, null)
                 }
                 Spacer(Modifier.width(8.dp))
                 Text("Compare")

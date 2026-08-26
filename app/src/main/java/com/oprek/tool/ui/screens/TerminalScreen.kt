@@ -524,7 +524,7 @@ fun TerminalScreen(navController: NavController) {
                     runCmd(command)
                     command = ""
                 }, enabled = command.isNotEmpty() && !isRunning) {
-                    Icon(Icons.AutoMirrored.Filled.Send, "Run", tint = if (command.isNotEmpty()) AccentGreen else TextMuted)
+                    @Suppress("DEPRECATION") Icon(Icons.Filled.Send, "Run", tint = if (command.isNotEmpty()) AccentGreen else TextMuted)
                 }
             }
         }
