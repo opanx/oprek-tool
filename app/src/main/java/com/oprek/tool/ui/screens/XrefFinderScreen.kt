@@ -236,7 +236,7 @@ private fun xrefString(data: ByteArray, query: String): List<String> {
     if (is64) {
         // ARM64: scan for ADRP+ADD/ADRP+LDR pairs that reference this page
         for (off in offsets) {
-            val page = off and 0xFFFFF000
+            val page = off.toLong() and 0xFFFFF000L
             val pageOff = off and 0xFFF
             // Scan for ADRP (page-relative addressing)
             for (i in 0 until data.size - 4 step 4) {
