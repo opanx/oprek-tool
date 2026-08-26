@@ -816,7 +816,7 @@ private fun parseElfSections(path: String): List<ElfSection> {
     val sections = mutableListOf<ElfSection>()
     try {
         val data = File(path).readBytes()
-        if (data.size < 64 || (data[0].toInt() and 0xFF) != 0x7F.toByte() || (data[1].toInt() and 0xFF) != 0x45) return sections
+        if (data.size < 64 || (data[0].toInt() and 0xFF) != 0x7F || (data[1].toInt() and 0xFF) != 0x45) return sections
 
         val is64 = data[4] == 2.toByte()
         val isLE = data[5] == 1.toByte()
