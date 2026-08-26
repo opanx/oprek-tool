@@ -613,7 +613,6 @@ private fun archName(m: Int): String = when (m) {
     0xB7 -> "AArch64"
     0x08 -> "MIPS"
     0x14 -> "PowerPC"
-    0x28 -> "ARM"
     else -> "0x${m.toString(16)}"
 }
 
