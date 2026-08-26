@@ -9,13 +9,12 @@ permissions:
   contents: write
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process -Xmx4g"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dkotlin.compiler.execution.strategy=in-process -Xmx3g"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -36,6 +35,8 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -57,11 +58,13 @@ jobs:
         run: |
           cp release.keystore app/
           ./gradlew assembleDebug --no-daemon --stacktrace
+        timeout-minutes: 15
 
       - name: Build Release APK (SIGNED)
         run: |
           cp release.keystore app/
           ./gradlew assembleRelease --no-daemon --stacktrace
+        timeout-minutes: 15
 
       - name: Get version
         id: version
