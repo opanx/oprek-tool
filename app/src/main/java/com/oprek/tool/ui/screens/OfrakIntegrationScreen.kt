@@ -625,7 +625,7 @@ private fun findEmbeddedResources(data: ByteArray): List<ResourceNode> {
 
     // Scan for ZIP signatures (PK\x03\x04)
     for (i in 0 until data.size - 4) {
-        if (data[i] == 0x50 && data[i+1] == 0x4B && data[i+2] == 0x03 && data[i+3] == 0x04) {
+        if ((data[i].toInt() and 0xFF) == 0x50 && (data[i+1].toInt() and 0xFF) == 0x4B && (data[i+2].toInt() and 0xFF) == 0x03 && (data[i+3].toInt() and 0xFF) == 0x04) {
             // Try to find end of central directory
             var endOffset = findZipEnd(data, i)
             if (endOffset > i + 100) {
@@ -640,7 +640,7 @@ private fun findEmbeddedResources(data: ByteArray): List<ResourceNode> {
 
     // Scan for DEX signatures
     for (i in 0 until data.size - 4) {
-        if (data[i] == 0x64 && data[i+1] == 0x65 && data[i+2] == 0x78 && data[i+3] == 0x0A) {
+        if ((data[i].toInt() and 0xFF) == 0x64 && (data[i+1].toInt() and 0xFF) == 0x65 && (data[i+2].toInt() and 0xFF) == 0x78 && (data[i+3].toInt() and 0xFF) == 0x0A) {
             val buf = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
             if (i + 112 <= data.size) {
                 val fileSize = buf.getInt(i + 32)
@@ -663,7 +663,7 @@ private fun findZipEnd(data: ByteArray, start: Int): Int {
     // Search backwards for End of Central Directory (PK\x05\x06)
     for (i in min(data.size - 22, start + 100_000_000) downTo maxOf(start, data.size - 65557)) {
         if (i >= 0 && data.size >= i + 22) {
-            if (data[i] == 0x50 && data[i+1] == 0x4B && data[i+2] == 0x05 && data[i+3] == 0x06) {
+            if ((data[i].toInt() and 0xFF) == 0x50 && (data[i+1].toInt() and 0xFF) == 0x4B && (data[i+2].toInt() and 0xFF) == 0x05 && (data[i+3].toInt() and 0xFF) == 0x06) {
                 val buf = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN)
                 val cdOffset = buf.getInt(i + 16)
                 val cdSize = buf.getInt(i + 12)
@@ -816,7 +816,7 @@ private fun parseElfSections(path: String): List<ElfSection> {
     val sections = mutableListOf<ElfSection>()
     try {
         val data = File(path).readBytes()
-        if (data.size < 64 || data[0] != 0x7F.toByte() || data[1] != 0x45) return sections
+        if (data.size < 64 || (data[0].toInt() and 0xFF) != 0x7F.toByte() || (data[1].toInt() and 0xFF) != 0x45) return sections
 
         val is64 = data[4] == 2.toByte()
         val isLE = data[5] == 1.toByte()
@@ -1030,7 +1030,7 @@ private fun repackBinary(path: String): List<String> {
 
     for (sf in sectionFiles) {
         // Parse section index from filename: "0_.text.bin" → index 0
-        val idxStr = sf.nameBefore("_").toIntOrNull() ?: continue
+        val idxStr = sf.name.substringBefore("_").toIntOrNull() ?: continue
         val secs = parseElfSections(path)
         val sec = secs.getOrNull(idxStr) ?: continue
 
@@ -1249,8 +1249,8 @@ private fun scanEmbeddedFiles(path: String): List<String> {
         Triple(byteArrayOf(0x37, 0x7A, 0xBC.toByte(), 0xAF.toByte()), "7Z", "7-Zip Archive"),
         Triple(byteArrayOf(0x1F, 0x8B.toByte()), "GZIP", "Gzip compressed"),
         Triple(byteArrayOf(0xFD.toByte(), 0x37, 0x7A, 0x58), "XZ", "XZ compressed"),
-        Triple(byteArrayOf(0x89, 0x50, 0x4E, 0x47), "PNG", "PNG image"),
-        Triple(byteArrayOf(0xFF.toByte(), 0xD8, 0xFF.toByte(), 0xE0), "JPEG", "JPEG image"),
+        Triple(byteArrayOf(0x89.toByte(), 0x50, 0x4E, 0x47), "PNG", "PNG image"),
+        Triple(byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte()), "JPEG", "JPEG image"),
         Triple(byteArrayOf(0x4D, 0x5A), "PE", "Windows executable"),
     )
 
