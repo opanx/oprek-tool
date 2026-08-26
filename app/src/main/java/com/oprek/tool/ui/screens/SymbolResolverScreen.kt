@@ -164,7 +164,7 @@ fun SymbolResolverScreen(navController: NavController) {
                                 "GLOBAL" -> Icons.Default.Public
                                 "LOCAL" -> Icons.Default.Person
                                 "WEAK" -> Icons.Default.FavoriteBorder
-                                @Suppress("DEPRECATION") else -> Icons.Default.HelpOutline
+                                else -> Icons.Default.Info
                             },
                             null,
                             tint = when (sym.binding) {

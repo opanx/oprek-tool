@@ -189,7 +189,7 @@ fun FirmwareAnalyzerScreen(navController: NavController) {
                                     chunk.description.contains("gzip") -> Icons.Default.Compress
                                     chunk.description.contains("xz") -> Icons.Default.Compress
                                     chunk.description.contains("LZMA") -> Icons.Default.Compress
-                                    @Suppress("DEPRECATION") else -> Icons.Default.InsertDriveFile
+                                    else -> Icons.Default.Description
                                 },
                                 null,
                                 tint = when (chunk.confidence) {
