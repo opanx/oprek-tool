@@ -50,6 +50,8 @@ val toolCategories = listOf(
         NavToolItem("OFRAK Integration", "ofrak", Icons.Default.Terminal),
         NavToolItem(".deb Analyzer", "deb", Icons.Default.Archive),
         NavToolItem("Firmware Analyzer", "firmware", Icons.Default.Memory),
+        NavToolItem("Smali Viewer", "smali", Icons.Default.PhoneAndroid),
+        NavToolItem("XREF Finder", "xref", Icons.Default.Link),
     ), AccentCyan),
     NavToolCategory("🎯 Auto Dump", Icons.Default.Storage, listOf(
         NavToolItem("Auto Dump (IL2CPP)", "autodump", Icons.Default.CloudDownload),

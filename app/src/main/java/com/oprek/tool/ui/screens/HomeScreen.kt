@@ -221,6 +221,9 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 ToolItem("⚡ OFRAK Integration", "Run OFRAK commands from app", Icons.Outlined.Terminal, AccentGreen, "ofrak"),
                 ToolItem("📦 .deb Analyzer", "Extract/modify/repack .deb packages", Icons.Outlined.Archive, AccentOrange, "deb"),
                 ToolItem("🔧 Firmware Analyzer", "Extract embedded firmware files", Icons.Outlined.Memory, AccentRed, "firmware"),
+                // === v0.14.0 NEW TOOLS ===
+                ToolItem("📱 Smali Viewer", "Parse DEX bytecode — class/method/field listings", Icons.Outlined.PhoneAndroid, AccentPurple, "smali"),
+                ToolItem("🔗 XREF Finder", "Find cross-refs to strings, addresses, hex patterns", Icons.Outlined.Link, AccentCyan, "xref"),
             )
 
             LazyVerticalGrid(

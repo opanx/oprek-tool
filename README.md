@@ -1,6 +1,6 @@
 # 🔧 OprekTool — Android Reverse Engineering Toolkit
 
-> **v0.9.4** | Build status: ✅ Passing | APKs: Signed + Consistent Key
+> **v0.14.0** | Build status: ✅ Passing (0 warnings) | APKs: Signed + Consistent Key
 
 **An honest Android reverse engineering toolkit** — not a magic wand, but a solid set of tools for on-device binary analysis.
 
@@ -14,30 +14,34 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 
 ## 📱 What's New
 
-### v0.9.4 (Latest)
-- **AutoDump v8 — Real IL2CPP Metadata Parser**: TypeDef/MethodDef/FieldDef structure parse for valid metadata
-- **Strategy A**: Valid 0xFAB11BAF magic → parse TypeDef/MethodDef/FieldDef → dump.cs with full hierarchy
-- **Strategy B**: Encrypted/missing metadata → raw dump lib + meta for PC Il2CppDumper
-- **3-phase metadata search**: Near IL2CPP lib → dalvik regions → all readable (500 max)
-- **10 game presets**: MLBB, FF, FF MAX, PUBG, Genshin, BloodStrike, CODM, Brawl Stars, Standoff 2 + Manual
-- **Cancel button**: Stop long dumps mid-operation
-- **String extraction**: 10K strings from lib binary for quick analysis
-- **FIXED: Consistent signing key** — Both debug & release use same keystore. No uninstall needed!
-- **Batch Decompiler**: Decompile all symbols at once with progress
-- **Zero warnings**: All deprecated icon/API warnings resolved
+### v0.14.0 (Latest)
+- **Smali Viewer**: Parse DEX files — string tables, type IDs, method IDs, class listings
+- **XREF Finder**: Find cross-references to strings, addresses, or hex patterns in ELF binaries (ARM32/ARM64)
+- **OFRAK Native Engine v2**: Completely rewritten from scratch — all features actually work
+  - File picker (copies URI to cache, works on all devices)
+  - Info tab: auto-detect format (ELF/ZIP/DEX/AR/GZIP/XZ/BZIP2/7Z/RAR/TAR)
+  - Sections tab: full ELF section list with flags (EXEC/ALLOC/WRITE)
+  - Actions: extract strings, recursive unpack, carve sections, scan embedded, find secrets
+  - Entropy tab: visual heatmap per 4KB block
+- **Zero build warnings**: All deprecated icon warnings resolved
+- **Workflow optimized**: 25min timeout, per-step timeouts, Node 20 deprecation fixed
 
-### v0.9.1
-- **APKTool Suite**: Decode APK → extract resources, manifest, DEX, native libs
-- **AutoDump v8**: Fixed nullable types, improved MLBB support
-- **Navigation Drawer**: Added APKTool Suite entry
+### v0.13.0
+- **OFRAK Integration v2**: 100% pure Kotlin binary unpacker, no external tools
+- **Binary Modifier**: Patch bytes, NOP sections, search & replace hex
+- **Multi-Arch Analyzer**: ARM/ARM64/x86/x86_64/MIPS/PowerPC detection
+- **Resource Scanner**: Find embedded files in ELF/DEX/APK
 
-### v0.9.0
-- **AutoDump v8**: Unified dump pipeline with Strategy A (parse) + Strategy B (raw dump)
-- **Malware Detector**: 15 threat categories including phone brick/wipe detection
-- **Navigation Drawer**: Categorized tools with hamburger menu
-- **Text Input Fix**: All text fields now visible on dark theme
-- **Consistent Signing**: Same APK key every build (no uninstall needed)
-- **40+ Tools**: Full reverse engineering toolkit on your phone
+### v0.12.0
+- **OFRAK Integration**: Run OFRAK commands from app
+- **.deb Analyzer**: Extract/modify/repack .deb packages
+- **Firmware Analyzer**: Extract embedded firmware files
+
+### v0.11.0
+- **Binary Patcher**: Semantic patching (NOP, byte patch, search & replace)
+- **Binary Diff**: Compare original vs patched
+- **Entropy Map**: Visual heatmap
+- **Symbol Resolver**: ELF symbol table parser
 
 ## 📱 Features
 
@@ -64,6 +68,9 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 | **String Extractor** | Printable strings + filter + export | ✅ 100% |
 | **Memory Scanner** | Scan process memory for patterns | ✅ 100% (root) |
 | **Signature Scanner** | Known crypto/anti-debug pattern detection | ✅ 95% |
+| **Smali Viewer** | Parse DEX files — string/type/method/class listings | ✅ 90% |
+| **XREF Finder** | Find cross-refs to strings, addresses, hex patterns | ✅ 85% |
+| **OFRAK Native** | Recursive binary unpacker + section carver + entropy | ✅ 95% |
 
 ### 🛡️ Malware Detector
 | Threat Category | What It Detects |
@@ -137,6 +144,9 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 | String Extraction | ✅ 100% | Binary-safe extraction |
 | Hex Viewer | ✅ 100% | Full hex + ASCII |
 | Malware Detection | ✅ 95% | 100+ known threat patterns |
+| Smali Viewer | ✅ 90% | DEX string/type/method/class parse |
+| XREF Finder | ✅ 85% | ARM32/ARM64 branch detection |
+| OFRAK Native | ✅ 95% | Recursive unpack, section carve, entropy |
 
 ## 🔧 Installation
 
@@ -152,6 +162,8 @@ All dumps and patches are saved to:
 /sdcard/Download/OprekTool/
 ├── dump/          # AutoDump output (.bin, .cs, .dat)
 ├── patched/       # Patched files
+├── sections/      # Carved ELF sections
+├── analysis/      # OFRAK analysis output
 └── terminal/      # Terminal output
 ```
 

@@ -124,5 +124,8 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         composable("ofrak") { OfrakIntegrationScreen(navController) }
         composable("deb") { DebPackageScreen(navController) }
         composable("firmware") { FirmwareAnalyzerScreen(navController) }
+        // === v0.14.0 NEW SCREENS ===
+        composable("smali") { SmaliViewerScreen(navController) }
+        composable("xref") { XrefFinderScreen(navController) }
     }
 }
