@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableIntStateOf
+import com.oprek.tool.ui.theme.darkTextFieldColors
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +44,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
     val clipboardManager = LocalClipboardManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var selectedTab by remember { mutableIntOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Generator", "Template", "Config", "Guide")
 
     // Config state
@@ -52,7 +54,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
     var telegramLink by remember { mutableStateOf("https://t.me/kembungjir") }
     var channelLink by remember { mutableStateOf("https://t.me/lazy_fat_catt") }
     var dumpPath by remember { mutableStateOf("/sdcard/Download/OprekTool/dump") }
-    var selectedArch by remember { mutableIntOf(1) } // 0=arm32, 1=arm64
+    var selectedArch by remember { mutableIntStateOf(1) } // 0=arm32, 1=arm64
     var obfuscate by remember { mutableStateOf(true) }
     var useFrida by remember { mutableStateOf(false) }
 
@@ -86,7 +88,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
             // Tabs
             TabRow(
                 selectedTabIndex = selectedTab,
-                containerColor = SurfaceDark,
+                containerColor = DarkSurface,
                 contentColor = AccentCyan
             ) {
                 tabs.forEachIndexed { index, title ->
@@ -175,21 +177,21 @@ private fun GeneratorTab(
                 value = toolTitle, onValueChange = onTitleChange,
                 label = { Text("Tool Title") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = DarkTextFieldColors()
+                colors = darkTextFieldColors()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = telegramLink, onValueChange = onTelegramChange,
                 label = { Text("Telegram Link") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = DarkTextFieldColors()
+                colors = darkTextFieldColors()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = channelLink, onValueChange = onChannelChange,
                 label = { Text("Channel Link") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = DarkTextFieldColors()
+                colors = darkTextFieldColors()
             )
         }
 
@@ -201,21 +203,21 @@ private fun GeneratorTab(
                 value = targetPackage, onValueChange = onPackageChange,
                 label = { Text("Package Name") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = DarkTextFieldColors()
+                colors = darkTextFieldColors()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = targetLib, onValueChange = onLibChange,
                 label = { Text("Target Library") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = DarkTextFieldColors()
+                colors = darkTextFieldColors()
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = dumpPath, onValueChange = onDumpPathChange,
                 label = { Text("Dump Output Path") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = DarkTextFieldColors()
+                colors = darkTextFieldColors()
             )
         }
 
@@ -245,11 +247,11 @@ private fun GeneratorTab(
             Spacer(modifier = Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = obfuscate, onCheckedChange = onObfuscateChange)
-                Text("Obfuscate Strings", color = TextGray)
+                Text("Obfuscate Strings", color = TextSecondary)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = useFrida, onCheckedChange = onFridaChange)
-                Text("Use Frida (instead of Dobby)", color = TextGray)
+                Text("Use Frida (instead of Dobby)", color = TextSecondary)
             }
         }
 
@@ -315,10 +317,10 @@ private fun TemplateFile(
             Text(name, color = AccentCyan, fontWeight = FontWeight.Bold)
             Row {
                 IconButton(onClick = onCopy) {
-                    Icon(Icons.Default.ContentCopy, "Copy", tint = TextGray, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.ContentCopy, "Copy", tint = TextSecondary, modifier = Modifier.size(18.dp))
                 }
                 IconButton(onClick = onSave) {
-                    Icon(Icons.Default.Save, "Save", tint = TextGray, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Save, "Save", tint = TextSecondary, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -328,11 +330,11 @@ private fun TemplateFile(
                 text = content,
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
-                color = TextGray,
+                color = TextSecondary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(4.dp))
-                    .background(SurfaceDark)
+                    .background(DarkSurface)
                     .padding(8.dp)
                     .heightIn(max = 300.dp)
                     .verticalScroll(rememberScrollState())
@@ -340,7 +342,7 @@ private fun TemplateFile(
         } else {
             Text(
                 "Click 'Generate Code' to generate templates",
-                color = TextGray.copy(alpha = 0.5f),
+                color = TextSecondary.copy(alpha = 0.5f),
                 fontSize = 12.sp
             )
         }
@@ -376,7 +378,7 @@ private fun ConfigTab(
             presets.forEach { (name, pkg, lib) ->
                 Surface(
                     onClick = { /* Will trigger recomposition */ },
-                    color = SurfaceDark,
+                    color = DarkSurface,
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -390,7 +392,7 @@ private fun ConfigTab(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(name, color = TextWhite, fontSize = 12.sp)
-                            Text("$pkg | $lib", color = TextGray, fontSize = 10.sp)
+                            Text("$pkg | $lib", color = TextSecondary, fontSize = 10.sp)
                         }
                     }
                 }
@@ -402,7 +404,7 @@ private fun ConfigTab(
         DarkCard {
             Text("File Picker", color = AccentCyan, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Select target APK or .so file for analysis", color = TextGray, fontSize = 12.sp)
+            Text("Select target APK or .so file for analysis", color = TextSecondary, fontSize = 12.sp)
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = onPickApk,
@@ -435,7 +437,7 @@ private fun GuideTab() {
 
             steps.forEach { (title, desc) ->
                 Text(title, color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                Text(desc, color = TextGray, fontSize = 11.sp)
+                Text(desc, color = TextSecondary, fontSize = 11.sp)
                 Spacer(modifier = Modifier.height(6.dp))
             }
         }
@@ -459,7 +461,7 @@ private fun GuideTab() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CheckCircle, null, tint = AccentGreen, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(feature, color = TextGray, fontSize = 11.sp)
+                    Text(feature, color = TextSecondary, fontSize = 11.sp)
                 }
                 Spacer(modifier = Modifier.height(2.dp))
             }
@@ -477,7 +479,7 @@ private fun GuideTab() {
             )
 
             links.forEach { (name, url) ->
-                Text("$name: $url", color = TextGray, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                Text("$name: $url", color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
                 Spacer(modifier = Modifier.height(2.dp))
             }
         }
@@ -496,11 +498,11 @@ private fun GuideTab() {
                 "}",
                 fontSize = 10.sp,
                 fontFamily = FontFamily.Monospace,
-                color = TextGray,
+                color = TextSecondary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(4.dp))
-                    .background(SurfaceDark)
+                    .background(DarkSurface)
                     .padding(8.dp)
             )
         }
@@ -823,7 +825,7 @@ private fun DarkCard(content: @Composable ColumnScope.() -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
