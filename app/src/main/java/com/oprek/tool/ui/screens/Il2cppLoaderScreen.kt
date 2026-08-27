@@ -35,7 +35,7 @@ import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class GamePreset(
+data class LoaderGamePreset(
     val name: String,
     val pkg: String,
     val lib: String,
@@ -43,7 +43,7 @@ data class GamePreset(
     val icon: String = "🎮"
 )
 
-val gamePresets = listOf(
+val loaderGamePresets = listOf(
     GamePreset("Mobile Legends", "com.mobile.legends", "liblogic.so", icon = "⚔️"),
     GamePreset("Free Fire", "com.dts.freefireth", "libil2cpp.so", icon = "🔥"),
     GamePreset("Free Fire MAX", "com.dts.freefiremax", "libil2cpp.so", icon = "🔥"),
@@ -338,7 +338,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                                 return@launch
                             }
                             isRunning = true
-                            val game = gamePresets[selectedGame]
+                            val game = loaderGamePresets[selectedGame]
                             val pkg = if (game.pkg.isEmpty()) customPkg else game.pkg
                             val lib = if (game.pkg.isEmpty()) customLib else game.lib
                             outputLog += "[*] Searching for $pkg...\n"
@@ -383,7 +383,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                                 return@launch
                             }
                             isRunning = true
-                            val game = gamePresets[selectedGame]
+                            val game = loaderGamePresets[selectedGame]
                             val lib = if (game.pkg.isEmpty()) customLib else game.lib
                             outputLog += "\n[*] Starting IL2CPP dump...\n"
                             outputLog += "[*] PID: $gamePid | Library: $lib\n"
@@ -417,7 +417,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                                 return@launch
                             }
                             isRunning = true
-                            val game = gamePresets[selectedGame]
+                            val game = loaderGamePresets[selectedGame]
                             val lib = if (game.pkg.isEmpty()) customLib else game.lib
                             outputLog += "\n[*] Scanning strings from $lib...\n"
                             val strings = ShellExec.extractStringsFromLib(gamePid, lib, 10000)
@@ -445,7 +445,7 @@ private fun GameTab(
         DarkCard {
             Text("Select Target Game", color = AccentCyan, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
-            gamePresets.forEachIndexed { index, game ->
+            loaderGamePresets.forEachIndexed { index, game ->
                 Surface(
                     onClick = { onSelect(index) },
                     color = if (selected == index) AccentCyan.copy(alpha = 0.15f) else DarkCard,
@@ -470,7 +470,7 @@ private fun GameTab(
         }
 
         // Custom input
-        if (selected == gamePresets.size - 1) {
+        if (selected == loaderGamePresets.size - 1) {
             DarkCard {
                 Text("Custom Package", color = AccentCyan, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(8.dp))
@@ -511,7 +511,7 @@ private fun DumpTab(
     onDump: (String) -> Unit
 ) {
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        val game = gamePresets[selectedGame]
+        val game = loaderGamePresets[selectedGame]
         DarkCard {
             Text("IL2CPP Metadata Dumper", color = AccentCyan, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
