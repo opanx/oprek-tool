@@ -270,7 +270,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Game", "Dump", "Strings", "Hooks", "Output")
+    val tabs = listOf("Game", "Dump", "Frida", "Strings", "Hooks", "Output")
 
     // State
     var selectedGame by remember { mutableIntStateOf(0) }
@@ -378,7 +378,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                         }
                     })
                 1 -> DumpTab(selectedGame, customPkg, customLib, gameRunning, gamePid, isRunning, outputLog,
-                    onDump = { filter ->
+                    onDump = {
                         scope.launch(Dispatchers.IO) {
                             if (!hasRoot || gamePid == -1) {
                                 outputLog += "[-] Root + running game required!\n"
@@ -410,7 +410,8 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                             isRunning = false
                         }
                     })
-                2 -> StringsTab(gameRunning, gamePid, extractedStrings, { extractedStrings = it },
+                2 -> FridaTab(selectedGame, customPkg, customLib, outputLog, { outputLog = it }, isRunning)
+                3 -> StringsTab(gameRunning, gamePid, extractedStrings, { extractedStrings = it },
                     stringFilter, { stringFilter = it }, isRunning, outputLog,
                     onScanStrings = {
                         scope.launch(Dispatchers.IO) {
@@ -428,8 +429,8 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                             isRunning = false
                         }
                     })
-                3 -> HooksTab(gameRunning, gamePid, outputLog, { outputLog = it })
-                4 -> OutputTab(outputLog, context)
+                4 -> HooksTab(gameRunning, gamePid, outputLog, { outputLog = it })
+                5 -> OutputTab(outputLog, context)
             }
         }
     }
@@ -555,6 +556,135 @@ private fun DumpTab(
                 Text("START DUMP", color = DarkBg, fontWeight = FontWeight.Bold)
             }
         }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun FridaTab(
+    selectedGame: Int, customPkg: String, customLib: String,
+    log: String, onLogChange: (String) -> Unit, isRunning: Boolean
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val game = loaderGamePresets[selectedGame]
+    val pkg = if (game.pkg.isEmpty()) customPkg else game.pkg
+    val lib = if (game.pkg.isEmpty()) customLib else game.lib
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        DarkCard {
+            Text("Frida IL2CPP Runtime Dumper", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text("Executes Frida script INSIDE game process", color = TextSecondary, fontSize = 12.sp)
+            Text("Calls il2cpp_class_get_methods() etc. directly", color = TextSecondary, fontSize = 11.sp)
+            Text("Target: $pkg | Lib: $lib", color = AccentGreen, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+        }
+
+        DarkCard {
+            Text("Requirements", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val reqs = listOf(
+                "Frida server running on device (su)",
+                "Game must be running",
+                "Script auto-detects libil2cpp.so / liblogic.so",
+                "Dumps all TypeDef, MethodDef, FieldDef, Properties",
+                "Generates dump.cs with full class/method signatures"
+            )
+            reqs.forEach { r ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, null, tint = AccentGreen, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(r, color = TextSecondary, fontSize = 11.sp)
+                }
+                Spacer(Modifier.height(2.dp))
+            }
+        }
+
+        // Generate script
+        var scriptContent by remember { mutableStateOf("") }
+        Button(onClick = {
+            scope.launch(Dispatchers.IO) {
+                try {
+                    val assetManager = context.assets
+                    val script = assetManager.open("scripts/il2cpp_frida_dump.js").bufferedReader().readText()
+                    scriptContent = script
+                    onLogChange(log + "[+] Frida script loaded (${script.length} bytes)\n")
+                } catch (e: Exception) {
+                    onLogChange(log + "[-] Failed to load script: ${e.message}\n")
+                }
+            }
+        }, modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)) {
+            Icon(Icons.Default.Code, null, tint = TextPrimary)
+            Spacer(Modifier.width(8.dp))
+            Text("Load Frida Script", color = TextPrimary, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Execute via root
+        Button(onClick = {
+            scope.launch(Dispatchers.IO) {
+                onLogChange(log + "[*] Checking for frida-server...\n")
+                val check = ShellExec.execRoot("which frida || ls /data/local/tmp/frida-server* 2>/dev/null || echo NOT_FOUND")
+                val hasFrida = check.any { it.contains("frida") && !it.contains("NOT_FOUND") }
+                
+                if (!hasFrida) {
+                    onLogChange(log + "[-] Frida server NOT found!\n")
+                    onLogChange(log + "[*] Install frida-server from https://github.com/frida/frida/releases\n")
+                    onLogChange(log + "[*] Push to device: adb push frida-server-XX-android-arm64 /data/local/tmp/frida-server\n")
+                    onLogChange(log + "[*] Run: su -c \"chmod 755 /data/local/tmp/frida-server && /data/local/tmp/frida-server &\"\n")
+                    return@launch
+                }
+                
+                onLogChange(log + "[+] Frida server found!\n")
+                onLogChange(log + "[*] Generating Frida script for $pkg...\n")
+                
+                // Save script to device
+                val scriptPath = "/data/local/tmp/oprek_il2cpp_dump.js"
+                try {
+                    val assetManager = context.assets
+                    val script = assetManager.open("scripts/il2cpp_frida_dump.js").bufferedReader().readText()
+                    File(scriptPath).writeText(script)
+                    onLogChange(log + "[+] Script saved to $scriptPath\n")
+                    onLogChange(log + "[*] Executing: frida -U -f $pkg -l $scriptPath --no-pause\n")
+                    
+                    // Execute frida
+                    val result = ShellExec.execRoot("frida -U -f $pkg -l $scriptPath --no-pause 2>&1 &")
+                    onLogChange(log + "[+] Frida launched! Check /sdcard/Download/OprekTool/dump/dump_frida.cs\n")
+                } catch (e: Exception) {
+                    onLogChange(log + "[-] Error: ${e.message}\n")
+                }
+            }
+        }, modifier = Modifier.fillMaxWidth(),
+            enabled = !isRunning,
+            colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)) {
+            Icon(Icons.Default.PlayArrow, null, tint = DarkBg)
+            Spacer(Modifier.width(8.dp))
+            Text("Execute Frida Dump", color = DarkBg, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Manual command
+        DarkCard {
+            Text("Manual Command", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val cmd = "frida -U -f $pkg -l /data/local/tmp/oprek_il2cpp_dump.js --no-pause"
+            Text(cmd, fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = TextSecondary,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
+                    .background(DarkCard).padding(6.dp))
+            Spacer(Modifier.height(4.dp))
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            Button(onClick = {
+                cm.setText(AnnotatedString(cmd))
+                scope.launch { /* snackbar */ }
+            }, modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
+                Text("Copy Command", color = DarkBg, fontSize = 11.sp)
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
     }
 }
