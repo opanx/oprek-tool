@@ -127,5 +127,7 @@ fun AppNavigation(navController: NavHostController, vm: MainViewModel = viewMode
         // === v0.14.0 NEW SCREENS ===
         composable("smali") { SmaliViewerScreen(navController) }
         composable("xref") { XrefFinderScreen(navController) }
+        // === v0.15.0 IL2CPP LOADER ===
+        composable("il2cpploader") { Il2cppLoaderScreen { navController.popBackStack() } }
     }
 }

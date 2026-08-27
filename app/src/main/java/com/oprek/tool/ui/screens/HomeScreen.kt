@@ -224,6 +224,8 @@ fun HomeScreen(navController: NavController, vm: MainViewModel) {
                 // === v0.14.0 NEW TOOLS ===
                 ToolItem("📱 Smali Viewer", "Parse DEX bytecode — class/method/field listings", Icons.Outlined.PhoneAndroid, AccentPurple, "smali"),
                 ToolItem("🔗 XREF Finder", "Find cross-refs to strings, addresses, hex patterns", Icons.Outlined.Link, AccentCyan, "xref"),
+                // === v0.15.0 IL2CPP LOADER ===
+                ToolItem("🎮 IL2CPP Loader", "Generate IL2CPP overlay tool for games", Icons.Outlined.Gamepad, AccentGreen, "il2cpploader"),
             )
 
             LazyVerticalGrid(

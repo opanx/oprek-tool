@@ -52,6 +52,7 @@ val toolCategories = listOf(
         NavToolItem("Firmware Analyzer", "firmware", Icons.Default.Memory),
         NavToolItem("Smali Viewer", "smali", Icons.Default.PhoneAndroid),
         NavToolItem("XREF Finder", "xref", Icons.Default.Link),
+        NavToolItem("IL2CPP Loader", "il2cpploader", Icons.Default.Gamepad),
     ), AccentCyan),
     NavToolCategory("🎯 Auto Dump", Icons.Default.Storage, listOf(
         NavToolItem("Auto Dump (IL2CPP)", "autodump", Icons.Default.CloudDownload),
