@@ -71,7 +71,8 @@ typedef struct {
     uint32_t interfaceOffsetsCount;
     uint32_t typeDefinitionsOffset;
     uint32_t typeDefinitionsCount;
-    uint64_tRGCTXOffset;  // Removed for compatibility
+    uint32_t rgctxStartIndex;
+    uint32_t rgctxCount;
     uint32_t rgctxEntriesOffset;
     uint32_t rgctxEntriesCount;
     uint32_t imagesOffset;
@@ -140,11 +141,10 @@ typedef struct {
     uint32_t parameterStart;
     uint32_t genericContainerIndex;
     uint32_t methodIndex;
-    virtualIndex;
+    uint32_t virtualIndex;
     uint32_t slot;
     uint32_t flags;
     uint32_t iflags;
-    uint16_t slot;
     uint16_t parameterCount;
     uint32_t token;
 } Il2CppMethodDefinition;
