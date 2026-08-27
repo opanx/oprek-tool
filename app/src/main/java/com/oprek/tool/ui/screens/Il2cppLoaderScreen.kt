@@ -679,7 +679,7 @@ private fun FridaTab(
             Spacer(Modifier.height(4.dp))
             val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             Button(onClick = {
-                cm.setText(AnnotatedString(cmd))
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("OprekTool", cmd))
                 scope.launch { /* snackbar */ }
             }, modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
@@ -794,7 +794,7 @@ private fun DecryptTab(
                     .background(DarkCard).padding(6.dp))
             Spacer(Modifier.height(4.dp))
             val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            Button(onClick = { cm.setText(AnnotatedString(cmd)) },
+            Button(onClick = { cm.setPrimaryClip(android.content.ClipData.newPlainText("OprekTool", cmd)) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
                 Text("Copy Command", color = DarkBg, fontSize = 11.sp)
@@ -986,7 +986,7 @@ private fun OverlayTab(
             Spacer(Modifier.height(4.dp))
             val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             Button(onClick = {
-                cm.setText(AnnotatedString(cmd))
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("OprekTool", cmd))
             }, modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
                 Text("Copy Command", color = DarkBg, fontSize = 11.sp)
@@ -1141,7 +1141,7 @@ private fun OutputTab(log: String, context: Context) {
     Column(modifier = Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = {
-                cm.setText(AnnotatedString(log))
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("OprekTool", log))
                 scope.launch { /* snackbar */ }
             }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
                 Icon(Icons.Default.ContentCopy, null, tint = DarkBg, modifier = Modifier.size(16.dp))
