@@ -35,7 +35,7 @@ import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class LoaderGamePreset(
+data class LoaderLoaderGamePreset(
     val name: String,
     val pkg: String,
     val lib: String,
@@ -44,25 +44,25 @@ data class LoaderGamePreset(
 )
 
 val loaderGamePresets = listOf(
-    GamePreset("Mobile Legends", "com.mobile.legends", "liblogic.so", icon = "⚔️"),
-    GamePreset("Free Fire", "com.dts.freefireth", "libil2cpp.so", icon = "🔥"),
-    GamePreset("Free Fire MAX", "com.dts.freefiremax", "libil2cpp.so", icon = "🔥"),
-    GamePreset("PUBG Mobile", "com.tencent.ig", "libil2cpp.so", icon = "🎯"),
-    GamePreset("PUBG Mobile KR", "com.tencent.igkr", "libil2cpp.so", icon = "🎯"),
-    GamePreset("Genshin Impact", "com.miHoYo.GenshinImpact", "libil2cpp.so", icon = "✨"),
-    GamePreset("Honkai Star Rail", "com.HoYoverse.hkrpgoversea", "libil2cpp.so", icon = "🚀"),
-    GamePreset("Blood Strike", "com.excean.dualaid", "libil2cpp.so", icon = "🩸"),
-    GamePreset("COD Mobile", "com.activision.callofduty.shooter", "libil2cpp.so", icon = "🎖️"),
-    GamePreset("Brawl Stars", "com.supercell.brawlstars", "libil2cpp.so", icon = "⭐"),
-    GamePreset("Standoff 2", "com.axlebolt.standoff2", "libil2cpp.so", icon = "🔫"),
-    GamePreset("Roblox", "com.roblox.client", "libil2cpp.so", icon = "🧱"),
-    GamePreset("Asphalt 9", "com.gameloft.android.ANMP.GloftA9HM", "libil2cpp.so", icon = "🏎️"),
-    GamePreset("Clash Royale", "com.supercell.clashroyale", "libil2cpp.so", icon = "👑"),
-    GamePreset("Minecraft", "com.mojang.minecraftpe", "libil2cpp.so", icon = "⛏️"),
-    GamePreset("Arena of Valor", "com.ngame.allstar.eu", "libil2cpp.so", icon = "🏆"),
-    GamePreset("eFootball PES", "jp.konami.pesam", "libil2cpp.so", icon = "⚽"),
-    GamePreset("Stumble Guys", "com.kitkagames.fallbuddies", "libil2cpp.so", icon = "🤪"),
-    GamePreset("Custom (Manual)", "", "", icon = "🔧")
+    LoaderGamePreset("Mobile Legends", "com.mobile.legends", "liblogic.so", icon = "⚔️"),
+    LoaderGamePreset("Free Fire", "com.dts.freefireth", "libil2cpp.so", icon = "🔥"),
+    LoaderGamePreset("Free Fire MAX", "com.dts.freefiremax", "libil2cpp.so", icon = "🔥"),
+    LoaderGamePreset("PUBG Mobile", "com.tencent.ig", "libil2cpp.so", icon = "🎯"),
+    LoaderGamePreset("PUBG Mobile KR", "com.tencent.igkr", "libil2cpp.so", icon = "🎯"),
+    LoaderGamePreset("Genshin Impact", "com.miHoYo.GenshinImpact", "libil2cpp.so", icon = "✨"),
+    LoaderGamePreset("Honkai Star Rail", "com.HoYoverse.hkrpgoversea", "libil2cpp.so", icon = "🚀"),
+    LoaderGamePreset("Blood Strike", "com.excean.dualaid", "libil2cpp.so", icon = "🩸"),
+    LoaderGamePreset("COD Mobile", "com.activision.callofduty.shooter", "libil2cpp.so", icon = "🎖️"),
+    LoaderGamePreset("Brawl Stars", "com.supercell.brawlstars", "libil2cpp.so", icon = "⭐"),
+    LoaderGamePreset("Standoff 2", "com.axlebolt.standoff2", "libil2cpp.so", icon = "🔫"),
+    LoaderGamePreset("Roblox", "com.roblox.client", "libil2cpp.so", icon = "🧱"),
+    LoaderGamePreset("Asphalt 9", "com.gameloft.android.ANMP.GloftA9HM", "libil2cpp.so", icon = "🏎️"),
+    LoaderGamePreset("Clash Royale", "com.supercell.clashroyale", "libil2cpp.so", icon = "👑"),
+    LoaderGamePreset("Minecraft", "com.mojang.minecraftpe", "libil2cpp.so", icon = "⛏️"),
+    LoaderGamePreset("Arena of Valor", "com.ngame.allstar.eu", "libil2cpp.so", icon = "🏆"),
+    LoaderGamePreset("eFootball PES", "jp.konami.pesam", "libil2cpp.so", icon = "⚽"),
+    LoaderGamePreset("Stumble Guys", "com.kitkagames.fallbuddies", "libil2cpp.so", icon = "🤪"),
+    LoaderGamePreset("Custom (Manual)", "", "", icon = "🔧")
 )
 
 // Shell execution helper
