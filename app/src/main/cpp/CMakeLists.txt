@@ -4,6 +4,11 @@ project(oprek_native C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 11)
 
+# IL2CPP Dumper functions (compiled into shared library)
+set(IL2CPP_DUMPER_SOURCES
+    il2cpp_dumper.c
+)
+
 # Capstone - download and build from source
 include(FetchContent)
 FetchContent_Declare(
@@ -43,6 +48,7 @@ FetchContent_MakeAvailable(capstone)
 # Build our native library
 add_library(oprek_native SHARED
     jni_bridge.cpp
+    il2cpp_dumper.c
 )
 
 target_link_libraries(oprek_native
