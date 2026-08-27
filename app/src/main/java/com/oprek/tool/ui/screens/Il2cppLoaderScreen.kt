@@ -270,7 +270,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Game", "Dump", "Frida", "Strings", "Hooks", "Output")
+    val tabs = listOf("Game", "Dump", "Frida", "Overlay", "Strings", "Hooks", "Output")
 
     // State
     var selectedGame by remember { mutableIntStateOf(0) }
@@ -411,7 +411,8 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                         }
                     })
                 2 -> FridaTab(selectedGame, customPkg, customLib, outputLog, { outputLog = it }, isRunning)
-                3 -> StringsTab(gameRunning, gamePid, extractedStrings, { extractedStrings = it },
+                3 -> OverlayTab(selectedGame, customPkg, customLib, outputLog, { outputLog = it }, isRunning)
+                4 -> StringsTab(gameRunning, gamePid, extractedStrings, { extractedStrings = it },
                     stringFilter, { stringFilter = it }, isRunning, outputLog,
                     onScanStrings = {
                         scope.launch(Dispatchers.IO) {
@@ -429,8 +430,8 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                             isRunning = false
                         }
                     })
-                4 -> HooksTab(gameRunning, gamePid, outputLog, { outputLog = it })
-                5 -> OutputTab(outputLog, context)
+                5 -> HooksTab(gameRunning, gamePid, outputLog, { outputLog = it })
+                6 -> OutputTab(outputLog, context)
             }
         }
     }
@@ -682,6 +683,190 @@ private fun FridaTab(
             }, modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
                 Text("Copy Command", color = DarkBg, fontSize = 11.sp)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun OverlayTab(
+    selectedGame: Int, customPkg: String, customLib: String,
+    log: String, onLogChange: (String) -> Unit, isRunning: Boolean
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val game = loaderGamePresets[selectedGame]
+    val pkg = if (game.pkg.isEmpty()) customPkg else game.pkg
+
+    // Overlay config state
+    var menuTitle by remember { mutableStateOf("OprekTool Menu") }
+    var hookAuth by remember { mutableStateOf(true) }
+    var bypassRoot by remember { mutableStateOf(true) }
+    var bypassSSL by remember { mutableStateOf(true) }
+    var speedHack by remember { mutableStateOf(false) }
+    var speedValue by remember { mutableStateOf("1.5") }
+    var godMode by remember { mutableStateOf(false) }
+    var showFPS by remember { mutableStateOf(false) }
+    var noRecoil by remember { mutableStateOf(false) }
+    var unlimitedAmmo by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        DarkCard {
+            Text("ImGui Overlay Generator", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text("Generate + inject ImGui menu into game via Frida", color = TextSecondary, fontSize = 12.sp)
+            Text("Hooks rendering pipeline + draws floating menu", color = TextSecondary, fontSize = 11.sp)
+        }
+
+        DarkCard {
+            Text("Menu Configuration", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(menuTitle, { menuTitle = it },
+                label = { Text("Menu Title") },
+                modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+        }
+
+        DarkCard {
+            Text("Toggle Features", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = hookAuth, onCheckedChange = { hookAuth = it })
+                Text("Hook Auth/Login methods", color = TextSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = bypassRoot, onCheckedChange = { bypassRoot = it })
+                Text("Bypass Root Detection", color = TextSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = bypassSSL, onCheckedChange = { bypassSSL = it })
+                Text("Bypass SSL Pinning", color = TextSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = speedHack, onCheckedChange = { speedHack = it })
+                Text("Speed Hack", color = TextSecondary)
+            }
+            if (speedHack) {
+                OutlinedTextField(speedValue, { speedValue = it },
+                    label = { Text("Speed Multiplier (0.5-5.0)") },
+                    modifier = Modifier.fillMaxWidth(), colors = darkTextFieldColors())
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = godMode, onCheckedChange = { godMode = it })
+                Text("God Mode", color = TextSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = noRecoil, onCheckedChange = { noRecoil = it })
+                Text("No Recoil", color = TextSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = unlimitedAmmo, onCheckedChange = { unlimitedAmmo = it })
+                Text("Unlimited Ammo", color = TextSecondary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = showFPS, onCheckedChange = { showFPS = it })
+                Text("Show FPS Counter", color = TextSecondary)
+            }
+        }
+
+        // Generate + Execute
+        Button(onClick = {
+            scope.launch(Dispatchers.IO) {
+                try {
+                    val assetManager = context.assets
+                    var script = assetManager.open("scripts/imgui_overlay_frida.js").bufferedReader().readText()
+                    
+                    // Customize script with user config
+                    script = script.replace("OprekTool Menu", menuTitle)
+                    script = script.replace("hook_auth", if (hookAuth) "true" else "false")
+                    script = script.replace("bypass_root", if (bypassRoot) "true" else "false")
+                    script = script.replace("bypass_ssl", if (bypassSSL) "true" else "false")
+                    script = script.replace("speed", speedValue)
+                    
+                    // Save to device
+                    val scriptPath = "/data/local/tmp/oprek_overlay.js"
+                    File(scriptPath).writeText(script)
+                    onLogChange(log + "[+] Overlay script generated!\n")
+                    onLogChange(log + "[+] Title: $menuTitle\n")
+                    onLogChange(log + "[+] Features: ${if (hookAuth) "Auth " else ""}${if (bypassRoot) "Root " else ""}${if (bypassSSL) "SSL " else ""}${if (speedHack) "Speed" else ""}\n")
+                    onLogChange(log + "[+] Saved: $scriptPath\n")
+                    onLogChange(log + "[*] Execute: frida -U -f $pkg -l $scriptPath --no-pause\n")
+                } catch (e: Exception) {
+                    onLogChange(log + "[-] Error: ${e.message}\n")
+                }
+            }
+        }, modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)) {
+            Icon(Icons.Default.Build, null, tint = TextPrimary)
+            Spacer(Modifier.width(8.dp))
+            Text("Generate + Save Overlay Script", color = TextPrimary, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        Button(onClick = {
+            scope.launch(Dispatchers.IO) {
+                onLogChange(log + "[*] Checking frida-server...\n")
+                val check = ShellExec.execRoot("which frida 2>/dev/null || echo NOT_FOUND")
+                val hasFrida = check.any { it.contains("frida") && !it.contains("NOT_FOUND") }
+                if (!hasFrida) {
+                    onLogChange(log + "[-] Frida server NOT found!\n")
+                    return@launch
+                }
+                onLogChange(log + "[+] Launching overlay...\n")
+                ShellExec.execRoot("frida -U -f $pkg -l /data/local/tmp/oprek_overlay.js --no-pause &")
+                onLogChange(log + "[+] Overlay injected! Menu should appear in game.\n")
+            }
+        }, modifier = Modifier.fillMaxWidth(),
+            enabled = !isRunning,
+            colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)) {
+            Icon(Icons.Default.PlayArrow, null, tint = DarkBg)
+            Spacer(Modifier.width(8.dp))
+            Text("Launch Overlay", color = DarkBg, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        DarkCard {
+            Text("Manual Command", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val cmd = "frida -U -f $pkg -l /data/local/tmp/oprek_overlay.js --no-pause"
+            Text(cmd, fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = TextSecondary,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
+                    .background(DarkCard).padding(6.dp))
+            Spacer(Modifier.height(4.dp))
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            Button(onClick = {
+                cm.setText(AnnotatedString(cmd))
+            }, modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
+                Text("Copy Command", color = DarkBg, fontSize = 11.sp)
+            }
+        }
+
+        DarkCard {
+            Text("Overlay Features", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val features = listOf(
+                "Floating menu with drag support",
+                "Toggle features on/off in real-time",
+                "Auth/Login hook - force return true",
+                "Root detection bypass",
+                "SSL pinning bypass",
+                "Speed hack with adjustable multiplier",
+                "God mode, no recoil, unlimited ammo",
+                "FPS counter overlay",
+                "Auto-detect libil2cpp.so / liblogic.so",
+                "Dump IL2CPP from overlay menu"
+            )
+            features.forEach { f ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, null, tint = AccentGreen, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(f, color = TextSecondary, fontSize = 11.sp)
+                }
+                Spacer(Modifier.height(2.dp))
             }
         }
 
