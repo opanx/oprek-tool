@@ -391,7 +391,7 @@ private fun ConfigTab(
                         Icon(Icons.Default.Gamepad, null, tint = AccentGreen, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(name, color = TextWhite, fontSize = 12.sp)
+                            Text(name, color = TextPrimary, fontSize = 12.sp)
                             Text("$pkg | $lib", color = TextSecondary, fontSize = 10.sp)
                         }
                     }
