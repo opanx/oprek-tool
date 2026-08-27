@@ -270,7 +270,7 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Game", "Dump", "Frida", "Overlay", "Strings", "Hooks", "Output")
+    val tabs = listOf("Game", "Dump", "Frida", "Decrypt", "Overlay", "Strings", "Hooks", "Output")
 
     // State
     var selectedGame by remember { mutableIntStateOf(0) }
@@ -411,8 +411,9 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                         }
                     })
                 2 -> FridaTab(selectedGame, customPkg, customLib, outputLog, { outputLog = it }, isRunning)
-                3 -> OverlayTab(selectedGame, customPkg, customLib, outputLog, { outputLog = it }, isRunning)
-                4 -> StringsTab(gameRunning, gamePid, extractedStrings, { extractedStrings = it },
+                3 -> DecryptTab(selectedGame, customPkg, customLib, outputLog, { outputLog = it }, isRunning)
+                4 -> OverlayTab(selectedGame, customPkg, customLib, outputLog, { outputLog = it }, isRunning)
+                5 -> StringsTab(gameRunning, gamePid, extractedStrings, { extractedStrings = it },
                     stringFilter, { stringFilter = it }, isRunning, outputLog,
                     onScanStrings = {
                         scope.launch(Dispatchers.IO) {
@@ -430,8 +431,8 @@ fun Il2cppLoaderScreen(onBack: () -> Unit) {
                             isRunning = false
                         }
                     })
-                5 -> HooksTab(gameRunning, gamePid, outputLog, { outputLog = it })
-                6 -> OutputTab(outputLog, context)
+                6 -> HooksTab(gameRunning, gamePid, outputLog, { outputLog = it })
+                7 -> OutputTab(outputLog, context)
             }
         }
     }
@@ -683,6 +684,153 @@ private fun FridaTab(
             }, modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
                 Text("Copy Command", color = DarkBg, fontSize = 11.sp)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun DecryptTab(
+    selectedGame: Int, customPkg: String, customLib: String,
+    log: String, onLogChange: (String) -> Unit, isRunning: Boolean
+) {
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val game = loaderGamePresets[selectedGame]
+    val pkg = if (game.pkg.isEmpty()) customPkg else game.pkg
+    val lib = if (game.pkg.isEmpty()) customLib else game.lib
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        DarkCard {
+            Text("Encrypted Metadata Decryptor", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text("Hooks IL2CPP init + decrypt functions", color = TextSecondary, fontSize = 12.sp)
+            Text("Intercepts decrypted metadata at runtime", color = TextSecondary, fontSize = 11.sp)
+            Text("Target: $pkg | Lib: $lib", color = AccentGreen, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+        }
+
+        DarkCard {
+            Text("How It Works", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val steps = listOf(
+                "1. Hooks il2cpp_init to catch VM initialization",
+                "2. Hooks il2cpp_domain_get_assemblies (metadata ready)",
+                "3. Hooks malloc/mmap to detect metadata allocation",
+                "4. Hooks memcpy to detect decryption in progress",
+                "5. Saves decrypted metadata blocks to file",
+                "6. Dumps decrypted metadata as dump.cs",
+                "7. Auto-triggers after 30 seconds"
+            )
+            steps.forEach { s ->
+                Text(s, color = TextSecondary, fontSize = 11.sp)
+            }
+        }
+
+        DarkCard {
+            Text("Hooks Installed", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val hooks = listOf(
+                "il2cpp_init" to "Catches VM initialization",
+                "il2cpp_shutdown" to "Dumps before shutdown",
+                "il2cpp_domain_get_assemblies" to "Detects metadata ready",
+                "malloc" to "Detects large allocations (metadata)",
+                "memcpy" to "Detects metadata being copied/decrypted",
+                "mmap" to "Detects metadata memory mapping"
+            )
+            hooks.forEach { (name, desc) ->
+                Row(Modifier.fillMaxWidth()) {
+                    Text(name, color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.width(200.dp))
+                    Text(desc, color = TextSecondary, fontSize = 10.sp)
+                }
+            }
+        }
+
+        // Execute
+        Button(onClick = {
+            scope.launch(Dispatchers.IO) {
+                onLogChange(log + "[*] Checking frida-server...\n")
+                val check = ShellExec.execRoot("which frida 2>/dev/null || echo NOT_FOUND")
+                val hasFrida = check.any { it.contains("frida") && !it.contains("NOT_FOUND") }
+                if (!hasFrida) {
+                    onLogChange(log + "[-] Frida server NOT found!\n")
+                    onLogChange(log + "[*] Install frida-server from github.com/frida/frida/releases\n")
+                    return@launch
+                }
+                
+                onLogChange(log + "[+] Launching decryptor...\n")
+                try {
+                    val assetManager = context.assets
+                    val script = assetManager.open("scripts/il2cpp_metadata_decrypt.js").bufferedReader().readText()
+                    val scriptPath = "/data/local/tmp/oprek_decrypt.js"
+                    File(scriptPath).writeText(script)
+                    onLogChange(log + "[+] Script saved: $scriptPath\n")
+                    ShellExec.execRoot("frida -U -f $pkg -l $scriptPath --no-pause &")
+                    onLogChange(log + "[+] Decryptor launched!\n")
+                    onLogChange(log + "[*] Metadata will be decrypted automatically.\n")
+                    onLogChange(log + "[*] Dump will appear at /sdcard/Download/OprekTool/dump/\n")
+                } catch (e: Exception) {
+                    onLogChange(log + "[-] Error: ${e.message}\n")
+                }
+            }
+        }, modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = AccentRed)) {
+            Icon(Icons.Default.LockOpen, null, tint = TextPrimary)
+            Spacer(Modifier.width(8.dp))
+            Text("Launch Decryptor", color = TextPrimary, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Manual
+        DarkCard {
+            Text("Manual Command", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val cmd = "frida -U -f $pkg -l /data/local/tmp/oprek_decrypt.js --no-pause"
+            Text(cmd, fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = TextSecondary,
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
+                    .background(DarkCard).padding(6.dp))
+            Spacer(Modifier.height(4.dp))
+            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            Button(onClick = { cm.setText(AnnotatedString(cmd)) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)) {
+                Text("Copy Command", color = DarkBg, fontSize = 11.sp)
+            }
+        }
+
+        DarkCard {
+            Text("Output Files", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val files = listOf(
+                "dump_decrypted.cs" to "Decrypted IL2CPP dump with all classes/methods",
+                "decrypted_metadata_*.bin" to "Raw decrypted metadata binary",
+                "dump_frida.cs" to "Full runtime dump from Frida"
+            )
+            files.forEach { (name, desc) ->
+                Text("$name - $desc", color = TextSecondary, fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace)
+            }
+            Spacer(Modifier.height(4.dp))
+            Text("All files: /sdcard/Download/OprekTool/dump/", color = AccentGreen, fontSize = 11.sp)
+        }
+
+        DarkCard {
+            Text("Supported Games", color = AccentCyan, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            val games = listOf(
+                "Mobile Legends (liblogic.so) - encrypted metadata",
+                "Free Fire (libil2cpp.so) - may be encrypted",
+                "PUBG Mobile (libil2cpp.so) - encrypted",
+                "Genshin Impact (libil2cpp.so) - encrypted",
+                "Honkai Star Rail (libil2cpp.so) - encrypted",
+                "COD Mobile (libil2cpp.so) - may be encrypted",
+                "Any IL2CPP game - auto-detect encryption"
+            )
+            games.forEach { g ->
+                Text("• $g", color = TextSecondary, fontSize = 11.sp)
             }
         }
 
