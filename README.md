@@ -1,6 +1,6 @@
 # 🔧 OprekTool — Android Reverse Engineering Toolkit
 
-> **v0.14.0** | Build status: ✅ Passing (0 warnings) | APKs: Signed + Consistent Key
+> **v0.16.0** | Build status: ✅ Passing (0 warnings) | APKs: Signed + Consistent Key
 
 **An honest Android reverse engineering toolkit** — not a magic wand, but a solid set of tools for on-device binary analysis.
 
@@ -14,17 +14,28 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 
 ## 📱 What's New
 
-### v0.14.0 (Latest)
+### v0.16.0 (Latest)
+- **IL2CPP Loader Generator**: Generate complete IL2CPP overlay tool projects for any Unity game
+  - Configurable: title, target package, library, telegram/channel links, dump path
+  - Architecture: ARM32/ARM64 selection
+  - Options: string obfuscation, anti-debug, hide from recents, root check, Frida/Dobby
+  - Auto-generates Main.cpp, AndroidManifest.xml, Android.mk
+  - 20 game presets with correct package names
+  - 7 library mappings (il2cpp, logic, UE4, etc.)
+- **Frida Script Generator**: 4 pre-built Frida scripts
+  - `frida_il2cpp_dump.js` — Runtime IL2CPP class/method capture
+  - `frida_method_hooker.js` — Hook auth/login/license methods
+  - `frida_string_interceptor.js` — Capture all IL2CPP string allocations
+  - `frida_ssl_bypass.js` — SSL pinning bypass for OkHttp/TrustManager/WebView
+- **Zero build warnings**: All deprecated icons fixed
+
+### v0.15.0
+- IL2CPP Loader v1 — Basic generator with 4 tabs
+
+### v0.14.0
 - **Smali Viewer**: Parse DEX files — string tables, type IDs, method IDs, class listings
-- **XREF Finder**: Find cross-references to strings, addresses, or hex patterns in ELF binaries (ARM32/ARM64)
+- **XREF Finder**: Find cross-refs to strings, addresses, or hex patterns in ELF binaries (ARM32/ARM64)
 - **OFRAK Native Engine v2**: Completely rewritten from scratch — all features actually work
-  - File picker (copies URI to cache, works on all devices)
-  - Info tab: auto-detect format (ELF/ZIP/DEX/AR/GZIP/XZ/BZIP2/7Z/RAR/TAR)
-  - Sections tab: full ELF section list with flags (EXEC/ALLOC/WRITE)
-  - Actions: extract strings, recursive unpack, carve sections, scan embedded, find secrets
-  - Entropy tab: visual heatmap per 4KB block
-- **Zero build warnings**: All deprecated icon warnings resolved
-- **Workflow optimized**: 25min timeout, per-step timeouts, Node 20 deprecation fixed
 
 ### v0.13.0
 - **OFRAK Integration v2**: 100% pure Kotlin binary unpacker, no external tools
@@ -44,6 +55,16 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 - **Symbol Resolver**: ELF symbol table parser
 
 ## 📱 Features
+
+### 🎮 IL2CPP Loader — Generate Game Tools
+| Feature | Detail |
+|---------|--------|
+| **Generator** | Configure tool title, target game, links, dump path, arch, options |
+| **Templates** | Auto-generate Main.cpp, AndroidManifest.xml, Android.mk |
+| **Frida Scripts** | 4 pre-built scripts: dump, hooker, string interceptor, SSL bypass |
+| **Game Presets** | 20 games: MLBB, FF, PUBG, Genshin, CODM, Brawl Stars, etc. |
+| **Library Mappings** | il2cpp, logic, UE4, unity, custom libraries |
+| **Options** | Obfuscation, anti-debug, hide recents, root check, Frida/Dobby |
 
 ### 🎯 AutoDump v8 — Real IL2CPP Dumper
 | Feature | Detail |
@@ -147,6 +168,8 @@ This tool **does NOT** replace PC-based RE tools like Ghidra, IDA Pro, or Il2Cpp
 | Smali Viewer | ✅ 90% | DEX string/type/method/class parse |
 | XREF Finder | ✅ 85% | ARM32/ARM64 branch detection |
 | OFRAK Native | ✅ 95% | Recursive unpack, section carve, entropy |
+| IL2CPP Loader Gen | ✅ 95% | Complete project generation |
+| Frida Scripts | ✅ 90% | 4 pre-built scripts, customizable |
 
 ## 🔧 Installation
 
@@ -164,6 +187,7 @@ All dumps and patches are saved to:
 ├── patched/       # Patched files
 ├── sections/      # Carved ELF sections
 ├── analysis/      # OFRAK analysis output
+├── il2cpp-tool/   # IL2CPP Loader generated files
 └── terminal/      # Terminal output
 ```
 
@@ -172,6 +196,9 @@ All dumps and patches are saved to:
 - [README (Indonesian)](README_ID.md)
 - [Bug Reports](https://github.com/opanx/oprek-tool/issues)
 - [Releases](https://github.com/opanx/oprek-tool/releases)
+- [Telegram Owner](https://t.me/Gk_Gene)
+- [Channel](https://t.me/kembungjir)
+- [Channel](https://t.me/lazy_fat_catt)
 
 ## ⚖️ Legal
 
