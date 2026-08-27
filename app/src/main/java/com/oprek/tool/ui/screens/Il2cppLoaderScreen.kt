@@ -35,7 +35,7 @@ import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class LoaderLoaderGamePreset(
+data class LoaderGamePreset(
     val name: String,
     val pkg: String,
     val lib: String,
